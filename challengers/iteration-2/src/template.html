@@ -254,9 +254,10 @@ table.stats td:first-child{text-align:left;color:var(--muted)}
 .pdie.landed .face{animation:land .35s ease-out}
 @keyframes land{0%{transform:scale(1.25) rotate(-8deg)}100%{transform:none}}
 /* feste Seiten */
-.table.seats{padding-top:16px;align-items:start}
+.table.seats{padding-block:20px 28px;align-items:start}
 .seat{transition:transform .35s ease;min-width:0}
-.seat.atk{transform:translateY(-14px)}
+.seat.atk{transform:translateY(-16px)}
+.seat.dfn{transform:translateY(24px)}
 .seat.atk .pcard{box-shadow:0 10px 0 -4px color-mix(in srgb,var(--att) 45%,transparent)}
 /* Zeitraffer */
 .recap{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:var(--r);padding:10px}
