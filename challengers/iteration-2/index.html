@@ -259,12 +259,33 @@ table.stats td:first-child{text-align:left;color:var(--muted)}
 .seat.atk{transform:translateY(-16px)}
 .seat.dfn{transform:translateY(24px)}
 .seat.atk .pcard{box-shadow:0 10px 0 -4px color-mix(in srgb,var(--att) 45%,transparent)}
+/* Spielszene */
+.scene{position:absolute;inset:0;pointer-events:none;z-index:3}
+.sc-tok{position:absolute;width:24px;height:24px;border-radius:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-d);font-weight:800;font-size:12.5px;color:#fff;border:2px solid #fff;box-shadow:0 2px 0 rgba(0,0,0,.25);transition:opacity .25s}
+.sc-tok.ta{background:var(--lila)}.sc-tok.tb{background:var(--blau)}
+.sc-tok.hold{box-shadow:0 0 0 3px color-mix(in srgb,var(--hl) 80%,transparent),0 2px 0 rgba(0,0,0,.25)}
+.sc-tok.gk{width:14px;height:14px;border-radius:4px;opacity:.85}
+.sc-ball{position:absolute;width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #111;transform:translate(calc(-50% + 11px),calc(-50% + 9px));z-index:2}
+.sc-flash{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);font-family:var(--font-d);font-weight:800;font-size:22px;padding:2px 10px;border-radius:6px;background:var(--surface);color:var(--fg);opacity:0;transition:opacity .2s,transform .2s;white-space:nowrap}
+.sc-flash.on{opacity:.95;transform:translate(-50%,-50%) scale(1)}
+.sc-flash.goal{background:var(--pitch-line);color:#fff}.sc-flash.card{background:var(--money);color:#111}.sc-flash.change{background:var(--def);color:#fff}
+.pitch .mk{position:absolute;border:1.5px solid var(--pitch-line);opacity:.45;pointer-events:none}
+.pitch .mk.box{left:22%;right:22%;height:16%}.pitch .mk.box.top{top:-1.5px;border-top:none}.pitch .mk.box.bot{bottom:-1.5px;border-bottom:none}
+.pitch .mk.six{left:37%;right:37%;height:6%}.pitch .mk.six.top{top:-1.5px;border-top:none}.pitch .mk.six.bot{bottom:-1.5px;border-bottom:none}
+.pitch .mk.circle{left:50%;top:50%;width:26%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%)}
+.pitch .pz span{opacity:.55}
 /* Zeitraffer */
 .recap{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:var(--r);padding:10px}
 .rpitch{position:relative;aspect-ratio:16/9;max-width:100%;background:var(--pitch);border:2px solid var(--pitch-line);border-radius:6px;overflow:hidden}
 .rmid{position:absolute;left:50%;top:0;bottom:0;border-left:2px solid var(--pitch-line);opacity:.5}
 .rgoal{position:absolute;top:38%;bottom:38%;width:6px;background:var(--pitch-line)}
 .rgoal.l{left:0}.rgoal.r{right:0}
+.rpitch .mk{position:absolute;border:1.5px solid var(--pitch-line);opacity:.5}
+.rpitch .mk.hline{left:50%;top:0;bottom:0;border-width:0 0 0 1.5px}
+.rpitch .mk.hcircle{left:50%;top:50%;height:24%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%)}
+.rpitch .mk.hbox{top:22%;bottom:22%;width:15%}.rpitch .mk.hbox.l{left:-1.5px;border-left:none}.rpitch .mk.hbox.r{right:-1.5px;border-right:none}
+.rpitch .mk.hsix{top:37%;bottom:37%;width:5.5%}.rpitch .mk.hsix.l{left:-1.5px;border-left:none}.rpitch .mk.hsix.r{right:-1.5px;border-right:none}
 .rball{position:absolute;width:18px;height:18px;border-radius:50%;transform:translate(-50%,-50%);border:3px solid #fff;box-shadow:0 2px 0 rgba(0,0,0,.3);transition:left .35s ease,top .35s ease}
 .rball.pa{background:var(--lila)}.rball.pb{background:var(--blau)}
 .rflash{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--font-d);font-weight:800;font-size:28px;opacity:0;transition:opacity .2s;color:var(--fg);background:var(--surface);padding:2px 10px;border-radius:6px}
@@ -285,7 +306,7 @@ table.stats td:first-child{text-align:left;color:var(--muted)}
     <summary>Regeln dieser Testversion und offene Annahmen</summary>
     <ul>
       <li>Jeder Spieler hat 10 von 26 Feldspielern im Deck (zufällig oder per Draft, Reihenfolge A-B-B-A …) und einen der beiden Keeper (zufällig).</li>
-      <li>Ein Spielzug: Zuerst deckt der Angreifer auf und wählt seine Aktion (orange). Danach deckt der Verteidiger auf, sieht die Angriffsaktion und wählt in der gespiegelten Zone (blau). Die Option hinter „/“ kostet: Spieler erschöpfen oder Token (Angreifer rot, Verteidiger blau).</li>
+      <li>Ein Spielzug: Beide ziehen ihre Karte. Der Verteidiger sieht seine Karte sofort und kann schon überlegen. Der Angreifer deckt auf und wählt seine Aktion (orange). Danach deckt der Verteidiger auf, sieht die Angriffsaktion und wählt in der gespiegelten Zone (blau). Die Option hinter „/“ kostet: Spieler erschöpfen oder Token (Angreifer rot, Verteidiger blau).</li>
       <li>Abwehr: Passabfangen schlägt Querpass, Rückpass, Steilpass, Flanke, Vorlage und Diagonalball. Tackling schlägt Dribbling und „--“. Block schlägt Schuss und Kopfball, Schuss blocken nur den Schuss. Ballgewinn schlägt alles außer grüne Aktionen. Ball sichern ist nicht zu erobern.</li>
       <li>Steilpass: Spielt die Abwehr Passabfangen, ist der Ball weg. Sonst folgt im nächsten Zug ein Tempo-Duell: Beide decken ihre nächste Karte auf, es zählt nur deren Tempo (bei Gleichstand die Präsenz), die Aktionen entfallen. Gewinnt der Angreifer, kommt der Ball in der Zone davor an, sonst erobert die Abwehr ihn dort. Sprint: Tempo-Duell der Karten, die gerade gespielt werden, danach wie Dribbling.</li>
       <li>„--“ gegen „--“: Im nächsten Zug decken beide sofort eine neue Karte auf, es zählt deren Präsenz (bei Gleichstand das Tempo). Gewinnt die Abwehr, erobert sie den Ball. Sonst bleibt der Angreifer am Ball, und der Zug läuft normal weiter: Der Angreifer wählt zuerst, sieht dabei aber schon die Abwehrkarte, danach wählt die Abwehr.</li>
@@ -418,12 +439,18 @@ const CARD_DATA = {"players":[{"id":"c00","name":"Bjarke Jacobsen","nr":15,"col"
       def: null,
     };
     st.phase = 'att';
-    // Präsenz-Duell: beide decken sofort auf; die Abwehrkarte liegt offen, bevor der Angreifer wählt
+    // Die Abwehr zieht ihre Karte gleich zu Beginn und sieht sie schon, während der Angriff überlegt.
+    // Beim Direktschuss nach Vorlage deckt die Abwehr keine Karte auf.
+    if (!st.cur.volley) {
+      const defS = other(att);
+      const did = draw(st, defS);
+      st.cur.def = { id: did, alt: null, opt: null, pay: null, fresh: false, zone: MIRROR[st.ball], open: !!st.cur.presence };
+    }
+    // Präsenz-Duell: die Abwehrkarte liegt offen, bevor der Angreifer wählt
     if (st.cur.presence) {
       st.presence = false;
       const defS = other(att);
-      const did = draw(st, defS);
-      st.cur.def = { id: did, alt: null, opt: null, pay: null, fresh: false, zone: MIRROR[st.ball], open: true };
+      const did = st.cur.def.id;
       if (!id || !did) { st.cur.presence = false; return; }
       const r = duel(id, did, 'praesenz', 'tempo');
       st.cur.duel = r; st.stats[r.win === 'def' ? defS : att].duels++;
@@ -825,7 +852,13 @@ const CARD_DATA = {"players":[{"id":"c00","name":"Bjarke Jacobsen","nr":15,"col"
         shot: c.shotDone ? c.shot : null, whistle: null, flank: st.flank, header: !!c.header,
       };
       st.track = st.track || [];
-      st.track.push({ m: c.minute, h: st.half, ps: c.possStart, bs: c.ballStart, pe: st.poss, be: st.ball, k: (c.out && c.out.k) || 'keep', g: [st.goals.A, st.goals.B], sk: c.shotDone && c.shot ? c.shot.kind : null });
+      const sh = c.shotDone && c.shot ? c.shot : null;
+      st.track.push({
+        m: c.minute, h: st.half, ps: c.possStart, bs: c.ballStart, pe: st.poss, be: st.ball, k: (c.out && c.out.k) || 'keep', g: [st.goals.A, st.goals.B],
+        sk: sh ? sh.kind : null, aim: sh ? sh.aim : null, gkN: sh ? sh.gkN : null,
+        ai: c.att ? c.att.id : null, di: c.def ? c.def.id : null, aa: c.att ? (c.att.eff || c.att.action) : null, da: c.def ? c.def.action : null,
+        hd: !!c.header, vo: !!c.volley, pr: !!c.presence, th: c.through ? c.through.to : null, th2: st.through ? st.through.to : null, fl: !!st.flank,
+      });
       for (const role of ['att', 'def']) {
         const side = c[role];
         if (!side || !side.id || side.sentOff) continue;
@@ -1020,14 +1053,306 @@ function pitchHtml(st){
   }).join('');
   const poss = rp ? (rp.step >= 2 ? rp.prev.possEnd : rp.prev.possStart) : st.poss;
   const atk = poss === vs;
-  const [x,y] = BALL_XY[ballZone];
-  app.ballTarget = ballZone;
   return `<div class="pitch" aria-label="Spielfeld">${zones}<div class="goalbar top"></div><div class="goalbar bot"></div>
-     <div class="ball" id="ball" data-zone="${ballZone}" style="left:${x}%;top:${y}%" aria-label="Ball"></div></div>
+     <div class="mk box top"></div><div class="mk box bot"></div><div class="mk six top"></div><div class="mk six bot"></div><div class="mk circle"></div>
+     ${sceneHtml('gscene','in-pitch')}</div>
    <div class="pitchcap"><span>oben: Tor von ${esc(teamLabel(FC.other(vs)))}</span><span>unten: Tor von ${esc(teamLabel(vs))}</span></div>
    <div class="notice">${atk?'▲':'▼'} <b>${esc(teamLabel(poss))}</b> greift an${atk?' nach oben':' nach unten'}.${st.flank&&!rp?' <b>Flanke in der Luft:</b> Kopfball möglich.':''}</div>`;
 }
-// Ball gleitet von der alten zur neuen Zone
+// ---------- Spielszene: Laufwege für Ball und Spieler ----------
+// Koordinaten im „A-Rahmen“: u = links→rechts (0–100), v = oben→unten (0–100).
+// Heim (A) spielt nach oben (v = 0 ist das Tor von Gast), Gast (B) nach unten.
+const SCN = (() => {
+  const RECT = { LO:[0,28.6,0,50], RO:[71.4,100,0,50], LD:[0,28.6,50,100], RD:[71.4,100,50,100], ZO:[28.6,71.4,0,33.3], ZM:[28.6,71.4,33.3,66.7], ZD:[28.6,71.4,66.7,100] };
+  const PASSY = ['Querpass','Rückpass','Diagonalball','Vorlage','Flanke'];
+  const MOVES = ['Dribbling','Sprint','Steilpass-Lauf'];
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  function rng(seed){ let s = (seed * 7919 + 104729) % 2147483647; return () => (s = s * 48271 % 2147483647) / 2147483647; }
+  const toA = (p, poss) => poss === 'A' ? p : [100 - p[0], 100 - p[1]];
+  const fwd = poss => poss === 'A' ? [0, -1] : [0, 1];
+  const add = (p, d, k) => [p[0] + d[0] * (k ?? 1), p[1] + d[1] * (k ?? 1)];
+  const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  const keep = p => [clamp(p[0], 3, 97), clamp(p[1], 3, 97)];
+  function zonePt(zone, poss, r, spread){
+    const [u0,u1,v0,v1] = RECT[zone] || RECT.ZM; const s = spread ?? .5;
+    const u = u0 + (u1 - u0) * (.5 + (r() - .5) * s), v = v0 + (v1 - v0) * (.5 + (r() - .5) * s);
+    return toA([u, v], poss);
+  }
+  const goalLine = poss => poss === 'A' ? 1 : 99;          // Tor, auf das diese Mannschaft schießt
+  const ownGoal = poss => poss === 'A' ? 97 : 3;           // eigener Keeper steht hier
+  // Ecken aus Sicht des Schützen (links, Mitte, rechts)
+  const cornerU = (poss, n) => poss === 'A' ? [44, 50, 56][n] : [56, 50, 44][n];
+
+  // Plant einen Zug: Schlüsselbilder (t von 0 bis 1) für Ball, Angreifer (att), Verteidiger (def), Empfänger (rec), Keeper
+  function planTurn(e, nx, ctx, seed){
+    const r = rng(seed);
+    const ps = e.ps, defT = ps === 'A' ? 'B' : 'A';
+    const F = fwd(ps);
+    let S = ctx.pos && !ctx.reset ? ctx.pos : (ctx.reset ? [50, 50] : zonePt(e.bs, ps, r, .3));
+    if (ctx.reset) S = [50, 50];
+    const E = keep(zonePt(e.be, e.pe, r, .55));
+    const side = (S[0] < 50 ? 1 : -1) * (ps === 'A' ? 1 : -1);
+    const D0 = keep(add(add(S, F, 7), [side * (2 + r() * 3), 0]));
+    const gk = { A: [50, ownGoal('A')], B: [50, ownGoal('B')] };
+    const recT = nx ? nx.ps : e.pe;
+    // nächster Ballführer: der Spieler auf der nächsten Angriffskarte
+    const R = nx ? keep(nx.ps === e.pe ? E : E) : E;
+    const toks = { att: { id: e.ai, team: ps }, def: { id: e.di, team: defT }, rec: nx ? { id: nx.ai, team: recT } : null };
+    const K = [];
+    const kf = (t, o) => K.push(Object.assign({ t }, o));
+    let flash = null, end = { pos: R, holder: 'rec', dir: [R[0] - S[0], R[1] - S[1]], reset: false };
+    const base = { ball: S, att: S, def: D0, rec: add(R, F, -2), gkA: gk.A, gkB: gk.B };
+    kf(0, base);
+    const a = e.aa || '--', k = e.k;
+    const changed = e.pe !== e.ps;
+
+    if (e.sk) {
+      // Torschuss: Ball fliegt in die gewählte Ecke, Keeper springt in seine Ecke
+      const shooterPos = e.hd ? keep([50 + (r() - .5) * 10, ps === 'A' ? 13 : 87]) : S;
+      const gU = cornerU(ps, e.aim ?? 1), kU = cornerU(ps, e.gkN ?? 1);
+      const gV = goalLine(ps);
+      const kKey = defT === 'A' ? 'gkA' : 'gkB';
+      if (e.hd) kf(.18, { att: shooterPos, ball: add(shooterPos, F, -1), def: add(shooterPos, [side * 3, 0]) });
+      const target = k === 'goal' ? [gU, ps === 'A' ? -1 : 101] : k === 'save' ? [kU, gV + (ps === 'A' ? 2 : -2)] : [gU + (gU < 50 ? -9 : gU > 50 ? 9 : 7), ps === 'A' ? -2 : 102];
+      kf(e.hd ? .3 : .12, { ball: shooterPos });
+      kf(.5, { ball: target, [kKey]: [kU, gV + (ps === 'A' ? 2 : -2)], bendBall: e.hd ? .05 : .08 });
+      flash = { at: .52, text: k === 'goal' ? 'TOR!' : k === 'save' ? 'Gehalten' : 'Daneben', cls: k === 'goal' ? 'goal' : '' };
+      if (k === 'goal') {
+        kf(.78, { ball: target });
+        kf(.8, { ball: [50, 50], [kKey]: [50, gV + (ps === 'A' ? 2 : -2)], rec: [50, 52], att: shooterPos, def: add(shooterPos, [side * 3, 0]) });
+        kf(1, { ball: [50, 50], rec: [50, 50] });
+        end = { pos: [50, 50], holder: 'rec', dir: [0, 0], reset: false };
+      } else {
+        // Abstoß: der Keeper spielt zum nächsten Angreifer
+        const kp = [kU, gV + (ps === 'A' ? 2 : -2)];
+        kf(.72, { ball: kp, [kKey]: kp });
+        kf(1, { ball: R, rec: R, [kKey]: [50, ownGoal(defT)], bendBall: .15 });
+      }
+      return { dur: 2.3, K, toks, flash, end };
+    }
+
+    if (changed) {
+      // Ballbesitzwechsel
+      let X;
+      if (PASSY.includes(a) || a === 'Steilpass') {
+        const T = keep(zonePt(e.bs === e.be ? e.bs : e.bs, ps, r, .2));
+        const aim = keep(add(S, [(E[0] - S[0]) * -.4 + (r() - .5) * 12, 0], 1));
+        X = keep(lerp(S, add(S, F, 18), .45 + r() * .1));
+        X = keep([X[0] + (r() - .5) * 8, X[1]]);
+        kf(.15, { att: S, def: lerp(D0, X, .3) });
+        kf(.42, { ball: X, def: X, bendBall: .1 });
+      } else if (a === 'Ballverlust' || a === 'Fehlpass') {
+        X = keep(add(add(S, F, 6), [(r() - .5) * 14, 0]));
+        kf(.35, { ball: X, bendBall: .3 });
+        kf(.5, { def: X });
+      } else {
+        // Zweikampf: Tackling, Ballgewinn, verlorenes Duell
+        X = keep(lerp(S, D0, .6));
+        kf(.3, { att: X, ball: X, def: lerp(D0, X, .7) });
+        kf(.45, { ball: lerp(X, D0, .5), def: lerp(X, D0, .5) });
+      }
+      const after = keep(lerp(X, R, .25));
+      kf(.65, { def: after, ball: after });
+      kf(1, { ball: R, rec: R, bendBall: .12 });
+      flash = { at: .4, text: e.da === 'Gelbe Karte' ? 'Gelb' : (a === 'Ballverlust' || a === 'Fehlpass') ? 'Ballverlust' : (e.da === 'Passabfangen' ? 'Abgefangen' : 'Ballgewinn'), cls: 'change' };
+      end = { pos: R, holder: 'rec', dir: [R[0] - X[0], R[1] - X[1]] };
+      return { dur: 1.6, K, toks, flash, end };
+    }
+
+    if (e.da === 'Gelb' || e.da === 'Gelbe Karte') {
+      kf(.3, { def: lerp(D0, S, .85) });
+      kf(.4, { att: add(S, [1.5, 1.5]), ball: add(S, [2.5, 0]) });
+      kf(.6, { att: S, def: D0 });
+      kf(1, { ball: R, rec: R, bendBall: .1 });
+      flash = { at: .38, text: 'Foul – Gelb', cls: 'card' };
+      return { dur: 1.6, K, toks, flash, end };
+    }
+
+    if (a === 'Flanke') {
+      // Erst bis zur Grundlinie, dann in hohem Bogen in die Mitte
+      const wing = S[0] < 50 ? 8 : 92;
+      const onWing = e.bs === 'LO' || e.bs === 'RO';
+      const byline = keep([wing, ps === 'A' ? 6 : 94]);
+      const box = keep([50 + (r() - .5) * 10, ps === 'A' ? 13 : 87]);
+      if (onWing) kf(.38, { att: byline, ball: byline, def: lerp(D0, byline, .7), bendAtt: .1, bendBall: .1 });
+      kf(.82, { ball: box, rec: box, bendBall: .35 });
+      kf(1, { ball: box, rec: box });
+      end = { pos: box, holder: 'rec', dir: [0, ps === 'A' ? -1 : 1] };
+      return { dur: 1.8, K, toks, flash, end };
+    }
+
+    if (e.th2) {
+      // Steilpass gespielt: Ball rollt in die Tiefe, beide laufen hinterher
+      const T = keep(zonePt(e.th2, ps, r, .3));
+      const M = lerp(S, T, .7);
+      kf(.55, { ball: M, bendBall: .04 });
+      kf(1, { ball: M, rec: lerp(S, M, .55), def: lerp(D0, M, .6) });
+      end = { pos: M, holder: null, dir: [T[0] - S[0], T[1] - S[1]], loose: true };
+      toks.rec = nx ? { id: nx.ai, team: recT } : null;
+      return { dur: 1.5, K, toks, flash: { at: .3, text: 'Steilpass!', cls: '' }, end };
+    }
+
+    if (MOVES.includes(a)) {
+      // Dribbling: am Verteidiger vorbei, flach, wenn es die vorige Richtung fortsetzt
+      const E1 = keep(add(E, F, 4));
+      const cont = ctx.dir && (ctx.dir[0] * (E1[0] - S[0]) + ctx.dir[1] * (E1[1] - S[1])) > 0;
+      const bend = cont ? .12 : .28;
+      const pass = lerp(S, E1, .45);
+      kf(.45, { att: pass, ball: add(pass, F, 1.2), def: add(pass, [side * 3.5, 0]), bendAtt: bend, bendBall: bend });
+      kf(.7, { att: E1, ball: add(E1, F, 1), def: lerp(add(pass, [side * 3.5, 0]), E1, .3), bendAtt: bend * .6, bendBall: bend * .6 });
+      kf(1, { ball: R, rec: R, bendBall: .05 });
+      return { dur: 1.6, K, toks, flash, end };
+    }
+
+    if (PASSY.includes(a) || a === 'Steilpass') {
+      const bend = a === 'Diagonalball' ? .3 : a === 'Vorlage' ? .12 : .06;
+      kf(.15, { ball: add(S, F, 1) });
+      kf(.75, { ball: R, rec: R, def: lerp(D0, R, .35), bendBall: bend });
+      kf(1, { ball: R, rec: R });
+      return { dur: 1.5, K, toks, flash, end };
+    }
+
+    // „--“, Ball sichern, gehalten: der Ball bewegt sich ein wenig in der Zone
+    const J = keep(add(S, [(r() - .5) * 8, (r() - .5) * 6]));
+    kf(.35, { att: J, ball: add(J, F, 1), def: lerp(D0, J, .4), bendAtt: .3, bendBall: .3 });
+    kf(1, { ball: R, rec: R, bendBall: .1 });
+    return { dur: 1.4, K, toks, flash, end };
+  }
+
+  // Ganze Partie planen; liefert die Pläne und die Lage nach jedem Zug
+  function planAll(track, tail){
+    const plans = []; let ctx = { pos: [50, 50], reset: true, dir: null };
+    for (let i = 0; i < track.length; i++) {
+      const e = track[i], nx = track[i + 1] || tail || null;
+      const p = planTurn(e, nx, ctx, i + 1);
+      plans.push(p);
+      ctx = Object.assign({}, p.end);
+      if (nx && nx.h !== e.h) ctx = { pos: [50, 50], reset: true, dir: null };
+      p.after = ctx;
+    }
+    return plans;
+  }
+
+  // Position eines Objekts zur Zeit t (Schlüsselbilder mit Kurven)
+  function pos(K, key, t){
+    let prev = null;
+    for (let i = 0; i < K.length; i++) {
+      const k = K[i]; if (!(key in k)) continue;
+      if (k.t >= t) {
+        if (!prev) return k[key];
+        const span = k.t - prev.t || 1, x = Math.max(0, Math.min(1, (t - prev.t) / span));
+        const e = x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+        const a = prev[key], b = k[key];
+        const bendKey = 'bend' + key[0].toUpperCase() + key.slice(1);
+        const bend = k[bendKey] || 0;
+        if (!bend) return [a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e];
+        const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, dx = b[0] - a[0], dy = b[1] - a[1];
+        const c = [mx - dy * bend, my + dx * bend];
+        const u = 1 - e; return [u * u * a[0] + 2 * u * e * c[0] + e * e * b[0], u * u * a[1] + 2 * u * e * c[1] + e * e * b[1]];
+      }
+      prev = k;
+    }
+    return prev ? prev[key] : null;
+  }
+  return { planTurn, planAll, pos };
+})();
+
+// Darstellung: waagerecht (Zeitraffer, Heim spielt nach rechts) oder senkrecht (im Spiel, eigene Richtung nach oben)
+function scView(p, mode){
+  if (!p) return null;
+  if (mode.kind === 'h') return [100 - p[1], p[0]];
+  return mode.seat === 'B' ? [100 - p[0], 100 - p[1]] : [p[0], p[1]];
+}
+function sceneHtml(id, extraCls){
+  return `<div class="scene ${extraCls||''}" id="${id}">
+    <div class="sc-tok gk" data-o="gkA"></div><div class="sc-tok gk" data-o="gkB"></div>
+    <div class="sc-tok" data-o="def"></div><div class="sc-tok" data-o="rec"></div><div class="sc-tok" data-o="att"></div>
+    <div class="sc-ball" data-o="ball"></div><div class="sc-flash" data-o="flash"></div></div>`;
+}
+// Läufer: spielt eine Folge von Plänen in einem Container ab, überlebt Neuzeichnen (sucht die Elemente jedes Bild neu)
+const SCRUN = {};
+function scPlay(name, sel, mode, plans, opts){
+  SCRUN[name] = { sel, mode, plans, i: 0, t0: performance.now() + ((opts && opts.delay) || 0), labels: (opts && opts.labels) || (() => null), onStep: opts && opts.onStep, onDone: opts && opts.onDone, done: false, speed: SPEEDS[speed()] * ((opts && opts.rate) || 1) };
+  scLoop();
+}
+function scStill(name, sel, mode, plan, opts){
+  SCRUN[name] = { sel, mode, plans: [plan], i: 0, t0: -1e9, labels: (opts && opts.labels) || (() => null), done: false, still: true, speed: 1 };
+  scLoop();
+}
+let scRaf = null;
+function scLoop(){ if (!scRaf) scRaf = requestAnimationFrame(scFrame); }
+function scFrame(now){
+  scRaf = null; let busy = false;
+  for (const name in SCRUN) {
+    const R = SCRUN[name]; const box = document.querySelector(R.sel);
+    const p = R.plans[R.i]; if (!p) continue;
+    const dur = p.dur * 1000 * R.speed;
+    let t = R.still ? 1 : (now - R.t0) / dur;
+    if (t < 0) { busy = true; t = 0; }
+    if (t >= 1 && !R.still && R.i < R.plans.length - 1) { R.i++; R.t0 = now; if (R.onStep) R.onStep(R.i); busy = true; continue; }
+    if (t >= 1) { t = 1; if (!R.done && !R.still && R.onDone) R.onDone(); R.done = true; } else busy = true;
+    if (box) scDraw(box, R, p, t);
+  }
+  if (busy) scLoop();
+}
+function scDraw(box, R, p, t){
+  const lab = R.labels(p, R.i) || {};
+  box.querySelectorAll('[data-o]').forEach(el => {
+    const o = el.dataset.o;
+    if (o === 'flash') {
+      const f = p.flash; const on = f && t >= f.at && t < f.at + .32;
+      el.textContent = f ? f.text : ''; el.className = 'sc-flash' + (on ? ' on ' + (f.cls||'') : '');
+      return;
+    }
+    const q = SCN.pos(p.K, o, t);
+    if (!q) { el.style.opacity = 0; return; }
+    // Empfänger erst zeigen, wenn er ins Spiel kommt; Angreifer ausblenden, wenn er den Ball abgegeben hat
+    let vis = 1;
+    if (o === 'rec') vis = !p.toks.rec ? 0 : (t > .45 ? 1 : 0);
+    if (o === 'att' && t > .92 && p.end && p.end.holder === 'rec') vis = .55;
+    if ((o === 'def') && !p.toks.def.id) vis = 0;
+    const holder = p.end ? p.end.holder : 'att';
+    if (R.still && (o === 'att' || o === 'def') && o !== holder) vis = 0;
+    const v = scView(q, R.mode);
+    el.style.left = v[0] + '%'; el.style.top = v[1] + '%'; el.style.opacity = vis;
+    if (o === 'att' || o === 'def' || o === 'rec') {
+      const tk = p.toks[o]; if (!tk) return;
+      const known = lab[o] !== undefined ? lab[o] : (tk.id ? card(tk.id).nr : '');
+      el.textContent = known === null ? '?' : known;
+      el.className = 'sc-tok ' + (tk.team === 'A' ? 'ta' : 'tb') + ((t < .9 ? o === 'att' : o === holder) ? ' hold' : '');
+    }
+    if (o === 'gkA' || o === 'gkB') { el.className = 'sc-tok gk ' + (o === 'gkA' ? 'ta' : 'tb'); el.textContent = ''; }
+  });
+}
+
+// Pläne für die laufende Partie (zwischengespeichert pro Spielstand)
+let PLAN_CACHE = { st: null, plans: [] };
+function plansFor(st){
+  if (PLAN_CACHE.st !== st) {
+    const tail = st.cur && st.cur.att ? { ai: st.cur.att.id, ps: st.poss, pe: st.poss, h: st.half } : null;
+    PLAN_CACHE = { st, plans: SCN.planAll(st.track || [], tail) };
+  }
+  return PLAN_CACHE.plans;
+}
+function gameMode(){ return { kind: 'v', seat: viewSeat() }; }
+// Nummer des nächsten Ballführers nur zeigen, wenn seine Karte für mich schon offen ist
+function gameLabels(st){
+  return p => {
+    const lab = {}; const c = st.cur && st.cur.att;
+    if (p.toks.rec && c && p.toks.rec.id === c.id) lab.rec = (c.action || seesCard(st.poss)) ? card(c.id).nr : null;
+    return lab;
+  };
+}
+function startPlan(st){
+  return { dur: 1, K: [{ t: 0, ball: [50, 50], rec: [50, 50], att: [50, 50], def: [50, 40], gkA: [50, 97], gkB: [50, 3] }],
+    toks: { att: { id: null, team: 'A' }, def: { id: null, team: 'B' }, rec: st.cur && st.cur.att ? { id: st.cur.att.id, team: st.poss } : null }, end: { holder: 'rec' } };
+}
+function syncGameScene(st){
+  if (!document.querySelector('#gscene')) return;
+  if (app.replay) return;               // läuft gerade als Animation
+  const plans = plansFor(st);
+  scStill('game', '#gscene', gameMode(), plans.length ? plans[plans.length - 1] : startPlan(st), { labels: gameLabels(st) });
+}
 // Würfel mit Augen, rollt kurz und landet auf dem echten Ergebnis
 const PIPS = {1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
 function dieFace(n){ return `<span class="face" aria-label="Würfel ${n}">${[1,2,3,4,5,6,7,8,9].map(i=>`<i${PIPS[n].includes(i)?' class="on"':''}></i>`).join('')}</span>`; }
@@ -1096,6 +1421,7 @@ function startReplay(prev){
   if (dice) for (let i=0;i<dice;i++) steps.splice(1+i, 0, [1.1 + i*0.01, 1150 + i*650]);
   const total = (prev.shot ? 3800 + dice*1300 : (prev.out && prev.out.duel ? 3300 : 2700)) + (prev.whistle ? 1200 : 0);
   app.replay = { prev, step: 0, dice: 0, total: total*m, t0: Date.now(), timers: [] };
+  if (!reduceMotion()) { const pl = plansFor(app.st); if (pl.length) scPlay('game', '#gscene', gameMode(), [pl[pl.length - 1]], { delay: 350 * m, labels: gameLabels(app.st) }); }
   let di = 0;
   steps.forEach(([s, t]) => {
     app.replay.timers.push(setTimeout(() => {
@@ -1133,8 +1459,8 @@ function render(){
   v.innerHTML = boardHtml(st) + `<div class="main"><div class="panel">${pitchHtml(st)}</div><div class="panel">${tableHtml(st)}</div></div>` + decksHtml(st) + (st.phase==='over'?statsHtml(st):'') + logHtml(st) + modalHtml();
   bindGame();
   bindDist();
-  animateBall();
   animateDice();
+  syncGameScene(st);
   if (Math.abs(window.scrollY - scrollY) > 2) window.scrollTo(0, scrollY);
 }
 
@@ -1175,8 +1501,10 @@ function slotHtml(st, role, src, seat, turn, opts){
   const c = src;
   const head = `<div class="role ${role==='def'?'d':'a'}"><span>${opts.step?`<span class="stepno">${opts.step}</span>`:''}${role==='def'?'Abwehr':'Angriff'} · ${esc(teamLabel(seat))}</span><span>Zone ${c&&c.zone?c.zone:'–'}</span></div>`;
   if (!c || !c.id) return `<div class="slot">${head}${cardBack(role==='def'?'deckt nach dem Angriff auf':'')}</div>`;
-  const visible = c.action || seesCard(seat) || opts.forceShow || c.open;
-  if (!visible) return `<div class="slot">${head}${cardBack('überlegt …')}<div class="muted">${esc(teamLabel(seat))} wählt …</div></div>`;
+  // Lokal am selben Gerät bleibt die Abwehrkarte verdeckt, bis der Angriff gewählt hat
+  const hotseatHidden = app.mode === 'local' && role === 'def' && !c.action && !c.open && st.phase === 'att';
+  const visible = !hotseatHidden && (c.action || seesCard(seat) || opts.forceShow || c.open);
+  if (!visible) return `<div class="slot">${head}${cardBack(role==='def' && st.phase==='att' ? 'Karte liegt bereit' : 'überlegt …')}<div class="muted">${role==='def' && st.phase==='att' ? esc(teamLabel(seat))+' wartet auf den Angriff …' : esc(teamLabel(seat))+' wählt …'}</div></div>`;
   const key = `${turn}-${role}-${c.id}-${c.action?'a':'d'}`;
   const body = opts.hideFace ? cardBack('') : revealCard(key, cardHtml(c.id, { zone: c.zone, team: st.teams[seat] }));
   return `<div class="slot">${head}${body}${opts.hideFace?'':(actionLine(c, role) || `<div class="muted">${seesCard(seat)&&canAct(st)?'Deine Wahl …':esc(teamLabel(seat))+' wählt …'}</div>`)}</div>`;
@@ -1250,6 +1578,8 @@ function controlsHtml(st){
   const mine = canAct(st);
   const who = esc(teamLabel(a));
   if (!mine) {
+    const myDefCard = st.phase==='att' && app.mode!=='local' && FC.other(st.poss)===app.me && st.cur.def && st.cur.def.id;
+    if (myDefCard) return `<div class="ctrl"><div class="notice wait"><span class="thinking"></span>${who} wählt die Angriffsaktion … Deine Abwehrkarte liegt schon vor dir, überleg dir deine Antwort.</div></div>`;
     const what = {def:'deckt auf und wählt die Abwehraktion', att:'deckt auf und wählt die Angriffsaktion', move:'wählt, wohin der Ball geht', dist:'verteilt die Schusspunkte', gk:'wählt verdeckt die Ecke für den Keeper', shot:'wählt die Ecke für den Schuss', def_pick2:'wählt einen von zwei Verteidigern'}[st.phase]||'ist dran';
     if (app.mode==='online' && !(app.gameDoc && app.gameDoc.seats && app.gameDoc.seats.B)) return `<div class="ctrl"><div class="notice wait">Das Spiel startet, sobald dein Gegner beigetreten ist.</div></div>`;
     if (app.mode==='p2p' && !app.connected) return `<div class="ctrl"><div class="notice wait">Keine Verbindung zum Gegner. ${app.isHost?'Sobald er wieder mit dem Code beitritt, geht es weiter.':'Tritt mit demselben Code erneut bei.'}</div></div>`;
@@ -1269,7 +1599,7 @@ function controlsHtml(st){
     else if (presence && ph==='def') h += `<div class="notice"><b>Nach dem Präsenz-Duell:</b> Der Angriff hat deine Karte schon gesehen. Wähle jetzt ganz normal deine Abwehraktion.</div>`;
     else if (through) h += `<div class="notice"><b>Tempo-Duell nach Steilpass:</b> ${side.id?esc(card(side.id).name)+' läuft mit Tempo <b>'+card(side.id).tempo+'</b>.':''} Es zählt nur das Tempo der beiden neuen Karten (bei Gleichstand die Präsenz), Aktionen werden nicht ausgeführt. ${ph==='att'?'Gewinnst du, kommt der Steilpass in '+esc(st.cur.through.to)+' an.':'Gewinnst du, eroberst du den Ball.'}</div>`;
     else if (header) h += `<div class="notice"><b>Kopfballduell nach Flanke:</b> ${side.id?esc(card(side.id).name)+' springt mit Kopfballwert <b>'+card(side.id).kopf+'</b> hoch.':''} Es zählen nur die Kopfballwerte (bei Gleichstand die Präsenz), Aktionen werden nicht ausgeführt. ${ph==='att'?'Gewinnst du, folgt der Kopfball aufs Tor.':'Gewinnst du, klärst du den Ball.'}</div>`;
-    else if (ph==='att') h += `<div class="notice">Du deckst zuerst auf. Die Abwehr sieht deine Aktion, bevor sie wählt.</div>`;
+    else if (ph==='att') h += `<div class="notice">Du deckst zuerst auf. Die Abwehr hat ihre Karte schon gezogen, sieht deine Aktion aber erst, wenn du gewählt hast.</div>`;
     if (ph==='def' && !header) { const a2 = st.cur.att; h += `<div class="notice">Der Angriff spielt <b class="ra">${esc(a2.action)}</b>${a2.green?' (grün)':''}. ${attHint(a2.action, a2.green)}</div>`; }
     if (!side.id) h += `<div class="notice">Keine Karte mehr im Deck.</div>`;
     h += `<div class="choices">`;
@@ -1357,46 +1687,20 @@ function bindDist(){
 }
 // ---------- Spiel im Zeitraffer ----------
 // Waagerechtes Feld: Heim spielt nach rechts, Gast nach links
-const RECAP_XY = { ZD:[14,50], ZM:[50,50], ZO:[84,50], LD:[30,20], LO:[72,20], RD:[30,80], RO:[72,80] };
-function recapPos(zone, poss){ const z = poss==='A' ? zone : FC.MIRROR[zone]; const [x,y] = RECAP_XY[z]; return poss==='A' ? [x,y] : [x,y]; }
 function recapHtml(st){
   if (!st.track || !st.track.length) return '';
   return `<div class="recap"><div class="row" style="justify-content:space-between"><span class="label">Das Spiel im Zeitraffer</span><button class="btn small" id="recapPlay">▶ abspielen</button></div>
-    <div class="rpitch" id="rpitch"><div class="rgoal l"></div><div class="rgoal r"></div><div class="rmid"></div><div class="rball" id="rball"></div><div class="rflash" id="rflash"></div>
-    <div class="rlabel l">${esc(teamLabel('A'))} →</div><div class="rlabel r">← ${esc(teamLabel('B'))}</div></div>
+    <div class="rpitch"><div class="mk hline"></div><div class="mk hcircle"></div><div class="mk hbox l"></div><div class="mk hbox r"></div><div class="mk hsix l"></div><div class="mk hsix r"></div>
+      <div class="rgoal l"></div><div class="rgoal r"></div>${sceneHtml('rscene','horiz')}
+      <div class="rlabel l">${esc(teamLabel('A'))} →</div><div class="rlabel r">← ${esc(teamLabel('B'))}</div></div>
     <div class="row" style="justify-content:space-between"><span class="muted" id="rmin">0'</span><b id="rscore" class="duel">0:0</b></div></div>`;
 }
 function startRecap(){
   const st = app.st; if (!st || !st.track || !st.track.length) return;
-  const ball = $('#rball'), flash = $('#rflash'), min = $('#rmin'), sc = $('#rscore');
-  if (!ball) return;
-  if (app.recapTimer) clearTimeout(app.recapTimer);
-  const tr = st.track, stepMs = 380 * SPEEDS[speed()];
-  const alive = () => document.body.contains(ball);
-  const place = (zone, poss) => { const [x,y] = recapPos(zone, poss); ball.style.left = x+'%'; ball.style.top = y+'%'; ball.className = 'rball ' + (poss==='A'?'pa':'pb'); };
-  place(tr[0].bs, tr[0].ps); sc.textContent = '0:0';
-  let i = 0;
-  const next = () => {
-    if (!alive() || i >= tr.length) { app.recapTimer = null; return; }
-    const e = tr[i++];
-    min.textContent = (e.m+1) + "'";
-    if (e.sk) {
-      // Schuss: Ball fliegt aufs gegnerische Tor, dann Ergebnis
-      ball.style.left = (e.ps==='A' ? 97 : 3) + '%'; ball.style.top = '50%';
-      flash.textContent = e.k==='goal' ? 'TOR!' : e.k==='save' ? 'Parade' : 'daneben';
-      flash.className = 'rflash on' + (e.k==='goal' ? ' goal' : '') + (e.ps==='A' ? ' right' : ' left');
-      app.recapTimer = setTimeout(() => {
-        if (!alive()) return;
-        flash.className = 'rflash'; sc.textContent = e.g[0] + ':' + e.g[1]; place(e.be, e.pe);
-        app.recapTimer = setTimeout(next, stepMs);
-      }, stepMs * 2.2);
-      return;
-    }
-    sc.textContent = e.g[0] + ':' + e.g[1];
-    place(e.be, e.pe);
-    app.recapTimer = setTimeout(next, stepMs);
-  };
-  app.recapTimer = setTimeout(next, stepMs);
+  const tr = st.track, plans = plansFor(st);
+  const show = i => { const m = $('#rmin'), sc = $('#rscore'); if (!m) return; const e = tr[i]; m.textContent = (e.m + 1) + "'"; const g = i > 0 ? tr[i - 1].g : [0, 0]; sc.textContent = g[0] + ':' + g[1]; };
+  show(0);
+  scPlay('recap', '#rscene', { kind: 'h' }, plans, { rate: .42, onStep: show, onDone: () => { const sc = $('#rscore'); if (sc) { const g = tr[tr.length - 1].g; sc.textContent = g[0] + ':' + g[1]; } } });
 }
 // ---------- Deck-Ansicht ----------
 const POS_ORDER = ['RV','IV','LV','ZDM','ZM','ZOM','RM','LM','ST'];
@@ -1408,7 +1712,11 @@ function decksHtml(st){
 function deckPanel(st, s, own){
   const t = st.teams[s];
   const onTable = [];
-  if (st.cur && !app.replay) for (const r of ['def','att']) { const c = st.cur[r]; if (c && c.id && t.squad.includes(c.id) && (r==='def'?FC.other(st.poss):st.poss)===s) onTable.push(c.id); }
+  const hidden = [];
+  if (st.cur && !app.replay) for (const r of ['def','att']) { const c = st.cur[r]; if (c && c.id && t.squad.includes(c.id) && (r==='def'?FC.other(st.poss):st.poss)===s) {
+    // verdeckte Abwehrkarte nicht verraten
+    const secret = r==='def' && !c.action && !c.open && (app.mode==='local' ? st.phase==='att' : s!==app.me);
+    if (secret) hidden.push(c.id); else onTable.push(c.id); } }
   const sortP = arr => arr.slice().sort((a,b)=>card(a).name.localeCompare(card(b).name));
   const drawnHidden = app.replay && st.cur ? ['def','att'].map(r=>st.cur[r]&&st.cur[r].id).filter(id=>id && t.squad.includes(id)) : [];
   const pile = sortP(t.pile.concat(drawnHidden)), disc = sortP(t.discard.filter(id=>!onTable.includes(id)));
@@ -1431,7 +1739,7 @@ function deckPanel(st, s, own){
       <div class="toks" title="Token"><span class="tok R${t.tok.R?' on':''}" title="roter Token${t.tok.R?' vorhanden':''}"></span><span class="tok G${t.tok.G?' on':''}" title="grüner Token${t.tok.G?' vorhanden':''}"></span><span class="tok B${t.tok.B?' on':''}" title="blauer Token${t.tok.B?' vorhanden':''}"></span></div></div>
     <div class="pilevis"><div class="stack" aria-label="Nachziehstapel">${'<i></i>'.repeat(Math.min(4,t.pile.length))}<b>${t.pile.length}</b></div>
       <div class="muted" style="font-size:13px">${t.pile.length} im Stapel · ${t.discard.length} gespielt · ${t.exhausted.length} erschöpft${t.out.length?' · '+t.out.length+' vom Platz':''}<br>Nach ${t.pile.length} weiteren ${t.pile.length===1?'Karte':'Karten'} wird neu gemischt.</div></div>
-    ${group('Auf dem Tisch', onTable, 'table')}
+    ${group('Auf dem Tisch', onTable, 'table')}${hidden.length?`<div class="muted" style="font-size:13px">1 Karte liegt verdeckt auf dem Tisch.</div>`:''}
     ${group('Noch im Stapel', pile, 'pile', zoneNote)}
     ${group('Schon gespielt', disc, 'disc')}
     ${group('Vom Platz', t.out, 'out')}

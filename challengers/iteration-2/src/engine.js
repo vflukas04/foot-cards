@@ -109,12 +109,18 @@
       def: null,
     };
     st.phase = 'att';
-    // Präsenz-Duell: beide decken sofort auf; die Abwehrkarte liegt offen, bevor der Angreifer wählt
+    // Die Abwehr zieht ihre Karte gleich zu Beginn und sieht sie schon, während der Angriff überlegt.
+    // Beim Direktschuss nach Vorlage deckt die Abwehr keine Karte auf.
+    if (!st.cur.volley) {
+      const defS = other(att);
+      const did = draw(st, defS);
+      st.cur.def = { id: did, alt: null, opt: null, pay: null, fresh: false, zone: MIRROR[st.ball], open: !!st.cur.presence };
+    }
+    // Präsenz-Duell: die Abwehrkarte liegt offen, bevor der Angreifer wählt
     if (st.cur.presence) {
       st.presence = false;
       const defS = other(att);
-      const did = draw(st, defS);
-      st.cur.def = { id: did, alt: null, opt: null, pay: null, fresh: false, zone: MIRROR[st.ball], open: true };
+      const did = st.cur.def.id;
       if (!id || !did) { st.cur.presence = false; return; }
       const r = duel(id, did, 'praesenz', 'tempo');
       st.cur.duel = r; st.stats[r.win === 'def' ? defS : att].duels++;
@@ -516,7 +522,13 @@
         shot: c.shotDone ? c.shot : null, whistle: null, flank: st.flank, header: !!c.header,
       };
       st.track = st.track || [];
-      st.track.push({ m: c.minute, h: st.half, ps: c.possStart, bs: c.ballStart, pe: st.poss, be: st.ball, k: (c.out && c.out.k) || 'keep', g: [st.goals.A, st.goals.B], sk: c.shotDone && c.shot ? c.shot.kind : null });
+      const sh = c.shotDone && c.shot ? c.shot : null;
+      st.track.push({
+        m: c.minute, h: st.half, ps: c.possStart, bs: c.ballStart, pe: st.poss, be: st.ball, k: (c.out && c.out.k) || 'keep', g: [st.goals.A, st.goals.B],
+        sk: sh ? sh.kind : null, aim: sh ? sh.aim : null, gkN: sh ? sh.gkN : null,
+        ai: c.att ? c.att.id : null, di: c.def ? c.def.id : null, aa: c.att ? (c.att.eff || c.att.action) : null, da: c.def ? c.def.action : null,
+        hd: !!c.header, vo: !!c.volley, pr: !!c.presence, th: c.through ? c.through.to : null, th2: st.through ? st.through.to : null, fl: !!st.flank,
+      });
       for (const role of ['att', 'def']) {
         const side = c[role];
         if (!side || !side.id || side.sentOff) continue;
