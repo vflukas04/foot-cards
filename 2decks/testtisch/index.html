@@ -167,14 +167,14 @@ function newState(){
  let cid=0;
  for(const t of ['B','L']){const ids=DATA.actions.map(([n,a])=>{const id='c'+(cid++);s.cards[id]={t,n,a};return id;});s.decks[t].A=shuffle(ids);}
  const byShort=(t,sh)=>DATA.players.findIndex(p=>p.team===t&&p.short===sh);
- const start={B:{Tesche:'C3',Kunze:'B4','Pröger':'D5'},L:{Heyer:'C4',Ajdini:'A5',Trapp:'C6','van Aken':'D6'}};
+ const start={B:{},L:{}};
  for(const t of ['B','L']){
   for(const [sh,f] of Object.entries(start[t])) s.board[byShort(t,sh)]=f;
   s.decks[t].P=shuffle(DATA.players.map((p,i)=>i).filter(i=>P(i).team===t&&s.board[i]===undefined));
-  s.hands[t].A=s.decks[t].A.splice(0,5); s.hands[t].P=s.decks[t].P.splice(0,2);
+  s.hands[t].A=s.decks[t].A.splice(0,4); s.hands[t].P=s.decks[t].P.splice(0,2);
  }
- s.ball={carrier:byShort('B','Tesche'),field:'C3'};
- s.log.push('Neues Spiel (Regelstand 1.3, 30 Aktionskarten je Team). Ausgangslage wie Testspiel 1, Blau mit Ball (Tesche C3). Starthand je 5 Aktionen und 2 Spieler.');
+ s.ball={carrier:null,field:'C4'};
+ s.log.push('Neues Spiel (Regelstand 1.3, 30 Aktionskarten je Team). Leere Matte, Ball frei auf C4, Blau beginnt. Starthand je 4 Aktionen und 2 Spieler.');
  return s;
 }
 
