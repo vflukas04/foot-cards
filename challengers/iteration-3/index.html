@@ -458,7 +458,7 @@ button.gv-ar:hover{background:var(--att);color:#fff}
       <li>Ein Spielzug: Beide ziehen ihre Karte. Der Verteidiger sieht seine Karte sofort und kann schon überlegen. Der Angreifer deckt auf und wählt seine Aktion (orange). Danach deckt der Verteidiger auf, sieht die Angriffsaktion und wählt in der gespiegelten Zone (blau). Die Option hinter „/“ kostet: Spieler erschöpfen oder Token (Angreifer rot, Verteidiger blau).</li>
       <li>Abwehr: Passabfangen schlägt Querpass, Rückpass, Steilpass, Flanke, Vorlage, Diagonalball und <b>neu in Version 3 auch „--“</b>. Tackling schlägt Dribbling und „--“. Block schlägt Schuss und Kopfball, Schuss blocken nur den Schuss. Ballgewinn schlägt alles außer grüne Aktionen. Ball sichern ist nicht zu erobern.</li>
       <li>Steilpass: Spielt die Abwehr Passabfangen, ist der Ball weg. Sonst folgt im nächsten Zug ein Tempo-Duell: Beide decken ihre nächste Karte auf, es zählt nur deren Tempo (bei Gleichstand die Präsenz), die Aktionen entfallen. Gewinnt der Angreifer, kommt der Ball in der Zone davor an, sonst erobert die Abwehr ihn dort. Sprint: Tempo-Duell der Karten, die gerade gespielt werden, danach wie Dribbling.</li>
-      <li>„--“ gegen „--“: Im nächsten Zug decken beide sofort eine neue Karte auf, es zählt deren Präsenz (bei Gleichstand das Tempo). Gewinnt die Abwehr, erobert sie den Ball. Sonst bleibt der Angreifer am Ball, und der Zug läuft normal weiter: Der Angreifer wählt zuerst, sieht dabei aber schon die Abwehrkarte, danach wählt die Abwehr.</li>
+      <li>„--“ gegen „--“: Der Ball ist frei. Im nächsten Zug decken beide sofort eine neue Karte auf, es zählt deren Präsenz (bei Gleichstand das Tempo, ist auch das gleich, bleibt der Ballführende am Ball). <b>Neu in Version 3:</b> Der Gewinner spielt mit seiner Karte ganz normal den Angriff, auch wenn es vorher die Abwehr war, und sieht dabei schon die Karte des Verlierers. Der Verlierer reagiert mit seiner Abwehraktion. Erst danach ist der Zug vorbei. Für Halbzeit und Abpfiff zählt ein Ballbesitzwechsel, wenn der Ball am Ende des Zuges bei der anderen Mannschaft ist als vor dem Duell.</li>
       <li>Vorlage: Kommt sie an, schießt im nächsten Zug die nächste Karte des Angreifers direkt (Schusswert plus Assist des Vorlagengebers). Die Abwehr deckt dabei keine Karte auf.</li>
       <li>Gelbe Karte: Foul, der Angreifer bleibt am Ball, seine Aktion wird nicht ausgeführt. Zweite Gelbe: Der Spieler ist raus. „Gelb OOO“ bringt alle drei Token. Fehlpass: Ball sofort weg.</li>
       <li>Querpass seitlich, aber nicht ins ZO. Dribbling vorwärts, seitlich oder auf der Stelle, Steilpass direkt vorwärts, Rückpass direkt rückwärts, Diagonalball auf den anderen Flügel nach vorn, Flanke und Vorlage nach ZO.</li>
@@ -605,8 +605,18 @@ const CARD_DATA = {"players":[{"id":"c00","name":"Bjarke Jacobsen","nr":15,"col"
       st.cur.duel = r; st.stats[r.win === 'def' ? defS : att].duels++;
       log(st, `Präsenz-Duell: ${duelText(r)}.`, 'duel');
       if (r.win === 'def') {
-        st.cur.att.action = 'Präsenz-Duell'; st.cur.def.action = 'Präsenz-Duell';
-        return change(st, 'Präsenz-Duell verloren', r);
+        // Version 3: Der Ball war frei. Gewinnt die Abwehr, wird sie zum Angreifer und spielt den Zug
+        // mit ihrer gerade gezogenen Karte; der Verlierer verteidigt mit seiner. Beide Karten liegen offen.
+        const c = st.cur;
+        st.stats[defS].won++;
+        c.possOrig = att;
+        st.poss = defS; st.ball = MIRROR[st.ball]; st.holder = null;
+        c.possStart = defS; c.ballStart = st.ball;
+        c.att = { id: did, alt: null, opt: null, pay: null, fresh: false, zone: st.ball };
+        c.def = { id, alt: null, opt: null, pay: null, fresh: false, zone: MIRROR[st.ball], open: true };
+        c.duel = { kind: r.kind, a: r.d, d: r.a, kind2: r.kind2, a2: r.d2, d2: r.a2, win: 'att', swapped: true };
+        log(st, `${card(did).name} kommt zuerst an den Ball: ${st.names[defS]} greift jetzt an und sieht die Karte von ${card(id).name}.`, 'change');
+        return;
       }
       log(st, `${st.names[att]} bleibt am Ball und sieht die Karte der Abwehr.`, 'info');
     }
@@ -993,6 +1003,8 @@ const CARD_DATA = {"players":[{"id":"c00","name":"Bjarke Jacobsen","nr":15,"col"
   }
   function endTurn(st, changed) {
     const c = st.cur;
+    // Für Halbzeit und Abpfiff zählt, ob der Ball am Ende bei der anderen Mannschaft ist als vor dem Präsenz-Duell
+    const turnover = c && c.possOrig ? st.poss !== c.possOrig : changed;
     if (c) {
       st.stats[c.possStart].turns++;
       if (!changed && c.att && c.att.id) st.holder = { s: c.possStart, id: c.att.id };
@@ -1018,12 +1030,12 @@ const CARD_DATA = {"players":[{"id":"c00","name":"Bjarke Jacobsen","nr":15,"col"
     }
     st.minute++;
     const total = st.goals.A + st.goals.B;
-    if (st.half === 1 && ((st.minute >= 45 && changed) || st.minute >= 50)) {
+    if (st.half === 1 && ((st.minute >= 45 && turnover) || st.minute >= 50)) {
       log(st, `Halbzeitpfiff (${st.minute}. Minute). ${st.goals.A}:${st.goals.B}`, 'whistle');
       if (st.prev) st.prev.whistle = 'Halbzeit';
       st.half = 2; st.minute = 45; st.poss = other(st.kickoff); st.ball = 'ZM'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.holder = null;
       log(st, `Anpfiff zweite Halbzeit. ${st.names[st.poss]} hat Anstoß.`, 'whistle');
-    } else if (st.half === 2 && st.minute >= 90 + total && changed) {
+    } else if (st.half === 2 && st.minute >= 90 + total && turnover) {
       st.phase = 'over'; st.cur = null;
       const r = st.goals.A === st.goals.B ? 'Unentschieden' : `Sieg ${st.names[st.goals.A > st.goals.B ? 'A' : 'B']}`;
       st.result = r;
@@ -1696,6 +1708,8 @@ const isPresence = p => !!(p && p.out && p.out.duel && p.out.duel.kind === 'Prä
 function presenceText(du, attId, defId){
   const A = attId ? card(attId).name : 'Angriff', D = defId ? card(defId).name : 'Abwehr';
   // Ballführender gewinnt: Der Ball war kurz frei und fast weg
+  // Abwehr hat gewonnen und spielt jetzt selbst den Angriff (Rollen sind schon getauscht)
+  if (du.swapped) return du.kind2 ? `Gleich präsent – ${A} ist schneller und kommt vor ${D} an den Ball!` : `${A} kommt vor ${D} an den Ball!`;
   if (du.win === 'att') return `Fast geht der Ball verloren, doch ${A} reagiert gedankenschnell und kommt vor ${D} an den Ball!`;
   if (du.win === 'def') return du.kind2 ? `Gleich präsent – ${D} ist schneller und kommt vor ${A} an den Ball!` : `${D} kommt vor ${A} an den Ball!`;
   // Kompletter Gleichstand: Ballführender bleibt laut Regel am Ball
@@ -1966,8 +1980,8 @@ function situationHtml(st){
   }
   if (c.presence && c.duel) {
     return sitHtml('Präsenz-Duell gewonnen', 'nach „--“ gegen „--“', vsHtml(c.duel, a&&a.id, d&&d.id, attS, defS),
-      st.phase==='att' ? `${esc(teamLabel(attS))} bleibt am Ball und sieht schon die Abwehrkarte.` : 'Der Angriff hat die Abwehrkarte schon gesehen und gewählt.',
-      'Nach „--“ gegen „--“ entscheidet im nächsten Zug die Präsenz der neuen Karten (bei Gleichstand das Tempo). Gewinnt die Abwehr, erobert sie den Ball. Sonst bleibt der Angreifer am Ball, sieht die Abwehrkarte und der Zug läuft normal weiter.');
+      st.phase==='att' ? (c.duel.swapped ? `${esc(teamLabel(attS))} hat den Ball erobert, spielt jetzt den Angriff und sieht schon die Karte des Gegners.` : `${esc(teamLabel(attS))} bleibt am Ball und sieht schon die Abwehrkarte.`) : 'Der Angriff hat die Abwehrkarte schon gesehen und gewählt.',
+      'Nach „--“ gegen „--“ ist der Ball frei. Im nächsten Zug entscheidet die Präsenz der neuen Karten (bei Gleichstand das Tempo, sonst bleibt der Ballführende am Ball). Der Gewinner spielt mit seiner Karte den Angriff und sieht dabei schon die Karte des Verlierers, der Verlierer reagiert mit seiner Abwehraktion. Danach ist der Zug ganz normal vorbei.');
   }
   return '';
 }

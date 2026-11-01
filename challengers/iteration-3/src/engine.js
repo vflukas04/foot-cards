@@ -126,8 +126,18 @@
       st.cur.duel = r; st.stats[r.win === 'def' ? defS : att].duels++;
       log(st, `Präsenz-Duell: ${duelText(r)}.`, 'duel');
       if (r.win === 'def') {
-        st.cur.att.action = 'Präsenz-Duell'; st.cur.def.action = 'Präsenz-Duell';
-        return change(st, 'Präsenz-Duell verloren', r);
+        // Version 3: Der Ball war frei. Gewinnt die Abwehr, wird sie zum Angreifer und spielt den Zug
+        // mit ihrer gerade gezogenen Karte; der Verlierer verteidigt mit seiner. Beide Karten liegen offen.
+        const c = st.cur;
+        st.stats[defS].won++;
+        c.possOrig = att;
+        st.poss = defS; st.ball = MIRROR[st.ball]; st.holder = null;
+        c.possStart = defS; c.ballStart = st.ball;
+        c.att = { id: did, alt: null, opt: null, pay: null, fresh: false, zone: st.ball };
+        c.def = { id, alt: null, opt: null, pay: null, fresh: false, zone: MIRROR[st.ball], open: true };
+        c.duel = { kind: r.kind, a: r.d, d: r.a, kind2: r.kind2, a2: r.d2, d2: r.a2, win: 'att', swapped: true };
+        log(st, `${card(did).name} kommt zuerst an den Ball: ${st.names[defS]} greift jetzt an und sieht die Karte von ${card(id).name}.`, 'change');
+        return;
       }
       log(st, `${st.names[att]} bleibt am Ball und sieht die Karte der Abwehr.`, 'info');
     }
@@ -514,6 +524,8 @@
   }
   function endTurn(st, changed) {
     const c = st.cur;
+    // Für Halbzeit und Abpfiff zählt, ob der Ball am Ende bei der anderen Mannschaft ist als vor dem Präsenz-Duell
+    const turnover = c && c.possOrig ? st.poss !== c.possOrig : changed;
     if (c) {
       st.stats[c.possStart].turns++;
       if (!changed && c.att && c.att.id) st.holder = { s: c.possStart, id: c.att.id };
@@ -539,12 +551,12 @@
     }
     st.minute++;
     const total = st.goals.A + st.goals.B;
-    if (st.half === 1 && ((st.minute >= 45 && changed) || st.minute >= 50)) {
+    if (st.half === 1 && ((st.minute >= 45 && turnover) || st.minute >= 50)) {
       log(st, `Halbzeitpfiff (${st.minute}. Minute). ${st.goals.A}:${st.goals.B}`, 'whistle');
       if (st.prev) st.prev.whistle = 'Halbzeit';
       st.half = 2; st.minute = 45; st.poss = other(st.kickoff); st.ball = 'ZM'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.holder = null;
       log(st, `Anpfiff zweite Halbzeit. ${st.names[st.poss]} hat Anstoß.`, 'whistle');
-    } else if (st.half === 2 && st.minute >= 90 + total && changed) {
+    } else if (st.half === 2 && st.minute >= 90 + total && turnover) {
       st.phase = 'over'; st.cur = null;
       const r = st.goals.A === st.goals.B ? 'Unentschieden' : `Sieg ${st.names[st.goals.A > st.goals.B ? 'A' : 'B']}`;
       st.result = r;
