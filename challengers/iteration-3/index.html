@@ -1686,11 +1686,186 @@ const SFX = (() => {
   return {
     on,
     toggle(){ try { localStorage.setItem('fc-sound', JSON.stringify(!on())); } catch(e){} if (on()) ac(true); },
+    ctx(){ return on() ? ac(false) : null; },
     unlock(){ if (on()) ac(true); },
     play(name, delayMs, arg){ if (!on()) return; const c = ac(false); if (!c || !P[name]) return; try { P[name](c, c.currentTime + .02 + (delayMs || 0) / 1000, arg); } catch(e){ console.error(e); } },
   };
 })();
-['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => SFX.unlock(), { capture: true }));
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { SFX.unlock(); if (!MUSIC.playing()) syncMusic(); }, { capture: true }));
+
+// ---------- Draft-Musik: frei nach G. F. Händel, „Zadok the Priest“ (1727, gemeinfrei) ----------
+// Eigenes Arrangement im Browser erzeugt: 16 Takte anschwellende Streicherfiguren in D-Dur über schreitendem Bass,
+// dann der große Einsatz mit Chor, Bläsern und Pauken. Läuft in Schleife, solange der Draft dauert.
+const MUSIC = (() => {
+  const BPM = 74, B = 60 / BPM, S16 = B / 4, BAR = B * 4;
+  const mf = n => 440 * Math.pow(2, (n - 69) / 12);
+  // [Basston, Akkordtöne] je Takt (MIDI-Nummern)
+  const INTRO = [
+    [38, [62, 66, 69]], [37, [61, 64, 69]], [35, [62, 66, 71]], [33, [61, 66, 69]],
+    [31, [62, 67, 71]], [30, [62, 66, 69]], [40, [62, 64, 67, 71]], [33, [61, 64, 69]],
+    [38, [62, 66, 69, 74]], [35, [62, 67, 71, 74]], [40, [64, 67, 71, 76]], [37, [64, 67, 69, 73]],
+    [42, [66, 69, 74, 78]], [43, [67, 71, 74, 79]], [45, [64, 69, 73, 76]], [45, [64, 67, 73, 76]],
+  ];
+  // Tutti: [Basston, Akkord, Schläge]
+  const TUTTI = [
+    [38, [62, 66, 69, 74], 4], [38, [62, 66, 69, 74], 4], [43, [62, 67, 71, 74], 4], [38, [62, 66, 69, 74], 4],
+    [45, [61, 64, 69, 73], 4], [38, [62, 66, 69, 74], 4], [43, [62, 67, 71, 74], 2], [45, [61, 64, 67, 73], 2], [38, [62, 66, 69, 74], 8],
+  ];
+  // Ereignisliste einer Schleife (Zeit in Sekunden ab Schleifenbeginn)
+  const EV = [];
+  const arp = (t0, bars, tones, vel, cut, up) => {
+    const seq = tones.length === 3 ? [0, 1, 2, 1] : [0, 1, 2, 3, 2, 1, 2, 3];
+    const steps = Math.round(bars * 16);
+    for (let i = 0; i < steps; i++) {
+      const n = tones[seq[i % seq.length]] + (up || 0);
+      const acc = i % 4 === 0 ? 1.15 : 1;
+      EV.push({ t: t0 + i * S16, k: 'str', n, d: S16 * 1.6, v: vel * acc, c: cut });
+    }
+  };
+  INTRO.forEach(([bass, tones], b) => {
+    const t0 = b * BAR, g = b / 15;
+    EV.push({ t: t0, k: 'bass', n: bass, d: BAR, v: .35 + .55 * g });
+    arp(t0, 1, tones, .32 + .42 * g, 1100 + 3400 * g, 0);
+    if (b >= 8) arp(t0, 1, tones, (.1 + .35 * g), 1400 + 3000 * g, 12);
+    if (b >= 12) EV.push({ t: t0, k: 'pad', ns: tones.map(x => x - 12), d: BAR, v: .25 + .4 * (b - 12) / 3 });
+  });
+  // Paukenwirbel in die Spannung hinein
+  for (let i = 0; i < 32; i++) EV.push({ t: 14 * BAR + i * (2 * BAR / 32), k: 'timp', n: 33, v: .12 + .5 * i / 31 });
+  let t = 16 * BAR;
+  TUTTI.forEach(([bass, tones, beats], i) => {
+    const d = beats * B, last = i === TUTTI.length - 1;
+    const timpN = (bass % 12) === 9 ? 33 : 38;
+    EV.push({ t, k: 'bass', n: bass, d, v: 1 });
+    EV.push({ t, k: 'bass', n: bass + 12, d, v: .6 });
+    EV.push({ t, k: 'choir', ns: [tones[0] - 12, ...tones], d: d * .97, v: last ? .9 : 1 });
+    EV.push({ t, k: 'brass', ns: tones.slice(0, 3), d: Math.min(d, 2 * B) * .9, v: 1 });
+    if (beats >= 4) EV.push({ t: t + 2 * B, k: 'brass', ns: tones.slice(0, 3), d: B * 1.6, v: .75 });
+    EV.push({ t, k: 'timp', n: timpN, v: .9 });
+    if (beats >= 4) EV.push({ t: t + 2 * B, k: 'timp', n: timpN, v: .55 });
+    if (!last) arp(t, beats / 4, tones, .55, 5200, 12);
+    else for (let r = 0; r < 24; r++) EV.push({ t: t + 4 * B + r * (3 * B / 24), k: 'timp', n: 38, v: .3 + .4 * r / 23 });
+    t += d;
+  });
+  const LOOP = t + BAR * 1.2;   // kurze Pause, der Hall klingt aus
+  EV.sort((a, b) => a.t - b.t);
+
+  // ---- Instrumente ----
+  function env(g, t0, a, peak, hold, rel){
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(Math.max(peak, .0002), t0 + a);
+    g.gain.setValueAtTime(Math.max(peak, .0002), t0 + Math.max(a, hold));
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.max(a, hold) + rel);
+  }
+  function osc(ctx, type, f, det){ const o = ctx.createOscillator(); o.type = type; o.frequency.value = f; if (det) o.detune.value = det; return o; }
+  const INS = {
+    str(ctx, out, e, t0){
+      const f = mf(e.n), lp = ctx.createBiquadFilter(), g = ctx.createGain();
+      lp.type = 'lowpass'; lp.frequency.value = e.c; lp.Q.value = .7;
+      const o1 = osc(ctx, 'sawtooth', f, -7), o2 = osc(ctx, 'sawtooth', f, 7);
+      env(g, t0, .012, .055 * e.v, e.d * .6, e.d * .7);
+      o1.connect(lp); o2.connect(lp); lp.connect(g).connect(out);
+      const end = t0 + e.d * 1.4; o1.start(t0); o2.start(t0); o1.stop(end); o2.stop(end);
+    },
+    bass(ctx, out, e, t0){
+      const lp = ctx.createBiquadFilter(), g = ctx.createGain(), o = osc(ctx, 'sawtooth', mf(e.n));
+      lp.type = 'lowpass'; lp.frequency.value = 520;
+      env(g, t0, .06, .16 * e.v, e.d, .3);   // legato: hält bis zum nächsten Basston
+      o.connect(lp).connect(g).connect(out); o.start(t0); o.stop(t0 + e.d + .35);
+    },
+    pad(ctx, out, e, t0){
+      for (const n of e.ns) {
+        const lp = ctx.createBiquadFilter(), g = ctx.createGain(), o = osc(ctx, 'sawtooth', mf(n), 4);
+        lp.type = 'lowpass'; lp.frequency.value = 1300;
+        env(g, t0, .5, .035 * e.v, e.d, .5);
+        o.connect(lp).connect(g).connect(out); o.start(t0); o.stop(t0 + e.d + .7);
+      }
+    },
+    choir(ctx, out, e, t0){
+      for (const n of e.ns) {
+        const f = mf(n), g = ctx.createGain(), mix = ctx.createGain(); mix.gain.value = 1;
+        const f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter(), lp = ctx.createBiquadFilter();
+        f1.type = 'bandpass'; f1.frequency.value = 730; f1.Q.value = 3.5;
+        f2.type = 'bandpass'; f2.frequency.value = 1150; f2.Q.value = 4.5;
+        lp.type = 'lowpass'; lp.frequency.value = 3200;
+        const o1 = osc(ctx, 'sawtooth', f, -9), o2 = osc(ctx, 'sawtooth', f, 9);
+        const lfo = osc(ctx, 'sine', 5.3), lg = ctx.createGain(); lg.gain.value = 9; lfo.connect(lg); lg.connect(o1.detune); lg.connect(o2.detune);
+        o1.connect(mix); o2.connect(mix); mix.connect(f1); mix.connect(f2); mix.connect(lp);
+        const fg = ctx.createGain(); fg.gain.value = .55; lp.connect(fg);
+        f1.connect(g); f2.connect(g); fg.connect(g); g.connect(out);
+        env(g, t0, .12, .11 * e.v, e.d * .92, .45);
+        const end = t0 + e.d + .6; [o1, o2, lfo].forEach(x => { x.start(t0); x.stop(end); });
+      }
+    },
+    brass(ctx, out, e, t0){
+      for (const n of e.ns) {
+        const lp = ctx.createBiquadFilter(), g = ctx.createGain(), o = osc(ctx, 'sawtooth', mf(n));
+        lp.type = 'lowpass'; lp.Q.value = 1.2;
+        lp.frequency.setValueAtTime(500, t0); lp.frequency.exponentialRampToValueAtTime(2800, t0 + .07); lp.frequency.exponentialRampToValueAtTime(1100, t0 + e.d);
+        env(g, t0, .03, .07 * e.v, e.d * .5, .35);
+        o.connect(lp).connect(g).connect(out); o.start(t0); o.stop(t0 + e.d + .4);
+      }
+    },
+    timp(ctx, out, e, t0){
+      const f = mf(e.n), o = osc(ctx, 'sine', f * 1.5), g = ctx.createGain();
+      o.frequency.setValueAtTime(f * 1.5, t0); o.frequency.exponentialRampToValueAtTime(f, t0 + .05);
+      g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(.55 * e.v, t0 + .008); g.gain.exponentialRampToValueAtTime(.0001, t0 + 1.3);
+      o.connect(g).connect(out); o.start(t0); o.stop(t0 + 1.35);
+    },
+  };
+  function reverb(ctx){
+    const len = Math.floor(ctx.sampleRate * 2.6), buf = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
+    const cv = ctx.createConvolver(); cv.buffer = buf; return cv;
+  }
+  // Signalweg: Instrumente → (trocken + Hall) → Kompressor → Lautstärke → Ausgang
+  function chain(ctx, dest, level){
+    const bus = ctx.createGain(), dry = ctx.createGain(), wet = ctx.createGain(), comp = ctx.createDynamicsCompressor(), vol = ctx.createGain();
+    dry.gain.value = .8; wet.gain.value = .45; vol.gain.value = level;
+    comp.threshold.value = -16; comp.ratio.value = 4; comp.attack.value = .01; comp.release.value = .25;
+    const rv = reverb(ctx);
+    bus.connect(dry).connect(comp); bus.connect(rv).connect(wet).connect(comp); comp.connect(vol).connect(dest);
+    return { bus, vol };
+  }
+  // Alle Ereignisse zwischen a und b (Sekunden ab Start, über Schleifen hinweg) planen
+  function plan(ctx, out, start, a, b){
+    for (let k = Math.floor(a / LOOP); k * LOOP < b; k++) {
+      for (const e of EV) {
+        const at = k * LOOP + e.t;
+        if (at >= a && at < b) INS[e.k](ctx, out, e, start + at);
+      }
+    }
+  }
+  let live = null;
+  return {
+    LOOP,
+    // für die Hörprobe: komplett offline berechnen
+    renderOffline(ctx, seconds){ const c = chain(ctx, ctx.destination, .9); plan(ctx, c.bus, .05, 0, seconds); },
+    playing(){ return !!live; },
+    start(ctx){
+      if (live || !ctx) return;
+      const c = chain(ctx, ctx.destination, .0001);
+      c.vol.gain.setValueAtTime(.0001, ctx.currentTime);
+      c.vol.gain.exponentialRampToValueAtTime(.55, ctx.currentTime + 1.2);
+      const st = { ctx, c, start: ctx.currentTime + .1, done: 0 };
+      const tick = () => { const ahead = ctx.currentTime - st.start + 1.5; if (ahead > st.done) { plan(ctx, c.bus, st.start, st.done, ahead); st.done = ahead; } };
+      tick(); st.timer = setInterval(tick, 250);
+      live = st;
+    },
+    stop(){
+      if (!live) return;
+      const st = live; live = null; clearInterval(st.timer);
+      const now = st.ctx.currentTime;
+      try { st.c.vol.gain.cancelScheduledValues(now); st.c.vol.gain.setValueAtTime(Math.max(.0001, st.c.vol.gain.value), now); st.c.vol.gain.exponentialRampToValueAtTime(.0001, now + 1.6); } catch(e){}
+      setTimeout(() => { try { st.c.vol.disconnect(); } catch(e){} }, 2000);
+    },
+  };
+})();
+// Musik läuft nur im Draft und nur mit eingeschaltetem Ton; mit dem Anpfiff klingt sie aus
+function syncMusic(){
+  const st = app.st;
+  if (SFX.on() && app.mode && st && st.phase === 'draft') MUSIC.start(SFX.ctx());
+  else MUSIC.stop();
+}
 
 // ---------- Tempo und Auflösungsmoment ----------
 const SPEEDS = { langsam: 1.7, normal: 1, schnell: .5 };
@@ -1839,6 +2014,7 @@ function stepsHtml(active){
 function render(){
   const v = $('#view');
   const top = $('#topActions');
+  syncMusic();
   if (!app.mode) { top.innerHTML=''; v.innerHTML = lobbyHtml(); bindLobby(); return; }
   const sp = speed();
   top.innerHTML = `<button class="btn" id="sound" aria-pressed="${SFX.on()}">${SFX.on()?'Ton an':'Ton aus'}</button><label class="row" style="gap:6px"><span class="label">Tempo</span><select id="speed" aria-label="Tempo">${Object.keys(SPEEDS).map(k=>`<option value="${k}"${k===sp?' selected':''}>${k}</option>`).join('')}</select></label><button class="btn" id="leave">Zur Übersicht</button>`;
@@ -2340,7 +2516,8 @@ function draftHtml(st){
   return `<div class="panel" style="margin-top:16px"><h2 style="font-size:24px">Draft</h2>
    <div class="notice${mine?'':' wait'}">${mine?`<b>${esc(teamLabel(a))}</b>: Wähle einen Spieler.`:`${esc(teamLabel(a))} wählt …`} (Heim ${cnt('A')}/10, Gast ${cnt('B')}/10)</div>
    <div class="row">${['A','B'].map(s=>`<span class="label">${esc(teamLabel(s))}:</span> ${st.teams[s].squad.map(id=>shirt(card(id))).join(' ')}`).join(' &nbsp; ')}</div>
-   <div class="pool">${pool}</div></div>`;
+   <div class="pool">${pool}</div>
+   <div class="muted" style="font-size:12.5px">Musik: eigenes Arrangement frei nach Georg Friedrich Händel, „Zadok the Priest“ (1727, gemeinfrei). Ausschalten oben mit „Ton“.</div></div>`;
 }
 
 function bindGame(){
