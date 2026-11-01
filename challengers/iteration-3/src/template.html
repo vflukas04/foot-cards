@@ -281,6 +281,8 @@ table.stats td:first-child{text-align:left;color:var(--muted)}
 .roletag.a{color:var(--att)}.roletag.d{color:var(--def)}
 .side .stack{margin:10px 10px 0 0}
 .shufnote{font-size:13px}
+.vol{display:flex;align-items:center;gap:6px}
+.vol input{width:92px;accent-color:var(--pitch-line)}
 .center{gap:10px}
 .rpitch.hp{aspect-ratio:16/10}
 .rpitch.hp .rgoal{top:40%;bottom:40%}
@@ -448,7 +450,7 @@ button.gv-ar:hover{background:var(--att);color:#fff}
 <div class="wrap" id="app">
   <div class="top">
     <div class="brand"><h1>Foot Cards</h1><span>Version 3 · Spielfluss (Vorschlag)</span></div>
-    <div class="row" id="topActions"></div>
+    <div class="row" style="gap:14px"><div class="row" id="volCtl" hidden></div><div class="row" id="topActions"></div></div>
   </div>
   <div id="view"><div class="empty">Lädt …</div></div>
   <details class="rules" id="rules">
@@ -1023,8 +1025,15 @@ function seesCard(seat){ return app.mode === 'local' || seat === app.me; }
 const SFX = (() => {
   let ctx = null;
   const on = () => { try { return JSON.parse(localStorage.getItem('fc-sound')) !== false; } catch(e) { return true; } };
+  // Lautstärke: eigener Kanal für Geräusche und für Musik; Regler 0–100, Standard entspricht der bisherigen Lautstärke
+  let sfxBus = null, musBus = null;
+  const DEF = { sfx: 80, music: 70 };
+  const getVol = k => { try { const v = JSON.parse(localStorage.getItem('fc-vol-' + k)); return typeof v === 'number' ? v : DEF[k]; } catch(e) { return DEF[k]; } };
+  const gainFor = k => Math.pow(Math.max(0, getVol(k)) / DEF[k], 1.6);
+  function applyVol(){ if (!ctx || !sfxBus) return; const t = ctx.currentTime; sfxBus.gain.setTargetAtTime(gainFor('sfx'), t, .04); musBus.gain.setTargetAtTime(gainFor('music'), t, .04); }
   function ac(create){
     if (!ctx && create) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { ctx = null; } }
+    if (ctx && !sfxBus) { sfxBus = ctx.createGain(); sfxBus.connect(ctx.destination); musBus = ctx.createGain(); musBus.connect(ctx.destination); sfxBus.gain.value = gainFor('sfx'); musBus.gain.value = gainFor('music'); }
     if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch(e){} }
     return ctx;
   }
@@ -1032,20 +1041,23 @@ const SFX = (() => {
   function env(g, t0, a, peak, dur){ g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(peak, t0 + a); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); }
   function filt(c, type, f, q){ const x = c.createBiquadFilter(); x.type = type; x.frequency.value = f; if (q) x.Q.value = q; return x; }
   const P = {
-    flip(c, t){ const n = noise(c, .08), f = filt(c, 'highpass', 2600), g = c.createGain(); env(g, t, .004, .22, .07); n.connect(f).connect(g).connect(c.destination); n.start(t); n.stop(t + .09); },
+    flip(c, t){ const n = noise(c, .08), f = filt(c, 'highpass', 2600), g = c.createGain(); env(g, t, .004, .22, .07); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + .09); },
     shuffle(c, t){ for (let i = 0; i < 16; i++) P.flip(c, t + i * .05 + Math.random() * .02); },
-    kick(c, t){ const o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t + .12); env(g, t, .003, .45, .16); o.connect(g).connect(c.destination); o.start(t); o.stop(t + .17); },
-    slide(c, t){ const n = noise(c, .65), f = filt(c, 'bandpass', 1800, 1.1), g = c.createGain(); f.frequency.setValueAtTime(2200, t); f.frequency.exponentialRampToValueAtTime(260, t + .6); env(g, t, .03, .55, .65); n.connect(f).connect(g).connect(c.destination); n.start(t); n.stop(t + .66); },
-    applause(c, t, len){ const dur = len || 1.8; for (let i = 0; i < 90; i++) { const s = t + Math.random() * dur * .85, fade = 1 - (s - t) / dur; const n = noise(c, .04), f = filt(c, 'bandpass', 1100 + Math.random() * 2400, .9), g = c.createGain(); env(g, s, .002, .05 + .14 * fade, .035); n.connect(f).connect(g).connect(c.destination); n.start(s); n.stop(s + .05); } },
-    cheer(c, t){ P.applause(c, t, 2.6); const n = noise(c, 2.8), f = filt(c, 'bandpass', 650, .7), g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.4, t + .45); g.gain.exponentialRampToValueAtTime(.0001, t + 2.8); n.connect(f).connect(g).connect(c.destination); n.start(t); n.stop(t + 2.8); },
-    murmur(c, t, len){ const d = len || 2.4; const n = noise(c, d), f = filt(c, 'bandpass', 420, .8), g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.22, t + d * .6); g.gain.exponentialRampToValueAtTime(.0001, t + d); n.connect(f).connect(g).connect(c.destination); n.start(t); n.stop(t + d); },
-    ohh(c, t){ const n = noise(c, 1.3), f = filt(c, 'lowpass', 900), g = c.createGain(); f.frequency.setValueAtTime(950, t); f.frequency.exponentialRampToValueAtTime(220, t + 1.2); env(g, t, .3, .35, 1.3); n.connect(f).connect(g).connect(c.destination); n.start(t); n.stop(t + 1.3); },
-    whistle(c, t, times){ const k = times || 1; for (let i = 0; i < k; i++) { const t0 = t + i * .42, len = (i === k - 1 && k > 1) ? .75 : .28; const o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain(); o.frequency.value = 2900; l.frequency.value = 36; lg.gain.value = 110; l.connect(lg).connect(o.frequency); env(g, t0, .01, .16, len); o.connect(g).connect(c.destination); o.start(t0); l.start(t0); o.stop(t0 + len); l.stop(t0 + len); } },
+    kick(c, t){ const o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t + .12); env(g, t, .003, .45, .16); o.connect(g).connect(sfxBus); o.start(t); o.stop(t + .17); },
+    slide(c, t){ const n = noise(c, .65), f = filt(c, 'bandpass', 1800, 1.1), g = c.createGain(); f.frequency.setValueAtTime(2200, t); f.frequency.exponentialRampToValueAtTime(260, t + .6); env(g, t, .03, .55, .65); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + .66); },
+    applause(c, t, len){ const dur = len || 1.8; for (let i = 0; i < 90; i++) { const s = t + Math.random() * dur * .85, fade = 1 - (s - t) / dur; const n = noise(c, .04), f = filt(c, 'bandpass', 1100 + Math.random() * 2400, .9), g = c.createGain(); env(g, s, .002, .05 + .14 * fade, .035); n.connect(f).connect(g).connect(sfxBus); n.start(s); n.stop(s + .05); } },
+    cheer(c, t){ P.applause(c, t, 2.6); const n = noise(c, 2.8), f = filt(c, 'bandpass', 650, .7), g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.4, t + .45); g.gain.exponentialRampToValueAtTime(.0001, t + 2.8); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + 2.8); },
+    murmur(c, t, len){ const d = len || 2.4; const n = noise(c, d), f = filt(c, 'bandpass', 420, .8), g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.22, t + d * .6); g.gain.exponentialRampToValueAtTime(.0001, t + d); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + d); },
+    ohh(c, t){ const n = noise(c, 1.3), f = filt(c, 'lowpass', 900), g = c.createGain(); f.frequency.setValueAtTime(950, t); f.frequency.exponentialRampToValueAtTime(220, t + 1.2); env(g, t, .3, .35, 1.3); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + 1.3); },
+    whistle(c, t, times){ const k = times || 1; for (let i = 0; i < k; i++) { const t0 = t + i * .42, len = (i === k - 1 && k > 1) ? .75 : .28; const o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain(); o.frequency.value = 2900; l.frequency.value = 36; lg.gain.value = 110; l.connect(lg).connect(o.frequency); env(g, t0, .01, .16, len); o.connect(g).connect(sfxBus); o.start(t0); l.start(t0); o.stop(t0 + len); l.stop(t0 + len); } },
   };
   return {
     on,
     toggle(){ try { localStorage.setItem('fc-sound', JSON.stringify(!on())); } catch(e){} if (on()) ac(true); },
     ctx(){ return on() ? ac(false) : null; },
+    musicOut(){ return musBus; },
+    vol: getVol,
+    setVol(k, v){ try { localStorage.setItem('fc-vol-' + k, JSON.stringify(v)); } catch(e){} applyVol(); },
     unlock(){ if (on()) ac(true); },
     play(name, delayMs, arg){ if (!on()) return; const c = ac(false); if (!c || !P[name]) return; try { P[name](c, c.currentTime + .02 + (delayMs || 0) / 1000, arg); } catch(e){ console.error(e); } },
   };
@@ -1200,9 +1212,9 @@ const MUSIC = (() => {
     // für die Hörprobe: komplett offline berechnen
     renderOffline(ctx, seconds){ const c = chain(ctx, ctx.destination, .9); plan(ctx, c.bus, .05, 0, seconds); },
     playing(){ return !!live; },
-    start(ctx){
+    start(ctx, dest){
       if (live || !ctx) return;
-      const c = chain(ctx, ctx.destination, .0001);
+      const c = chain(ctx, dest || ctx.destination, .0001);
       c.vol.gain.setValueAtTime(.0001, ctx.currentTime);
       c.vol.gain.exponentialRampToValueAtTime(.55, ctx.currentTime + 1.2);
       const st = { ctx, c, start: ctx.currentTime + .1, done: 0 };
@@ -1222,7 +1234,7 @@ const MUSIC = (() => {
 // Musik läuft nur im Draft und nur mit eingeschaltetem Ton; mit dem Anpfiff klingt sie aus
 function syncMusic(){
   const st = app.st;
-  if (SFX.on() && app.mode && st && st.phase === 'draft') MUSIC.start(SFX.ctx());
+  if (SFX.on() && app.mode && st && st.phase === 'draft') MUSIC.start(SFX.ctx(), SFX.musicOut());
   else MUSIC.stop();
 }
 
@@ -1374,6 +1386,7 @@ function render(){
   const v = $('#view');
   const top = $('#topActions');
   syncMusic();
+  $('#volCtl').hidden = !app.mode;
   if (!app.mode) { top.innerHTML=''; v.innerHTML = lobbyHtml(); bindLobby(); return; }
   const sp = speed();
   top.innerHTML = `<button class="btn" id="sound" aria-pressed="${SFX.on()}">${SFX.on()?'Ton an':'Ton aus'}</button><label class="row" style="gap:6px"><span class="label">Tempo</span><select id="speed" aria-label="Tempo">${Object.keys(SPEEDS).map(k=>`<option value="${k}"${k===sp?' selected':''}>${k}</option>`).join('')}</select></label><button class="btn" id="leave">Zur Übersicht</button>`;
@@ -2215,6 +2228,15 @@ async function boot(){
   } catch(e){ console.error(e); }
 }
 window.addEventListener('beforeunload', () => { try { if (app.conn) app.conn.close(); } catch(e){} });
+function initVolume(){
+  const box = $('#volCtl');
+  box.innerHTML = `<label class="vol" title="Lautstärke der Musik (läuft während des Drafts)"><span class="label">Musik</span><input type="range" id="volMusic" min="0" max="100" step="5" value="${SFX.vol('music')}" aria-label="Lautstärke Musik"></label>
+    <label class="vol" title="Lautstärke der Spielgeräusche"><span class="label">Geräusche</span><input type="range" id="volSfx" min="0" max="100" step="5" value="${SFX.vol('sfx')}" aria-label="Lautstärke Geräusche"></label>`;
+  $('#volMusic').oninput = e => SFX.setVol('music', +e.target.value);
+  $('#volSfx').oninput = e => SFX.setVol('sfx', +e.target.value);
+  $('#volSfx').onchange = () => SFX.play('applause', 0, .7);   // kurze Hörprobe
+}
+initVolume();
 boot();
 })();
 </script>
