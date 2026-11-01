@@ -364,7 +364,7 @@ kbd{position:absolute;top:6px;right:6px;font-family:var(--font-d);font-size:12px
 .scene.ball-b .sc-ball{background:#fff;border-color:#111}
 .scene.ball-n .sc-ball{background:#ffd84d;border-color:#111}
 .fx{position:absolute;inset:0;pointer-events:none;z-index:6}
-.bub{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px;padding:5px 10px 5px 8px;border-radius:999px;font-size:14.5px;white-space:nowrap;
+.bub{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px;padding:5px 10px 5px 8px;border-radius:999px;font-size:14.5px;white-space:nowrap;max-width:58%!important;
   border:2px solid #111;box-shadow:0 3px 0 rgba(0,0,0,.3),0 0 18px rgba(255,255,255,.35);max-width:96%}
 .bub span{overflow:hidden;text-overflow:ellipsis}
 .bub b{font-family:var(--font-d);font-size:16px}
@@ -377,6 +377,58 @@ kbd{position:absolute;top:6px;right:6px;font-family:var(--font-d);font-size:12px
 .bub.out svg{width:22px;height:22px}
 .bub.out.pop{animation:bubin .5s cubic-bezier(.2,1.4,.4,1) both,flare 1.2s ease-out .5s}
 @keyframes flare{0%{box-shadow:0 0 0 0 rgba(255,216,77,.9)}100%{box-shadow:0 0 0 26px rgba(255,216,77,0)}}
+/* Version 3c: Entscheidung an Ort und Stelle */
+.decide{position:relative}
+.decide::after{content:'';position:absolute;inset:-2px;pointer-events:none;z-index:3;--ant:var(--att);
+  background:linear-gradient(90deg,var(--ant) 55%,transparent 0) repeat-x 0 0/12px 3px,linear-gradient(90deg,var(--ant) 55%,transparent 0) repeat-x 0 100%/12px 3px,
+    linear-gradient(0deg,var(--ant) 55%,transparent 0) repeat-y 0 0/3px 12px,linear-gradient(0deg,var(--ant) 55%,transparent 0) repeat-y 100% 0/3px 12px;
+  animation:ants .7s linear infinite}
+.decide-d::after{--ant:var(--def)}
+@keyframes ants{to{background-position:12px 0,-12px 100%,0 -12px,100% 12px}}
+.cc.decide{z-index:2;font-size:13.5px;background:color-mix(in srgb,var(--hl) 70%,var(--surface));box-shadow:0 0 0 3px color-mix(in srgb,var(--hl) 60%,transparent),0 0 18px color-mix(in srgb,var(--hl) 70%,transparent);animation:cellpulse 1.4s ease-in-out infinite}
+@keyframes cellpulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--hl) 40%,transparent),0 0 26px color-mix(in srgb,var(--hl) 90%,transparent)}}
+.opt{font:inherit;font-weight:800;color:inherit;background:var(--surface);border:1.5px solid currentColor;border-radius:5px;padding:2px 5px;margin:1px 0;cursor:pointer;line-height:1.15}
+.opt:hover:not(:disabled),.opt:focus-visible{background:currentColor}
+.opt:hover:not(:disabled)>*,.opt:hover:not(:disabled){color:var(--surface)!important}
+.ra .opt:hover:not(:disabled){background:var(--att)}.rd .opt:hover:not(:disabled){background:var(--def)}
+.opt.paid{border-style:dashed}
+.opt.sel{background:var(--att);color:#fff!important;border-style:solid;box-shadow:0 0 0 3px var(--hl)}
+.rd .opt.sel{background:var(--def)}
+.opt.g{color:var(--grn)}.opt.bad{color:var(--red)}
+.opt:disabled{opacity:.45;cursor:not-allowed;text-decoration:line-through}
+.hintline{font-size:13px;line-height:1.35;background:var(--surface2);border-left:4px solid var(--hl);border-radius:6px;padding:7px 9px;min-height:3.2em}
+.shirtpay{border:none;background:none;padding:3px;border-radius:9px;cursor:pointer;animation:paypulse 1s ease-in-out infinite}
+.shirtpay .shirt{transition:transform .5s cubic-bezier(.3,.7,.2,1)}
+.shirtpay.turning .shirt{transform:rotate(90deg)}
+.shirtpay.turning{animation:none}
+@keyframes paypulse{50%{box-shadow:0 0 0 4px var(--hl),0 0 16px var(--hl)}}
+.tokrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tokb{display:inline-block;width:26px;height:26px;border-radius:50%;border:2px solid var(--fg);opacity:.18;padding:0}
+.tokb.on{opacity:1}
+.tokb.R{background:#c00000}.tokb.G{background:#1b6b24}.tokb.B{background:#4f97da}
+button.tokb{cursor:pointer;animation:paypulse 1s ease-in-out infinite}
+button.tokb.sel{box-shadow:0 0 0 4px var(--hl);animation:none}
+.tokb.spend{animation:spend .45s ease-in forwards}
+@keyframes spend{to{transform:translateY(-34px) scale(.4);opacity:0}}
+.tokhint{font-size:12.5px;color:var(--muted)}
+.turn{font-size:13.5px;line-height:1.35;padding:7px 10px;border-radius:8px;background:var(--surface2);display:flex;flex-direction:column;gap:2px}
+.turn.auto{flex-direction:row;align-items:center;flex-wrap:wrap;gap:4px}
+.turn.me{background:var(--hl);color:#111}
+.turn.me b{font-family:var(--font-d);font-size:19px}
+.side.myturn{box-shadow:0 0 0 3px var(--hl),0 0 24px color-mix(in srgb,var(--hl) 70%,transparent);animation:turnpulse 1.8s ease-in-out infinite}
+@keyframes turnpulse{50%{box-shadow:0 0 0 3px var(--hl),0 0 8px color-mix(in srgb,var(--hl) 40%,transparent)}}
+.pickcard{cursor:pointer;border-radius:10px}
+.pickcard:hover .pcard{outline:3px solid var(--hl)}
+.hz.target.decide::after{inset:2px}
+.goalbox{display:flex;flex-direction:column;gap:8px;border:2px solid var(--fg);border-radius:var(--r);padding:10px 12px;background:var(--surface2)}
+.goalhead{display:flex;flex-direction:column;gap:2px}
+.goalhead b{font-family:var(--font-d);font-size:22px}
+.goalhead span{font-size:13.5px;color:var(--muted)}
+.gkgoal.big .gkfield{padding:12px 6px;gap:6px}
+.gkgoal.big .gkfield b{font-size:36px}
+.gkfield.pick{cursor:pointer}
+.gkfield.pick:hover{background:color-mix(in srgb,var(--hl) 50%,transparent)}
+.nextrow{justify-content:space-between;flex-wrap:nowrap}
 /* Karte ziehen und umdrehen */
 .deal{position:relative;animation:dealin .55s cubic-bezier(.2,.7,.2,1) var(--dd,0s) both;transform-origin:80% 0}
 @keyframes dealin{0%{transform:translate(40px,-120px) scale(.3) rotate(10deg);opacity:0}25%{opacity:1}100%{transform:none;opacity:1}}
@@ -1113,10 +1165,13 @@ function cardHtml(id, o){
   const cells = FC.ZONES.map(zn => {
     const z = p.z[zn];
     const hl = o.zone === zn ? ' hl' : '';
-    return `<div class="cc ${zn}${hl}"><div>${rowHtml(z,'att')}</div><div>${rowHtml(z,'def')}</div></div>`;
+    const dc = o.decide && o.zone === zn;
+    const ar = dc && o.decide.role === 'att' ? o.decide.html : rowHtml(z,'att');
+    const dr = dc && o.decide.role === 'def' ? o.decide.html : rowHtml(z,'def');
+    return `<div class="cc ${zn}${hl}${dc?' decide decide-'+(o.decide.role==='att'?'a':'d'):''}"><div>${ar}</div><div>${dr}</div></div>`;
   }).join('');
   return `<div class="pcard${exh?' exh':''}${o.cls?' '+o.cls:''}" ${o.attrs||''}>
-    <div class="head"><div><div class="pname">${esc(p.name)}</div><div class="muted" style="font-size:12px">${yel?yel+'× Gelb':''}${exh?(yel?' · ':'')+'erschöpft':''}</div></div>${shirt(p, exh)}</div>
+    <div class="head"><div><div class="pname">${esc(p.name)}</div><div class="muted" style="font-size:12px">${yel?yel+'× Gelb':''}${exh?(yel?' · ':'')+'erschöpft':''}</div></div>${o.shirtPay?`<button type="button" class="shirtpay" data-pay="exhaust" title="Bezahlen: Spieler erschöpfen (Trikot drehen)" aria-label="Bezahlen: Spieler erschöpfen">${shirt(p, exh)}</button>`:shirt(p, exh)}</div>
     <div class="attrs"><span title="Tempo">Tempo <b>${p.tempo}</b></span><span title="Präsenz">Präsenz <b>${p.praesenz}</b></span><span title="Assist">Assist <b>${p.assist}</b></span><span title="Kopfball">Kopfball <b>${p.kopf}</b></span><span class="sw" title="Schusswert">Schuss <b>${p.schuss}</b></span></div>
     <div class="cgrid">${cells}</div></div>`;
 }
@@ -1168,7 +1223,8 @@ function pitchHtml(st){
     const rel = poss === 'A' ? zn : FC.MIRROR[zn];          // Zonenname aus Sicht des Angreifers
     const r = ZRECT_H[zn];
     const isT = movable.includes(rel);
-    return `<div class="hz${isT?' target':''}${az===zn?' glow g-'+team:''}" style="left:${r[0]}%;width:${r[1]-r[0]}%;top:${r[2]}%;height:${r[3]-r[2]}%" ${isT?`role="button" tabindex="0" data-move="${rel}"`:''}><span>${rel}</span></div>`;
+    const key = isT ? movable.indexOf(rel) + 1 : 0;
+    return `<div class="hz${isT?' target decide decide-a':''}${az===zn?' glow g-'+team:''}" style="left:${r[0]}%;width:${r[1]-r[0]}%;top:${r[2]}%;height:${r[3]-r[2]}%" ${isT?`role="button" tabindex="0" data-move="${rel}" data-key="${key}" title="Ball nach ${rel}${rel===st.ball?' (bleibt)':''}"`:''}><span>${rel}</span></div>`;
   }).join('');
   return `<div class="rpitch hp" aria-label="Spielfeld"><div class="mk hline"></div><div class="mk hcircle"></div><div class="mk hbox l"></div><div class="mk hbox r"></div><div class="mk hsix l"></div><div class="mk hsix r"></div>
       <div class="rgoal l"></div><div class="rgoal r"></div>${cells}${sceneHtml('gscene','horiz ball-'+team)}${bubblesHtml(st, az)}</div>
@@ -1211,7 +1267,7 @@ function bub(key, seat, text, ico, pos, cls){
 }
 function bubblesHtml(st, az){
   const c = zoneCenterH(az);
-  const x = Math.max(16, Math.min(84, c[0]));
+  const x = Math.max(30, Math.min(70, c[0]));   // Blasen bleiben im Feld, auch mit langen Namen
   const above = [x, Math.max(9, c[1] - 17)], below = [x, Math.min(91, c[1] + 17)];
   const rp = app.replay;
   let h = '';
@@ -1720,9 +1776,13 @@ function slotHtml(st, role, src, seat, turn, opts){
   const key = `${turn}-${role}-${c.id}-${c.action?'a':'d'}`;
   let body;
   if (opts.hideFace) body = cardBack('');
-  else if (dealing) { app.revealed.add(key); body = `<div class="deal" style="--dd:${dd}s"><div class="dealback">${cardBack('')}</div><div class="dealfront">${cardHtml(c.id, { zone: c.zone, team: st.teams[seat] })}</div></div>`; }
-  else body = revealCard(key, cardHtml(c.id, { zone: c.zone, team: st.teams[seat] }));
-  return `<div class="slot">${head}${body}${opts.hideFace?'':(actionLine(c, role) || `<div class="muted">${seesCard(seat)&&canAct(st)?'Deine Wahl …':esc(teamLabel(seat))+' wählt …'}</div>`)}</div>`;
+  const dec = opts.dec;
+  const co = { zone: c.zone, team: st.teams[seat], decide: dec ? { role, html: dec.html } : null, shirtPay: dec && dec.shirtPay };
+  if (opts.hideFace) body = cardBack('');
+  else if (dealing) { app.revealed.add(key); body = `<div class="deal" style="--dd:${dd}s"><div class="dealback">${cardBack('')}</div><div class="dealfront">${cardHtml(c.id, co)}</div></div>`; }
+  else body = revealCard(key, cardHtml(c.id, co));
+  const foot = dec ? `<div class="hintline" id="hint-${seat}" data-def="${esc(dec.def)}">${dec.def}</div>` : (actionLine(c, role) || '');
+  return `<div class="slot">${head}${body}${opts.hideFace?'':foot}</div>`;
 }
 function stepsHtml(active){
   const s = ['Angriff deckt auf','Abwehr deckt auf','Auflösung'];
@@ -1743,10 +1803,12 @@ function render(){
   const scrollY = window.scrollY;
   app.flipIdx = 0;
   if (st.phase === 'draft') { v.innerHTML = boardHtml(st) + draftHtml(st); setDock(''); bindGame(); return; }
-  const ctl = app.replay ? replayBar() : st.phase==='over' ? overBar() : controlsHtml(st);
-  v.innerHTML = boardHtml(st) + `<div class="arena">${sideHtml(st,'A')}<div class="panel center">${centerHtml(st, ctl)}</div>${sideHtml(st,'B')}</div>` + decksHtml(st) + (st.phase==='over'?statsHtml(st):'') + logHtml(st) + modalHtml();
-  setDock(ctl.bar, ctl.cls);
+  if (app.sel && app.sel.st !== st) app.sel = null;
+  const D = decideCtx(st);
+  v.innerHTML = boardHtml(st) + `<div class="arena">${sideHtml(st,'A',D)}<div class="panel center">${centerHtml(st, D)}</div>${sideHtml(st,'B',D)}</div>` + decksHtml(st) + (st.phase==='over'?statsHtml(st):'') + logHtml(st) + modalHtml();
+  setDock('');
   bindGame();
+  bindDecide();
   bindDist();
   animateDice();
   syncGameScene(st);
@@ -1785,8 +1847,9 @@ document.addEventListener('keydown', e => {
   const t = e.target;
   if (t && t.closest && t.closest('input,select,textarea')) return;
   if (app.zoom || e.ctrlKey || e.metaKey || e.altKey) return;
-  const d = document.getElementById('dock');
-  if (!d || d.hidden) return;
+  const d = document.getElementById('view');
+  if (!d) return;
+  if (e.key === 'Escape' && app.sel) { app.sel = null; render(); return; }
   if (/^[1-9]$/.test(e.key)) {
     const b = d.querySelector(`[data-key="${e.key}"]`);
     if (b && !b.disabled) { e.preventDefault(); b.click(); }
@@ -1929,39 +1992,146 @@ function stopHint(a, green, defOpts){
 
 // Heim immer links, Gast immer rechts; die Seite im Angriff sitzt etwas höher
 // Mitte: Ablauf, Spielfeld, Duell-Banner und was sonst zum Zug gehört
-function centerHtml(st, ctl){
-  ctl = ctl || {};
-  if (app.replay) return replayHtml(st);
-  if (st.phase==='over') {
-    return `<div class="banner outcome o-goal">Abpfiff · ${st.goals.A}:${st.goals.B} · ${esc(st.goals.A===st.goals.B?'Unentschieden':'Sieg '+teamLabel(st.goals.A>st.goals.B?'A':'B'))}</div>` + recapHtml(st);
+// Was darf der Spieler an diesem Gerät gerade entscheiden?
+function decideCtx(st){
+  if (!st || app.replay || st.phase === 'over' || st.phase === 'draft' || !canAct(st)) return null;
+  const a = FC.actor(st), acts = FC.legal(st, a);
+  return { seat: a, phase: st.phase, acts, forced: acts.length === 1 ? acts[0] : null };
+}
+// Optionen im leuchtenden Kartenfeld, mit Kosten und Hinweisen
+function buildDecide(st, role, side, seat, D){
+  const acts = D.acts;
+  const row = FC.zoneRow(side.id, side.zone, role);
+  const sel = app.sel && app.sel.st === st ? app.sel.opt : null;
+  const d = st.cur.def;
+  const defOpen = role === 'att' && d && d.id && cardVisible(st, 'def') && (d.open || st.cur.presence) ? FC.zoneRow(d.id, d.zone, 'def').opts.map(o => o.a) : null;
+  const tokName = role === 'def' ? 'blauen' : 'roten';
+  const opts = row.opts.map((o, i) => {
+    const ex = acts.some(x => x.type === 'choose' && x.opt === i && x.pay === 'exhaust');
+    const tk = acts.some(x => x.type === 'choose' && x.opt === i && x.pay === 'token');
+    const can = i === 0 || ex || tk;
+    let hint = `<b>${esc(o.a)}</b>${o.g ? ' (grün)' : ''} · ${i === 0 ? 'kostenlos' : can ? 'kostet: ' + [ex ? 'Spieler erschöpfen' : '', tk ? tokName + ' Token' : ''].filter(Boolean).join(' oder ') : 'geht nicht: Spieler schon erschöpft und kein ' + tokName + ' Token'}`;
+    if (role === 'att') hint += ' · ' + stopHint(o.a, o.g, defOpen).replace(/<[^>]+>/g, '');
+    else if (FC.DEF_BEATS(o.a, st.cur.att.action, st.cur.att.green)) hint += ' · <b>stoppt den Angriff</b>';
+    return { o, i, ex, tk, can, hint };
+  });
+  const cls = role === 'def' ? 'rd' : 'ra';
+  const html = `<span class="${cls}">${opts.map(x => `<button type="button" class="opt ${x.i===0?'free':'paid'}${sel===x.i?' sel':''}${x.o.g?' g':''}${(x.o.a==='Fehlpass'||x.o.a==='Ballverlust')?' bad':''}" data-opt="${x.i}" data-seat="${seat}" data-key="${x.i+1}" data-hint="${esc(x.hint)}"${x.can?'':' disabled'}>${esc(x.o.a)}</button>`).join(' / ')}</span>${dots(row.tok)}`;
+  const sx = sel != null ? opts[sel] : null;
+  let def;
+  if (sx) def = `<b>${esc(sx.o.a)}</b> gewählt. Jetzt bezahlen: ${[sx.ex ? 'aufs <b>Trikot</b> klicken (Spieler erschöpft)' : '', sx.tk ? `den <b>${tokName} Token</b> über der Karte anklicken` : ''].filter(Boolean).join(' oder ')}. Nochmal auf die Option klicken bricht ab.`;
+  else {
+    def = role === 'def' ? `Der Angriff spielt <b class="ra">${esc(st.cur.att.action)}</b>${st.cur.att.green?' (grün)':''}. ` : (defOpen ? 'Du siehst die Abwehrkarte schon. ' : '');
+    def += row.opts.length > 1 ? 'Klicke im leuchtenden Feld auf deine Aktion. Die Option hinter „/“ kostet etwas.' : 'Klicke im leuchtenden Feld auf deine Aktion oder setze einen Token ein.';
+    def += ' <span class="muted">Maus drüber zeigt Details.</span>';
   }
-  const active = st.phase==='att' ? 1 : st.phase==='def'||st.phase==='def_pick2' ? 2 : 3;
-  return stepsHtml(active) + pitchHtml(st) + situationHtml(st) + (ctl.top || '') + (ctl.info || '');
+  return { html, def, shirtPay: !!(sx && sx.ex), tokPay: !!(sx && sx.tk), n: opts.length };
+}
+const TASK = { att:'Wähle deine Angriffsaktion im leuchtenden Feld deiner Karte.', def:'Wähle deine Abwehraktion im leuchtenden Feld deiner Karte.', move:'Wähle eine leuchtende Zone auf dem Spielfeld.', dist:'Verteile die Schusspunkte am Tor in der Mitte.', gk:'Wähle am Tor in der Mitte, wohin dein Keeper springt.', shot:'Wähle am Tor in der Mitte die Ecke für deinen Schuss.', def_pick2:'Klicke die Karte an, die du behältst.' };
+const WAIT = { def:'deckt auf und wählt die Abwehraktion', att:'wählt die Angriffsaktion', move:'wählt, wohin der Ball geht', dist:'verteilt die Schusspunkte', gk:'wählt verdeckt die Ecke für den Keeper', shot:'wählt die Ecke für den Schuss', def_pick2:'wählt einen von zwei Verteidigern' };
+function statusHtml(st, s, D){
+  if (app.replay || st.phase === 'over') return '';
+  const actor = FC.actor(st);
+  const special = st.cur && (st.cur.header || st.cur.through || st.cur.volley);
+  if (s !== actor) {
+    if (app.mode !== 'local' && s === app.me && st.phase === 'att' && st.cur.def && st.cur.def.id && !special) return `<div class="turn">Deine Abwehrkarte liegt bereit. Überleg dir schon deine Antwort.</div>`;
+    return '';
+  }
+  const who = esc(teamLabel(s));
+  if (D && D.seat === s && D.forced) {
+    const f = D.forced;
+    const label = f.type === 'choose' ? choiceLabel(st, st.phase, f).a : f.type === 'dist' ? 'Keine Punkte zu verteilen' : 'Weiter';
+    return `<div class="turn auto"><span class="thinking"></span>${app.mode==='local'?`<b>${who}:</b> `:''}Nur eine Möglichkeit: <b>${esc(label)}</b> · geht automatisch weiter</div>`;
+  }
+  if (D && D.seat === s) return `<div class="turn me"><b>${app.mode === 'local' ? who + ' ist dran' : 'Du bist dran'}</b><span>${TASK[st.phase] || ''}</span></div>`;
+  return `<div class="turn"><span class="thinking"></span>${who} ${special && ['att','def'].includes(st.phase) ? 'deckt auf …' : (WAIT[st.phase] || 'ist dran') + ' …'}</div>`;
+}
+function tokenRow(st, s, D, dec){
+  const t = st.teams[s];
+  const mine = D && !D.forced && D.seat === s;
+  const NAME = { R: 'roter', G: 'grüner', B: 'blauer' };
+  let key = dec ? dec.n + 1 : 1;
+  const hints = [];
+  const tk = k => {
+    const has = t.tok[k];
+    let attrs = '', cls = '', title = NAME[k] + ' Token' + (has ? '' : ' (nicht vorhanden)');
+    if (mine && has) {
+      if (dec && dec.tokPay && ((D.phase === 'att' && k === 'R') || (D.phase === 'def' && k === 'B'))) { attrs = 'data-pay="token"'; cls = ' use'; title += ': damit bezahlen'; hints.push(`${k==='R'?'Rot':'Blau'}: bezahlen`); }
+      else if (k === 'B' && D.acts.some(x => x.type === 'blue2') && !(dec && dec.tokPay)) { attrs = `data-tokact="blue2" data-key="${key++}"`; cls = ' use'; title += ': zweiten Verteidiger ziehen'; hints.push('Blau: zweiter Verteidiger'); }
+      else if (k === 'G' && D.acts.some(x => x.type === 'green')) { attrs = `data-tokact="green" data-key="${key++}"`; cls = ' use'; title += ': Spieler wieder frisch machen'; hints.push('Grün: Spieler auffrischen'); }
+      else if (k === 'R' && D.phase === 'dist' && D.acts.some(x => x.boost)) { attrs = 'data-tokact="boost"'; cls = ' use' + (app.dist && app.dist.boost ? ' sel' : ''); title += ': +1 Schusspunkt'; hints.push(app.dist && app.dist.boost ? 'Rot: +1 eingesetzt' : 'Rot: +1 Schusspunkt'); }
+    }
+    return attrs ? `<button type="button" class="tokb ${k} on${cls}" ${attrs} title="${title}" aria-label="${title}"></button>` : `<span class="tokb ${k}${has?' on':''}" title="${title}"></span>`;
+  };
+  const html = tk('R') + tk('G') + tk('B');
+  return `<div class="tokrow"><span class="label">Token</span>${html}${hints.length ? `<span class="tokhint">${hints.join(' · ')}</span>` : ''}</div>`;
+}
+// Tor in der Mitte: Punkte verteilen, Keeper-Ecke oder Schussecke direkt anklicken
+function goalPanel(st, D){
+  const ph = st.phase;
+  if (!['dist','gk','shot'].includes(ph)) return '';
+  const sh = st.cur.shot;
+  const mine = D && !D.forced && D.seat === FC.actor(st);
+  if (!mine) return gkHtml(sh.gk, { fields: ph === 'dist' ? sh.gkBase : sh.fields });
+  const pct = v => Math.round(Math.max(0, Math.min(6, v - 1)) / 6 * 100);
+  if (ph === 'dist') {
+    const d = app.dist && app.dist.turn === st.cur.turn ? app.dist : (app.dist = { turn: st.cur.turn, add: [0,0,0], boost: false });
+    const total = sh.points + (d.boost ? 1 : 0), used = d.add.reduce((x, y) => x + y, 0);
+    const fields = sh.gkBase.map((v, i) => v + d.add[i]);
+    const hasBoost = D.acts.some(x => x.boost);
+    return `<div class="goalbox"><div class="goalhead"><b>Schusspunkte verteilen</b><span>${esc(sh.kind)} von ${esc(card(sh.shooter).name)}: ${sh.kind==='Kopfball'?'Kopfball':'Schuss'} ${sh.base}${sh.assist?` + Assist ${sh.assist}`:''}${sh.fern?' − 1 Fernschuss':''}${d.boost?' + 1 Token':''} = <b>${total}</b> · noch <b>${total-used}</b> übrig${hasBoost&&!d.boost?' · roter Token über deiner Karte bringt +1':''}</span></div>
+      <div class="gkgoal big">${fields.map((v,i)=>`<div class="gkfield decide decide-a"><span class="label">${FC.CORNERS[i]}</span><b>${v}</b><div class="row" style="gap:4px;justify-content:center"><button class="btn small" data-dist="${i}:-1" ${d.add[i]===0?'disabled':''} aria-label="weniger ${FC.CORNERS[i]}">−</button><button class="btn small" data-dist="${i}:1" ${used>=total?'disabled':''} aria-label="mehr ${FC.CORNERS[i]}">+</button></div><small>Treffer ${pct(v)} %</small></div>`).join('')}</div>
+      <div class="row"><button class="btn primary" id="distOk" data-enter ${used!==total?'disabled':''}>Punkte bestätigen</button><span class="muted">Der Gegner sieht die Verteilung.</span></div></div>`;
+  }
+  const isGk = ph === 'gk';
+  return `<div class="goalbox"><div class="goalhead"><b>${isGk ? 'Keeper: Wohin springst du?' : 'Wohin schießt du?'}</b><span>${isGk ? `Richtige Ecke = sicher gehalten.${app.mode==='local'?' Der Angreifer schaut bitte weg.':''}` : 'Der Keeper hat schon verdeckt gewählt. Andere Ecke: Würfel muss unter dem Feldwert liegen.'}</span></div>
+    <div class="gkgoal big">${[0,1,2].map(n=>`<div class="gkfield pick decide ${isGk?'decide-d':'decide-a'}" role="button" tabindex="0" data-act='{"type":"${isGk?'gk':'aim'}","n":${n}}' data-key="${n+1}" title="${FC.CORNERS[n]}"><span class="label">${FC.CORNERS[n]}</span><b>${sh.fields[n]}</b><small>${isGk ? 'Feldwert' : pct(sh.fields[n]) + ' %, wenn der Keeper falsch liegt'}</small></div>`).join('')}</div></div>`;
+}
+function centerNotice(st){
+  if (app.mode === 'online' && !(app.gameDoc && app.gameDoc.seats && app.gameDoc.seats.B)) return `<div class="notice wait">Das Spiel startet, sobald dein Gegner beigetreten ist.</div>`;
+  if (app.mode === 'p2p' && !app.connected) return `<div class="notice wait">Keine Verbindung zum Gegner. ${app.isHost ? 'Sobald er wieder mit dem Code beitritt, geht es weiter.' : 'Tritt mit demselben Code erneut bei.'}</div>`;
+  return '';
+}
+// Mitte: Ablauf, Spielfeld, Duell-Banner, Tor; „Weiter“ und „Neues Spiel“ sitzen hier statt in einer Leiste
+function centerHtml(st, D){
+  if (app.replay) {
+    const rp = app.replay, gone = Date.now() - rp.t0;
+    return replayHtml(st) + `<div class="row nextrow"><div class="progress"><i style="animation-duration:${rp.total}ms;animation-delay:-${gone}ms"></i></div><button class="btn primary" id="next" data-enter>Weiter</button></div>`;
+  }
+  if (st.phase === 'over') {
+    return `<div class="banner outcome o-goal">Abpfiff · ${st.goals.A}:${st.goals.B} · ${esc(st.goals.A===st.goals.B?'Unentschieden':'Sieg '+teamLabel(st.goals.A>st.goals.B?'A':'B'))}</div>` + recapHtml(st) + `<div class="row"><button class="btn primary" id="again" data-enter>Neues Spiel</button></div>`;
+  }
+  const active = st.phase === 'att' ? 1 : st.phase === 'def' || st.phase === 'def_pick2' ? 2 : 3;
+  return centerNotice(st) + stepsHtml(active) + pitchHtml(st) + situationHtml(st) + goalPanel(st, D);
 }
 // Seiten: Heim immer links, Gast immer rechts, für beide Spieler gleich
-function sideHtml(st, s){
+function sideHtml(st, s, D){
   const t = st.teams[s];
   const rp = app.replay;
   const attSeat = rp ? rp.prev.possStart : st.poss;
   const role = st.phase === 'over' ? null : (s === attSeat ? 'att' : 'def');
   const shuffling = !rp && app.shuffle[s] && !reduceMotion();
   if (shuffling) { app.shuffle[s] = false; SFX.play('shuffle'); }
+  const mine = D && !D.forced && D.seat === s;
+  const special = st.cur && (st.cur.header || st.cur.through || st.cur.volley);
+  const side = !rp && st.cur && role ? st.cur[role] : null;
+  const dec = mine && !rp && D.phase === role && side && side.id && !special ? buildDecide(st, role, side, s, D) : null;
   const head = `<div class="sidehead"><div class="sidename"><span class="tdot t${s==='A'?'a':'b'}"></span><b>${esc(teamLabel(s))}</b>${role?`<span class="roletag ${role==='att'?'a':'d'}">${role==='att'?'im Angriff':'in der Abwehr'}</span>`:''}</div>
     <div class="stack${shuffling?' shuffle':''}" aria-label="Nachziehstapel: ${t.pile.length} Karten" title="${t.pile.length} im Stapel">${'<i></i>'.repeat(4)}<b>${t.pile.length}</b></div></div>
-    ${shuffling?'<div class="muted shufnote">Stapel leer – wird neu gemischt …</div>':''}`;
+    ${shuffling?'<div class="muted shufnote">Stapel leer – wird neu gemischt …</div>':''}${statusHtml(st, s, D)}${st.phase!=='over'?tokenRow(st, s, D, dec):''}`;
   let body = '';
   if (rp) {
     const p = rp.prev;
     body = slotHtml(st, role, p[role], s, p.turn, { forceShow: true, hideFace: role==='def' && rp.step<1, step: role==='att'?1:2 });
   } else if (st.phase === 'over') {
     body = '';
-  } else if (st.phase === 'def_pick2' && role === 'def' && canAct(st)) {
+  } else if (st.phase === 'def_pick2' && role === 'def' && mine) {
     const d = st.cur.def;
-    body = `<div class="role d"><span>Blauer Token: Welchen behältst du?</span><span>Zone ${d.zone}</span></div>` + [d.id, d.alt].map((id,i)=>`<div class="slot"><span class="label">Taste ${i+1}</span>${cardHtml(id,{zone:d.zone, team:t})}</div>`).join('');
+    body = `<div class="role d"><span>Blauer Token: Welchen behältst du?</span><span>Zone ${d.zone}</span></div>` + [d.id, d.alt].map((id,i)=>`<div class="pickcard decide decide-d" role="button" tabindex="0" data-act='${JSON.stringify({type:'keep', id})}' data-key="${i+1}" title="${esc(card(id).name)} behalten">${cardHtml(id,{zone:d.zone, team:t})}</div>`).join('') + `<div class="muted">Die andere Karte kommt unter deinen Stapel.</div>`;
   } else {
-    body = slotHtml(st, role, st.cur[role], s, st.cur.turn, { step: role==='att'?1:2, dealDelay: shuffling ? 1 : 0 });
+    body = slotHtml(st, role, st.cur[role], s, st.cur.turn, { step: role==='att'?1:2, dealDelay: shuffling ? 1 : 0, dec });
   }
-  return `<div class="panel side side-${s}${role==='att'?' atk':''}">${head}${body}</div>`;
+  return `<div class="panel side side-${s}${role==='att'?' atk':''}${mine?' myturn':''}">${head}${body}</div>`;
 }
 function payLabel(pay, role){
   if (pay==='exhaust') return 'Spieler erschöpfen';
@@ -2178,6 +2348,44 @@ function bindGame(){
   const nx = $('#next'); if (nx) nx.onclick = endReplay;
   const rp2 = $('#recapPlay'); if (rp2) { rp2.onclick = startRecap; if (!app.recapAuto && app.st && app.st.phase==='over') { app.recapAuto = app.st.turn; setTimeout(startRecap, 400); } }
   const ag = $('#again'); if (ag) ag.onclick = () => { if (app.mode==='online') leave(); else if (app.mode==='p2p') { if (app.isHost) p2pRestart(); else flash('Ein neues Spiel startet dein Gegner.'); } else startLocal(app.mode, app.lastOpts); };
+}
+
+function bindDecide(){
+  document.querySelectorAll('[data-opt]').forEach(b => {
+    b.onclick = () => {
+      const i = +b.dataset.opt, st = app.st;
+      if (i === 0) { app.sel = null; act({ type: 'choose', opt: 0 }); return; }
+      app.sel = app.sel && app.sel.st === st && app.sel.opt === i ? null : { st, opt: i };
+      render();
+    };
+    const h = () => document.getElementById('hint-' + b.dataset.seat);
+    b.onmouseenter = b.onfocus = () => { const x = h(); if (x) x.innerHTML = b.dataset.hint; };
+    b.onmouseleave = b.onblur = () => { const x = h(); if (x) x.innerHTML = x.dataset.def; };
+  });
+  document.querySelectorAll('[data-pay]').forEach(b => b.onclick = () => {
+    const st = app.st, s = app.sel;
+    if (!s || s.st !== st || b.classList.contains('busy')) return;
+    const pay = b.dataset.pay;
+    b.classList.add('busy', pay === 'exhaust' ? 'turning' : 'spend');
+    SFX.play('flip');
+    setTimeout(() => { if (app.st !== st) return; app.sel = null; act({ type: 'choose', opt: s.opt, pay }); }, reduceMotion() ? 0 : 520);
+  });
+  document.querySelectorAll('[data-tokact]').forEach(b => b.onclick = () => {
+    const k = b.dataset.tokact, st = app.st;
+    if (k === 'boost') { toggleBoost(); return; }
+    if (b.classList.contains('busy')) return;
+    b.classList.add('busy', 'spend');
+    setTimeout(() => { if (app.st === st) act({ type: k }); }, reduceMotion() ? 0 : 450);
+  });
+  document.querySelectorAll('[role="button"][data-act]').forEach(b => b.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.click(); } });
+}
+function toggleBoost(){
+  if (!app.st || app.st.phase !== 'dist' || !app.dist) return;
+  app.dist.boost = !app.dist.boost;
+  const tot = app.st.cur.shot.points + (app.dist.boost ? 1 : 0);
+  let used = app.dist.add.reduce((x, y) => x + y, 0);
+  for (let i = 2; i >= 0 && used > tot; i--) { const r = Math.min(app.dist.add[i], used - tot); app.dist.add[i] -= r; used -= r; }
+  render();
 }
 
 // ---------- Züge ausführen ----------
