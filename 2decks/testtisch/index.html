@@ -1,0 +1,502 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script><style>[hidden]{display:none!important}body{margin:0}</style></head><body><title>2Decks Testtisch</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: Spieltisch – Kopfleiste mit Spielstand, links die Matte, rechts Steuerung/Auslösen/Protokoll, unten die eigene Hand */
+:root{
+ --bg:#eef2ec; --paper:#ffffff; --fg:#1b221e; --muted:#5b6860; --line:#c6d0c8; --pitch:#dfe9dc; --pitch-line:#b9c9b6;
+ --blue:#2c62b8; --blue-soft:#d9e5f7; --lila:#7a3fa6; --lila-soft:#ebdff4; --ok:#2f7d4a; --warn:#a2561a; --warn-soft:#f7e8d8;
+ --f-display:"Barlow Condensed","Arial Narrow",sans-serif; --f-body:"Source Sans 3","Segoe UI",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121714;--paper:#1b221e;--fg:#e3eae5;--muted:#9aa89f;--line:#34413a;--pitch:#1c2a20;--pitch-line:#33473a;--blue:#82a8ea;--blue-soft:#20304a;--lila:#c39be2;--lila-soft:#33253f;--ok:#7cc796;--warn:#e3a76f;--warn-soft:#3a2a1c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121714;--paper:#1b221e;--fg:#e3eae5;--muted:#9aa89f;--line:#34413a;--pitch:#1c2a20;--pitch-line:#33473a;--blue:#82a8ea;--blue-soft:#20304a;--lila:#c39be2;--lila-soft:#33253f;--ok:#7cc796;--warn:#e3a76f;--warn-soft:#3a2a1c;color-scheme:dark}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 32px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;margin:0;letter-spacing:.01em;text-wrap:balance}
+h1{font-size:1.7rem} h2{font-size:1.15rem} h3{font-size:1rem;font-weight:500}
+button{font:inherit;font-size:.92rem;padding:6px 11px;border-radius:6px;border:1px solid var(--line);background:var(--paper);color:var(--fg);cursor:pointer}
+button:hover:not(:disabled){border-color:var(--muted)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+button:disabled{opacity:.45;cursor:default}
+button.pri{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+button.tB{border-color:var(--blue);color:var(--blue)} button.tL{border-color:var(--lila);color:var(--lila)}
+select,input[type=text]{font:inherit;font-size:.92rem;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--paper);color:var(--fg)}
+.top{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;max-width:1240px;margin:0 auto 12px}
+.score{font:600 1.5rem var(--f-display);display:flex;gap:10px;align-items:center}
+.score .b{color:var(--blue)} .score .l{color:var(--lila)}
+.pill{font:600 .75rem var(--f-mono);letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid currentColor}
+.pB{color:var(--blue)} .pL{color:var(--lila)}
+.status{font-size:.85rem;color:var(--muted)}
+.main{display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:16px;max-width:1240px;margin:0 auto}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:8px;align-content:start;min-width:0}
+.side{display:grid;gap:12px;align-content:start;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.hint{font-size:.85rem;color:var(--muted);margin:0}
+.msg{font-size:.88rem;padding:6px 9px;border-radius:6px;background:var(--warn-soft);color:var(--fg);margin:0}
+.msg:empty{display:none}
+#board{width:100%;display:block;user-select:none;touch-action:manipulation}
+.fld{fill:var(--pitch);stroke:var(--pitch-line);stroke-width:1}
+.fld.box{fill:var(--pitch)} .fld.tgt{fill:var(--warn-soft);cursor:pointer;stroke:var(--warn)}
+.boxline{fill:none;stroke:var(--muted);stroke-dasharray:5 4;stroke-width:1}
+.ax{font:11px var(--f-mono);fill:var(--muted);text-anchor:middle}
+.pl rect{stroke-width:1.2} .plB rect{fill:var(--blue-soft);stroke:var(--blue)} .plL rect{fill:var(--lila-soft);stroke:var(--lila)}
+.pl{cursor:pointer} .pl.sel rect{stroke-width:3;stroke-dasharray:4 2}
+.pl text{fill:var(--fg);text-anchor:middle} .pn{font:600 11.5px var(--f-body)} .pv{font:11px var(--f-mono);fill:var(--muted)!important}
+.ballc{fill:#fff;stroke:#111;stroke-width:1.2}
+.ed{cursor:default} .ed.click{cursor:pointer}
+.ed rect{stroke-width:1.6}
+.edB rect{stroke:var(--blue)} .edL rect{stroke:var(--lila)}
+.edB.hid rect{fill:var(--blue-soft);stroke-dasharray:3 2} .edL.hid rect{fill:var(--lila-soft);stroke-dasharray:3 2}
+.edB.op rect{fill:var(--blue)} .edL.op rect{fill:var(--lila)}
+.ed.used{opacity:.5}
+.ed text{font:600 11px var(--f-mono);text-anchor:middle}
+.ed.op text{fill:var(--paper)} .ed.hid text{fill:var(--fg)}
+.slot rect{fill:transparent;stroke:var(--warn);stroke-width:1.5;stroke-dasharray:3 2;cursor:pointer}
+.slot:hover rect{fill:var(--warn-soft)}
+.ed.selc rect{stroke-width:3.5}
+.hand{max-width:1240px;margin:14px auto 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.card{background:var(--paper);border:1.5px solid var(--line);border-radius:8px;padding:8px 9px;display:grid;gap:3px;cursor:pointer;text-align:left;font-size:.84rem;line-height:1.35}
+.card.sel{border-color:var(--warn);box-shadow:0 0 0 2px var(--warn-soft)}
+.card .nm{font:600 1.02rem var(--f-display)} .card .alt{font:11px var(--f-mono);color:var(--muted)} .card .mod{font:600 11px var(--f-mono);color:var(--warn)}
+.card.pc .nm{display:flex;justify-content:space-between;gap:6px}
+.vals{font:600 12px var(--f-mono)}
+.log{max-height:240px;overflow:auto;font-size:.84rem;display:grid;gap:3px;margin:0;padding:0;list-style:none}
+.log li{border-bottom:1px solid var(--line);padding:2px 0}
+.calc{display:grid;gap:6px;border:1px dashed var(--warn);border-radius:8px;padding:9px;background:var(--warn-soft)}
+.calc .big{font:600 1.05rem var(--f-mono)}
+.screen{min-height:420px;display:grid;place-items:center;text-align:center;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:24px;max-width:1240px;margin:0 auto;gap:12px}
+.lobby{max-width:640px;margin:0 auto}
+table.mini{border-collapse:collapse;font-size:.82rem} table.mini td{padding:1px 6px 1px 0}
+@media (prefers-reduced-motion:no-preference){.card,button{transition:border-color .12s}}
+</style>
+
+<div class="top">
+ <div class="row" style="gap:12px"><h1>2Decks Testtisch</h1><span class="status" id="mode">Lädt …</span></div>
+ <div class="score" aria-live="polite"><span class="b">Blau</span><span id="sc">0 : 0</span><span class="l">Lila</span></div>
+ <div class="row"><span id="turnPill" class="pill"></span><span id="attPill" class="pill"></span><span class="status" id="me"></span></div>
+</div>
+
+<div id="lobby" class="lobby panel" hidden></div>
+<div id="cover" class="screen" hidden></div>
+
+<div id="game">
+<div class="main">
+ <div class="panel">
+  <svg id="board" viewBox="0 0 520 640" role="img" aria-label="Spielmatte 5 mal 7"></svg>
+  <p class="msg" id="msg"></p>
+ </div>
+ <div class="side">
+  <div class="panel">
+   <h2>Zug</h2>
+   <div class="row">
+    <button id="dP">Ziehen: 1 Spieler</button><button id="dA2">Ziehen: 2 Aktionen</button><button id="dA1">Ziehen: 1 Aktion</button>
+   </div>
+   <div class="row">
+    <button id="endT" class="pri">Zug beenden</button><button id="undo">Rückgängig</button>
+   </div>
+   <p class="hint" id="deckinfo"></p>
+  </div>
+  <div class="panel" id="selPanel"><h2>Auswahl</h2><div id="selBody"><p class="hint">Tippe eine Handkarte, einen Spieler oder eine eigene Karte auf der Matte an.</p></div></div>
+  <div class="panel" id="trigPanel" hidden></div>
+  <div class="panel">
+   <h2>Spielsituation</h2>
+   <div class="row"><button id="bChange">Ballwechsel …</button><button id="bGoal">Tor</button><button id="bSave">Gehalten (Abstoß)</button></div>
+   <p class="hint">Ballwechsel: erst den neuen Ballführer antippen, dann den Knopf. Jedes Team behält nur Spieler an einer eigenen verdeckten Karte plus den Ballführer; der bisherige Angreifer legt alle Aktionskarten ab, der bisherige Verteidiger nur die offenen.</p>
+  </div>
+  <div class="panel"><h2>Einstellungen zum Testen</h2>
+   <label class="row"><input type="checkbox" id="setOpp"> Spieler auf Felder mit Gegenspieler legen erlaubt</label>
+   <div class="row"><label for="setSec">Ball sichern</label><select id="setSec"><option value="A">Variante A: alle Karten am Ballführer-Feld ablegen</option><option value="B">Variante B: nur gegnerische Karten ablegen</option></select></div>
+   <p class="hint">Gilt für beide Spieler und wird mit dem Spielstand gespeichert.</p>
+  </div>
+  <div class="panel"><h2>Protokoll</h2><ol class="log" id="log" reversed></ol></div>
+  <div class="panel"><div class="row" style="justify-content:space-between"><span class="hint" id="gameInfo"></span><button id="newGame">Neues Spiel</button></div></div>
+ </div>
+</div>
+<div class="hand panel">
+ <div class="row" style="justify-content:space-between"><h2 id="handTitle">Deine Hand</h2><span class="hint" id="handInfo"></span></div>
+ <div class="cards" id="hand"></div>
+</div>
+</div>
+
+<script>
+const DATA={"players": [{"team": "L", "name": "Bashkim Ajdini", "short": "Ajdini", "pos": "RV", "area": "A", "T": 4, "Z": 3, "S": 2, "act": "Flanke", "pas": "Sprint"}, {"team": "L", "name": "Maurice Trapp", "short": "Trapp", "pos": "IV", "area": "A", "T": 2, "Z": 5, "S": 2, "act": "Steilpass", "pas": "Tackling"}, {"team": "L", "name": "Joost van Aken", "short": "van Aken", "pos": "IV", "area": "A", "T": 2, "Z": 4, "S": 2, "act": "Diagonalball", "pas": "Schuss blocken"}, {"team": "L", "name": "Kevin Wolze", "short": "Wolze", "pos": "LV", "area": "A", "T": 3, "Z": 3, "S": 3, "act": "Flanke", "pas": "Passabfangen"}, {"team": "L", "name": "Ulrich Taffertshofer", "short": "Taffertshofer", "pos": "DM", "area": "M", "T": 2, "Z": 4, "S": 3, "act": "Steilpass", "pas": "Passabfangen"}, {"team": "L", "name": "Moritz Heyer", "short": "Heyer", "pos": "ZM", "area": "M", "T": 4, "Z": 4, "S": 3, "act": "Dribbling", "pas": "Pressing"}, {"team": "L", "name": "David Blacha", "short": "Blacha", "pos": "ZM", "area": "M", "T": 3, "Z": 3, "S": 3, "act": "Querpass", "pas": "Tackling"}, {"team": "L", "name": "Anas Ouahim", "short": "Ouahim", "pos": "OM", "area": "S", "T": 4, "Z": 2, "S": 4, "act": "Übersteiger", "pas": "Sprint"}, {"team": "L", "name": "Marcos Álvarez", "short": "Álvarez", "pos": "ST", "area": "S", "T": 3, "Z": 3, "S": 5, "act": "Schuss", "pas": "Querpass"}, {"team": "L", "name": "Marc Heider", "short": "Heider", "pos": "ST", "area": "S", "T": 3, "Z": 4, "S": 4, "act": "Schuss", "pas": "Pressing"}, {"team": "L", "name": "Etienne Amenyido", "short": "Amenyido", "pos": "LA", "area": "S", "T": 5, "Z": 2, "S": 3, "act": "Dribbling", "pas": "Sprint"}, {"team": "B", "name": "Maxwell Gyamfi", "short": "Gyamfi", "pos": "RV", "area": "A", "T": 5, "Z": 3, "S": 1, "act": "Flanke", "pas": "Sprint"}, {"team": "B", "name": "Timo Beermann", "short": "Beermann", "pos": "IV", "area": "A", "T": 2, "Z": 5, "S": 2, "act": "Diagonalball", "pas": "Schuss blocken"}, {"team": "B", "name": "Niklas Wiemann", "short": "Wiemann", "pos": "IV", "area": "A", "T": 3, "Z": 4, "S": 2, "act": "Steilpass", "pas": "Tackling"}, {"team": "B", "name": "Florian Kleinhansl", "short": "Kleinhansl", "pos": "LV", "area": "A", "T": 3, "Z": 3, "S": 2, "act": "Flanke", "pas": "Passabfangen"}, {"team": "B", "name": "Robert Tesche", "short": "Tesche", "pos": "DM", "area": "M", "T": 2, "Z": 5, "S": 3, "act": "Steilpass", "pas": "Tackling"}, {"team": "B", "name": "Bryan Henning", "short": "Henning", "pos": "ZM", "area": "M", "T": 3, "Z": 3, "S": 3, "act": "Querpass", "pas": "Passabfangen"}, {"team": "B", "name": "Lukas Kunze", "short": "Kunze", "pos": "ZM", "area": "M", "T": 3, "Z": 4, "S": 3, "act": "Dribbling", "pas": "Pressing"}, {"team": "B", "name": "Lars Kehl", "short": "Kehl", "pos": "OM", "area": "S", "T": 3, "Z": 2, "S": 4, "act": "Übersteiger", "pas": "Querpass"}, {"team": "B", "name": "Ba-Muaka Simakala", "short": "Simakala", "pos": "LA", "area": "S", "T": 5, "Z": 2, "S": 5, "act": "Dribbling", "pas": "Sprint"}, {"team": "B", "name": "Erik Engelhardt", "short": "Engelhardt", "pos": "ST", "area": "S", "T": 3, "Z": 4, "S": 4, "act": "Schuss", "pas": "Pressing"}, {"team": "B", "name": "Kai Pröger", "short": "Pröger", "pos": "RA", "area": "S", "T": 4, "Z": 3, "S": 4, "act": "Schuss", "pas": "Sprint"}], "actions": [["Querpass", "aktiv"], ["Querpass", "passiv"], ["Steilpass", "aktiv"], ["Steilpass", "passiv"], ["Diagonalball", "aktiv"], ["Flanke", "sturm"], ["Flanke", "aktiv"], ["Dribbling", "aktiv"], ["Dribbling", "passiv"], ["Übersteiger", "-"], ["Sprint", "passiv"], ["Schuss", "sturm"], ["Schuss", "aktiv"], ["Tackling", "passiv"], ["Tackling", "aktiv"], ["Passabfangen", "aktiv"], ["Passabfangen", "passiv"], ["Schuss blocken", "passiv"], ["Pressing", "aktiv"], ["Taktik", "-"], ["Querpass", "sturm"], ["Dribbling", "sturm"], ["Steilpass", "aktiv"], ["Passabfangen", "passiv"], ["Tackling", "aktiv"]]};
+DATA.actions.push(['Rückpass','aktiv'],['Rückpass','passiv'],['Rückpass','-'],['Ball sichern','-'],['Ball sichern','-']);
+const COLS='ABCDE', NAME={B:'Blau',L:'Lila'}, OPP={B:'L',L:'B'};
+const KEEPER={B:{name:'Sauter',H:3},L:{name:'Kühn',H:3}};
+const INFO={
+ 'Querpass':{dir:'seitlich',eff:'Ball 1 Feld seitlich',kon:'Passabfangen',mod:['Z','+1 Zweikampf']},
+ 'Steilpass':{dir:'vorne',eff:'Ball 1 oder 2 Felder nach vorn',kon:'Passabfangen',mod:['T','+1 Tempo']},
+ 'Diagonalball':{dir:'diagonal vorn',eff:'Ball 1 Feld diagonal nach vorn, Seite beim Auslösen wählen',kon:'Passabfangen',mod:['T','+1 Tempo']},
+ 'Flanke':{dir:'nach innen',eff:'Ball 2–3 Felder in den Strafraum; kommt sie an: sofort Kopfball',kon:'Passabfangen / Schuss blocken (Kopfball)',mod:['S','+1 Schuss']},
+ 'Dribbling':{dir:'vorne',eff:'Ballführer 1 Feld nach vorn',kon:'Tackling',mod:['Z','+1 Zweikampf']},
+ 'Übersteiger':{dir:'beliebige Kante',eff:'wirkt immer als Dribbling nach vorn',kon:'Tackling',mod:['T','+1 Tempo']},
+ 'Sprint':{dir:'vorne',eff:'Spieler ohne Ball 1 Feld vor (Tempo 4+: 2 Felder)',kon:'–',mod:['T','+1 Tempo']},
+ 'Schuss':{dir:'beliebige Kante',eff:'Torschuss vom Feld des Ballführers',kon:'Schuss blocken',mod:['S','+1 Schuss']},
+ 'Tackling':{dir:'beide Felder',eff:'Konter gegen Dribbling/Übersteiger; im eigenen Zug gegen den Ballführer',kon:'schlägt Dribbling, Übersteiger',mod:['Z','+1 Zweikampf']},
+ 'Passabfangen':{dir:'beide Felder',eff:'Konter gegen Pass oder Flanke',kon:'schlägt Querpass, Steilpass, Diagonalball, Flanke',mod:['T','+1 Tempo']},
+ 'Schuss blocken':{dir:'beide Felder',eff:'Konter gegen Schuss oder Kopfball',kon:'schlägt Schuss, Kopfball',mod:['Z','+1 Zweikampf']},
+ 'Pressing':{dir:'–',eff:'eigenen Spieler 1 Feld Richtung Ball bewegen',kon:'–',mod:['T','+1 Tempo']},
+ 'Taktik':{dir:'–',eff:'beim Auslösen 2 Aktionen ziehen, 1 ablegen',kon:'–',mod:['*','+1 beliebig']},
+ 'Rückpass':{dir:'zurück',eff:'Ball 1 Feld nach hinten',kon:'Passabfangen',mod:['Z','+1 Zweikampf']},
+ 'Ball sichern':{dir:'–',eff:'Ausführender = Ballführer. Variante A: alle Karten an den Kanten des Ballführer-Felds werden abgelegt, auch eigene. Variante B: alle gegnerischen Karten dort werden abgelegt. Kein Bonuszug.',kon:'–',mod:['*','+1 beliebig']}
+};
+const COUNTER={Rückpass:'Passabfangen',Querpass:'Passabfangen',Steilpass:'Passabfangen',Diagonalball:'Passabfangen',Flanke:'Passabfangen',Dribbling:'Tackling','Übersteiger':'Tackling',Schuss:'Schuss blocken',Kopfball:'Schuss blocken'};
+const AB={Querpass:'QP',Steilpass:'SP',Diagonalball:'DB',Flanke:'FL',Dribbling:'DR','Übersteiger':'ÜS',Sprint:'SR',Schuss:'SC',Tackling:'TK',Passabfangen:'PA','Schuss blocken':'SB',Pressing:'PR',Taktik:'TA',Rückpass:'RP','Ball sichern':'BS'};
+const ALTTXT={aktiv:'Alt.: aktive Aktion des Spielers',passiv:'Alt.: passive Aktion des Spielers',sturm:'Alt.: Sturmaktion (eigene Aktion eines Stürmers)','-':'keine Alternative'};
+const VAL={T:'Tempo',Z:'Zweikampf',S:'Schuss'};
+
+/* ---------- Hilfen ---------- */
+const $=id=>document.getElementById(id);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const col=f=>COLS.indexOf(f[0]), rowOf=f=>+f.slice(1);
+const fid=(c,r)=>COLS[c]+r;
+function nbrs(f){const c=col(f),r=rowOf(f),o=[];[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dc,dr])=>{if(c+dc>=0&&c+dc<5&&r+dr>=1&&r+dr<=7)o.push(fid(c+dc,r+dr));});return o;}
+const ekey=(a,b)=>[a,b].sort((x,y)=>rowOf(x)-rowOf(y)||col(x)-col(y)).join('|');
+const edgesOf=f=>nbrs(f).map(n=>ekey(f,n));
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const P=i=>DATA.players[i];
+
+/* ---------- Neues Spiel ---------- */
+function newState(){
+ const s={v:1,seq:0,settings:{oppField:false,secure:'A'},turn:'B',att:'B',score:{B:0,L:0},ball:{carrier:null,field:null},board:{},cards:{},edges:{},
+  hands:{B:{A:[],P:[]},L:{A:[],P:[]}},decks:{B:{A:[],P:[]},L:{A:[],P:[]}},disc:{B:{A:[],P:[]},L:{A:[],P:[]}},log:[],prev:null};
+ let cid=0;
+ for(const t of ['B','L']){const ids=DATA.actions.map(([n,a])=>{const id='c'+(cid++);s.cards[id]={t,n,a};return id;});s.decks[t].A=shuffle(ids);}
+ const byShort=(t,sh)=>DATA.players.findIndex(p=>p.team===t&&p.short===sh);
+ const start={B:{Tesche:'C3',Kunze:'B4','Pröger':'D5'},L:{Heyer:'C4',Ajdini:'A5',Trapp:'C6','van Aken':'D6'}};
+ for(const t of ['B','L']){
+  for(const [sh,f] of Object.entries(start[t])) s.board[byShort(t,sh)]=f;
+  s.decks[t].P=shuffle(DATA.players.map((p,i)=>i).filter(i=>P(i).team===t&&s.board[i]===undefined));
+  s.hands[t].A=s.decks[t].A.splice(0,5); s.hands[t].P=s.decks[t].P.splice(0,2);
+ }
+ s.ball={carrier:byShort('B','Tesche'),field:'C3'};
+ s.log.push('Neues Spiel (Regelstand 1.3, 30 Aktionskarten je Team). Ausgangslage wie Testspiel 1, Blau mit Ball (Tesche C3). Starthand je 5 Aktionen und 2 Spieler.');
+ return s;
+}
+
+/* ---------- Zustand und Speicher ---------- */
+let S=null, mode='local', db=null, gameRef=null, me=null, code='spiel-1', unsub=null, writing=Promise.resolve(), sel=null, trig=null, pendingPay=null, msgT='';
+const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+
+function viewer(){ if(mode==='online') return me; return S?S.turn:'B'; }
+function canAct(){ return mode!=='online' || (me==='B'||me==='L'); }
+
+function commit(fn,logline){
+ const before=JSON.stringify({...S,prev:null});
+ const n=clone(S); n.prev=before; fn(n); if(logline) n.log.push(logline); n.seq=(S.seq||0)+1;
+ S=n; sel=null; render();
+ if(mode==='online'&&gameRef){const body={s:JSON.stringify(S),seq:S.seq};writing=writing.then(()=>gameRef.set(body)).catch(e=>flash('Speichern fehlgeschlagen ('+(e&&e.code||'Fehler')+'). Bitte erneut versuchen.'));}
+}
+function undo(){ if(!S.prev) return; const p=JSON.parse(S.prev); const lastLog=S.log[S.log.length-1]; p.seq=(S.seq||0)+1; p.log.push('Rückgängig: „'+(lastLog||'')+'“'); S=p; sel=null; trig=null; render();
+ if(mode==='online'&&gameRef){const body={s:JSON.stringify(S),seq:S.seq};writing=writing.then(()=>gameRef.set(body)).catch(()=>flash('Speichern fehlgeschlagen.'));}}
+function flash(t){msgT=t;$('msg').textContent=t;}
+
+/* ---------- Abfragen ---------- */
+const playersOn=f=>Object.entries(S.board).filter(([i,ff])=>ff===f).map(([i])=>+i);
+const teamOn=(f,t)=>playersOn(f).filter(i=>P(i).team===t);
+function canPlaceCard(t,e){ if(S.edges[e]) return false; const fs=e.split('|'); return fs.some(f=>teamOn(f,t).length>0)||fs.every(f=>playersOn(f).length===0); }
+const setting=(k,d)=>(S.settings&&S.settings[k]!==undefined)?S.settings[k]:d;
+function canPlacePlayer(t,f,moving){ if(teamOn(f,t).length) return false; if(!moving&&!setting('oppField',false)&&teamOn(f,OPP[t]).length) return false; return true; }
+function fieldOfBall(){ return S.ball.carrier!=null&&S.board[S.ball.carrier]?S.board[S.ball.carrier]:S.ball.field; }
+function mods(f,t,exclude){ let m={T:0,Z:0,S:0},src=[]; for(const e of edgesOf(f)){const x=S.edges[e]; if(!x||!x.open||x.used||exclude.includes(e)) continue; const c=S.cards[x.c]; if(c.t!==t) continue; const [k]=INFO[c.n].mod; if(k==='*'){src.push(c.n+' (+1 beliebig)');m.any=(m.any||0)+1;} else {m[k]++;src.push(c.n+' +1 '+VAL[k]);}} return {m,src}; }
+function shotPath(i){ const f=S.board[i]; const t=P(i).team; const r=rowOf(f),c=col(f),cC=2; const rows=t==='B'?range(r+1,7):range(1,r-1); const cs=range(Math.min(c,cC),Math.max(c,cC)); let n=0; for(const rr of rows)for(const cc of cs) n+=playersOn(fid(cc,rr)).filter(j=>j!==i).length; return n; }
+function range(a,b){const o=[];for(let x=a;x<=b;x++)o.push(x);return o;}
+
+/* ---------- Zeichnen ---------- */
+const W=96,H=80,X0=26,Y0=36;
+const fx=f=>X0+col(f)*W, fy=f=>Y0+(7-rowOf(f))*H;
+function render(){
+ if(!S) return;
+ const v=viewer();
+ $('sc').textContent=S.score.B+' : '+S.score.L;
+ $('turnPill').textContent='Am Zug: '+NAME[S.turn]; $('turnPill').className='pill p'+S.turn;
+ $('attPill').textContent='Angriff: '+NAME[S.att]+(S.att==='B'?' ↑':' ↓'); $('attPill').className='pill p'+S.att;
+ $('me').textContent=mode==='online'?(me==='B'||me==='L'?'Du spielst '+NAME[me]:'Du schaust zu'):'Hot-Seat: Hand von '+NAME[S.turn];
+ $('msg').textContent=msgT;
+ drawBoard(v); drawHand(v); drawSel(v); drawTrig(v);
+ $('log').innerHTML=S.log.slice().reverse().slice(0,80).map(l=>'<li>'+esc(l)+'</li>').join('');
+ const d=t=>`${NAME[t]}: Aktionen ${S.decks[t].A.length} im Stapel · ${S.disc[t].A.length} abgelegt · Spieler ${S.decks[t].P.length} im Stapel · ${S.disc[t].P.length} abgelegt`;
+ $('deckinfo').innerHTML=d('B')+'<br>'+d('L');
+ const my=canAct()&&(mode!=='online'||me===S.turn);
+ ['dP','dA2','dA1','endT'].forEach(id=>$(id).disabled=!my);
+ $('undo').disabled=!S.prev||!canAct();
+ ['bChange','bGoal','bSave'].forEach(id=>$(id).disabled=!canAct());
+ $('setOpp').checked=!!setting('oppField',false); $('setSec').value=setting('secure','A'); $('setOpp').disabled=$('setSec').disabled=!canAct();
+ $('gameInfo').textContent=mode==='online'?'Online-Spiel „'+code+'“ · Stand '+S.seq:'Lokales Spiel auf diesem Gerät · Stand '+S.seq;
+}
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function drawBoard(v){
+ let o='';
+ const tgt=new Set(); const slots=[];
+ if(sel&&sel.kind==='hp') for(let c=0;c<5;c++)for(let r=1;r<=7;r++){const f=fid(c,r); if(canPlacePlayer(sel.team,f)) tgt.add(f);}
+ if(sel&&sel.kind==='move'){ for(const n of nbrs(S.board[sel.i])) if(canPlacePlayer(P(sel.i).team,n,true)) tgt.add(n); }
+ if(sel&&sel.kind==='freeball') for(let c=0;c<5;c++)for(let r=1;r<=7;r++) tgt.add(fid(c,r));
+ for(let c=0;c<5;c++)for(let r=1;r<=7;r++){const f=fid(c,r);o+=`<rect class="fld${tgt.has(f)?' tgt':''}" data-f="${f}" x="${fx(f)}" y="${fy(f)}" width="${W}" height="${H}"/>`;}
+ o+=`<rect class="boxline" x="${X0+W}" y="${Y0}" width="${3*W}" height="${2*H}"/><rect class="boxline" x="${X0+W}" y="${Y0+5*H}" width="${3*W}" height="${2*H}"/>`;
+ o+=`<rect x="${X0+2*W+14}" y="${Y0-22}" width="${W-28}" height="18" rx="3" fill="var(--lila-soft)" stroke="var(--lila)"/><text class="ax" x="${X0+2.5*W}" y="${Y0-9}">Kühn H3</text>`;
+ o+=`<rect x="${X0+2*W+14}" y="${Y0+7*H+4}" width="${W-28}" height="18" rx="3" fill="var(--blue-soft)" stroke="var(--blue)"/><text class="ax" x="${X0+2.5*W}" y="${Y0+7*H+17}">Sauter H3</text>`;
+ for(let r=1;r<=7;r++) o+=`<text class="ax" x="${X0-13}" y="${Y0+(7-r)*H+H/2+4}">${r}</text>`;
+ for(let c=0;c<5;c++) o+=`<text class="ax" x="${X0+c*W+W/2}" y="${Y0+7*H+40}">${COLS[c]}</text>`;
+ // Spieler
+ const occ={}; for(const [i,f] of Object.entries(S.board)) (occ[f]=occ[f]||[]).push(+i);
+ for(const [f,l] of Object.entries(occ)){ l.sort((a,b)=>P(a).team<P(b).team?-1:1); const hh=(H-20)/l.length;
+  l.forEach((i,k)=>{const p=P(i),x=fx(f)+10,y=fy(f)+10+k*hh,ball=S.ball.carrier===i,isSel=sel&&(sel.kind==='bp'||sel.kind==='move')&&sel.i===i;
+   o+=`<g class="pl pl${p.team}${isSel?' sel':''}" data-p="${i}"><title>${esc(p.name)} · ${p.pos} · Tempo ${p.T}, Zweikampf ${p.Z}, Schuss ${p.S} · aktiv ${p.act}, passiv ${p.pas}</title><rect x="${x}" y="${y+1}" width="${W-20}" height="${hh-2}" rx="4" ${ball?'style="stroke-width:3.2"':''}/>`+
+   (hh>34?`<text class="pn" x="${x+(W-20)/2}" y="${y+hh/2-2}">${esc(p.short)}</text><text class="pv" x="${x+(W-20)/2}" y="${y+hh/2+12}">${p.T}·${p.Z}·${p.S}</text>`:`<text class="pn" x="${x+(W-20)/2}" y="${y+hh/2+4}">${esc(p.short)} ${p.T}${p.Z}${p.S}</text>`)+
+   (ball?`<circle class="ballc" cx="${x+W-26}" cy="${y+9}" r="6"/>`:'')+`</g>`;});}
+ if(S.ball.carrier==null&&S.ball.field){const f=S.ball.field;o+=`<circle class="ballc" cx="${fx(f)+W/2}" cy="${fy(f)+H/2}" r="8"/>`;}
+ // Kanten
+ const allE=new Set(); for(let c=0;c<5;c++)for(let r=1;r<=7;r++){const f=fid(c,r);edgesOf(f).forEach(e=>allE.add(e));}
+ for(const e of allE){
+  const [a,b]=e.split('|'); const horiz=rowOf(a)===rowOf(b); let x,y,w,h;
+  if(horiz){x=fx(b)-9;y=fy(a)+H/2-22;w=18;h=44;} else {x=fx(a)+W/2-24;y=fy(b)+H-9;w=48;h=18;}
+  const ed=S.edges[e];
+  if(ed){const c=S.cards[ed.c]; const mine=c.t===v; const show=ed.open||mine; const lab=show?AB[c.n]:''; const cls=`ed ed${c.t} ${ed.open?'op':'hid'}${ed.used?' used':''}${mine&&canAct()?' click':''}${sel&&sel.kind==='edge'&&sel.e===e?' selc':''}`;
+   const tip=ed.open?`${c.n}${ed.used?' (genutzt)':''} · ${NAME[c.t]}`:(mine?`${c.n} (verdeckt, nur für dich sichtbar) · ${ALTTXT[c.a]}`:`verdeckte Karte · ${NAME[c.t]}`);
+   o+=`<g class="${cls}" data-e="${e}"><title>${esc(tip)}</title><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3"/>`+(lab?(horiz?`<text transform="translate(${x+w/2+4},${y+h/2}) rotate(-90)">${lab}</text>`:`<text x="${x+w/2}" y="${y+h/2+4}">${lab}</text>`):'')+`</g>`;}
+  else if(sel&&sel.kind==='ha'&&canPlaceCard(sel.team,e)) o+=`<g class="slot" data-slot="${e}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3"/></g>`;
+ }
+ $('board').innerHTML=o;
+}
+function cardHtml(id,selected){const c=S.cards[id],i=INFO[c.n];return `<button class="card${selected?' sel':''}" data-hc="${id}"><span class="nm">${esc(c.n)}</span><span>${esc(i.eff)}</span><span class="alt">Richtung: ${esc(i.dir)} · Konter: ${esc(i.kon)}</span><span class="alt">${esc(ALTTXT[c.a])}</span><span class="mod">Kleindruck ${esc(i.mod[1])}</span></button>`;}
+function playerHtml(i,selected){const p=P(i);return `<button class="card pc${selected?' sel':''}" data-hp="${i}"><span class="nm"><span>${esc(p.name)}</span><span class="vals">${p.pos}</span></span><span class="vals">Tempo ${p.T} · Zweikampf ${p.Z} · Schuss ${p.S}</span><span class="alt">aktiv: ${esc(p.act)} · passiv: ${esc(p.pas)}</span></button>`;}
+function drawHand(v){
+ if(!(v==='B'||v==='L')){$('handTitle').textContent='Zuschauen';$('hand').innerHTML='<p class="hint">Du hast kein Team gewählt. Die Hände bleiben verdeckt.</p>';$('handInfo').textContent=`Blau: ${S.hands.B.A.length} Aktionen, ${S.hands.B.P.length} Spieler · Lila: ${S.hands.L.A.length} Aktionen, ${S.hands.L.P.length} Spieler`;return;}
+ const h=S.hands[v]; $('handTitle').textContent='Hand '+NAME[v];
+ $('handInfo').textContent=`${h.A.length} Aktionen · ${h.P.length} Spieler · Gegner: ${S.hands[OPP[v]].A.length} Aktionen, ${S.hands[OPP[v]].P.length} Spieler`;
+ $('hand').innerHTML=h.A.map(id=>cardHtml(id,sel&&sel.kind==='ha'&&sel.id===id)).join('')+h.P.map(i=>playerHtml(i,sel&&sel.kind==='hp'&&sel.i===i)).join('')||'<p class="hint">Keine Karten auf der Hand.</p>';
+}
+function drawSel(v){
+ const b=$('selBody'); if(!sel){b.innerHTML='<p class="hint">Tippe eine Handkarte, einen Spieler oder eine eigene Karte auf der Matte an.'+(pendingPay?' <b>Bezahlen:</b> tippe eine eigene Karte auf der Matte an, die abgelegt wird.':'')+'</p>'+(pendingPay?'<div class="row"><button data-act="skipPay">Ohne Bezahlen</button></div>':'');return;}
+ if(sel.kind==='ha'){const c=S.cards[sel.id];b.innerHTML=`<p><b>${esc(c.n)}</b> legen: tippe eine markierte Kante an. Erlaubt sind freie Kanten, an denen mindestens ein eigener Spieler steht oder deren beide Felder leer sind.</p><div class="row"><button data-act="discardHand">Karte ablegen</button><button data-act="cancel">Abbrechen</button></div>`;}
+ else if(sel.kind==='hp'){b.innerHTML=`<p><b>${esc(P(sel.i).name)}</b> legen: tippe ein markiertes Feld an (höchstens 1 Spieler pro Team und Feld${setting('oppField',false)?'':'; nicht auf Felder mit Gegenspieler'}).</p><div class="row"><button data-act="cancel">Abbrechen</button></div>`;}
+ else if(sel.kind==='bp'){const p=P(sel.i),f=S.board[sel.i],own=p.team===v;const hasBall=S.ball.carrier===sel.i;
+  b.innerHTML=`<p><b>${esc(p.name)}</b> (${NAME[p.team]}, ${f}) · T ${p.T} · Z ${p.Z} · S ${p.S} · aktiv ${esc(p.act)}, passiv ${esc(p.pas)}${hasBall?' · <b>am Ball</b>':''}</p>
+  <div class="row">${own&&!hasBall?'<button data-act="move">Bewegen (1 Feld, kostet 1 Karte)</button>':''}${!hasBall?'<button data-act="giveBall">Ball geben</button>':''}${hasBall?'<button data-act="freeBall">Ball frei auf Feld legen</button>':''}<button data-act="removeP">Ablegen</button>${own?'<button data-act="shoot">Torschuss rechnen</button>':''}<button data-act="cancel">Abbrechen</button></div>
+  <p class="hint">Für den Ballwechsel: diesen Spieler als neuen Ballführer gewählt lassen und „Ballwechsel …“ drücken.</p>`;}
+ else if(sel.kind==='move'){b.innerHTML=`<p><b>${esc(P(sel.i).name)}</b> bewegen: tippe ein markiertes Nachbarfeld an. Danach eine eigene Karte vom Feld als Bezahlung antippen.</p><div class="row"><button data-act="cancel">Abbrechen</button></div>`;}
+ else if(sel.kind==='freeball'){b.innerHTML=`<p>Tippe das Feld an, auf dem der Ball frei liegen soll.</p><div class="row"><button data-act="cancel">Abbrechen</button></div>`;}
+ else if(sel.kind==='edge'){const ed=S.edges[sel.e],c=S.cards[ed.c];const ex=sel.e.split('|').flatMap(f=>teamOn(f,c.t));
+  b.innerHTML=`<p><b>${esc(c.n)}</b> auf ${sel.e.replace('|','/')} · ${ed.open?(ed.used?'offen, schon genutzt':'offen, noch nutzbar'):'verdeckt'}</p>
+  ${!ed.used?(ex.length?`<div class="row"><label for="exSel">Ausführender</label><select id="exSel">${ex.map(i=>`<option value="${i}">${esc(P(i).short)} (${S.board[i]})</option>`).join('')}</select><label for="useSel">als</label><select id="useSel"></select></div><div class="row"><button class="pri" data-act="trigger">Auslösen</button></div>`:'<p class="hint">Kein eigener Spieler an dieser Kante – die Karte kann nicht ausgeführt werden.</p>'):''}
+  <div class="row"><button data-act="discardEdge">Als Bezahlung/so ablegen</button>${!ed.open?'<button data-act="reveal">Nur aufdecken</button>':''}<button data-act="cancel">Abbrechen</button></div>`;
+  if(ex.length&&!ed.used){const fill=()=>{const i=+$('exSel').value,p=P(i);const opts=[c.n];if(c.a==='aktiv')opts.push(p.act+' (aktive Aktion)');if(c.a==='passiv')opts.push(p.pas+' (passive Aktion)');if(c.a==='sturm'&&p.area==='S'){opts.push(p.act+' (Sturmaktion)');opts.push(p.pas+' (Sturmaktion)');}$('useSel').innerHTML=opts.map(o=>`<option>${esc(o)}</option>`).join('');};fill();$('exSel').onchange=fill;}
+ }
+}
+/* ---------- Auslösen-Assistent ---------- */
+function startTrigger(){
+ const e=sel.e,ed=S.edges[e],c=S.cards[ed.c],ex=+$('exSel').value,use=$('useSel').value.replace(/ \(.*\)$/,'');
+ const f=S.board[ex];
+ if(use==='Ball sichern'){
+  if(S.ball.carrier!==ex){flash('Ball sichern führt der Ballführer aus. '+P(ex).short+' hat den Ball nicht.');render();return;}
+  const v=setting('secure','A');
+  const hit=edgesOf(f).filter(k=>S.edges[k]&&k!==e&&(v==='A'||S.cards[S.edges[k].c].t!==c.t));
+  const gone=hit.map(k=>{const x=S.edges[k],cc=S.cards[x.c];return (x.open?cc.n:'verdeckt')+' '+k.replace('|','/')+' ('+NAME[cc.t]+')';});
+  trig=null;
+  commit(n=>{ n.edges[e].open=true; n.edges[e].used=true;
+   for(const k of hit){const x=n.edges[k];n.disc[n.cards[x.c].t].A.push(x.c);delete n.edges[k];}
+   if(v==='A'){n.disc[c.t].A.push(n.edges[e].c);delete n.edges[e];}
+  }, `${NAME[c.t]}: ${P(ex).short} (${f}) sichert den Ball (Variante ${v}). Abgelegt: ${gone.join(', ')||'nichts'}.`);
+  return;
+ }
+ commit(n=>{ for(const k of edgesOf(f)) if(n.edges[k]) n.edges[k].open=true; n.edges[e].open=true; n.edges[e].used=true; },
+  `${NAME[c.t]}: ${P(ex).short} (${f}) löst ${c.n}${use!==c.n?' als '+use:''} auf ${e.replace('|','/')} aus. Kanten von ${f} aufgedeckt.`);
+ trig={e,ex,use,f,team:c.t};
+ render();
+}
+function drawTrig(v){
+ const pn=$('trigPanel'); if(!trig||!S.edges[trig.e]){pn.hidden=true;return;} pn.hidden=false;
+ const {e,ex,use,f,team}=trig, opp=OPP[team];
+ const rev=edgesOf(f).filter(k=>S.edges[k]).map(k=>({k,x:S.edges[k],c:S.cards[S.edges[k].c]}));
+ const counter=COUNTER[use];
+ const traps=rev.filter(r=>r.c.t===opp&&!r.x.used&&(r.c.n===counter||r.c.a!=='-')&&r.k.split('|').some(ff=>teamOn(ff,opp).length));
+ const myM=mods(f,team,[e]), opM=mods(f,opp,[]);
+ const valDef=(use==='Steilpass'||use==='Sprint')?'T':(use==='Schuss'?'S':'Z');
+ const opps=Object.keys(S.board).map(Number).filter(i=>P(i).team===opp);
+ pn.innerHTML=`<h2>Auslösen: ${esc(use)}</h2>
+ <p class="hint">Aufgedeckt an ${f}: ${rev.map(r=>`${r.k.replace('|','/')} ${esc(r.c.n)} (${NAME[r.c.t]}${r.x.used?', genutzt':''})`).join(' · ')||'nichts'}</p>
+ ${traps.length?`<p class="msg">Mögliche Falle: ${traps.map(r=>esc(r.c.n)+' auf '+r.k.replace('|','/')+(r.c.n===counter?' (passender Konter)':' (nur über Alternative)')).join(', ')}</p>`:`<p class="hint">Keine passende gegnerische Falle am Feld.</p>`}
+ <p class="hint">Modifikatoren ${NAME[team]}: ${myM.src.join(', ')||'keine'} · ${NAME[opp]}: ${opM.src.join(', ')||'keine'}</p>
+ <div class="calc">
+  <div class="row"><label for="cV">Wert</label><select id="cV">${['T','Z','S'].map(k=>`<option value="${k}"${k===valDef?' selected':''}>${VAL[k]}</option>`).join('')}</select>
+  <label for="cO">gegen</label><select id="cO"><option value="-">niemand</option><option value="K"${use==='Schuss'?' selected':''}>Torwart ${KEEPER[opp].name} (Halten 3)</option>${opps.map(i=>`<option value="${i}">${esc(P(i).short)} (${S.board[i]})</option>`).join('')}</select></div>
+  <div class="row"><label><input type="checkbox" id="cSk"> Gegner auf übersprungenem Feld (−1)</label>${traps.length?`<label><input type="checkbox" id="cTr" checked> Falle wird genutzt</label>`:''}</div>
+  <div class="big" id="cOut"></div>
+  <div class="row"><button data-act="resA">${NAME[team]} setzt sich durch</button><button data-act="resD">${NAME[opp]} setzt sich durch</button><button data-act="closeTrig">Schließen</button></div>
+  <p class="hint">Den Ausgang (Ball weitergeben, Spieler bewegen, Ballwechsel) setzt ihr danach selbst um.</p>
+ </div>`;
+ const calc=()=>{const k=$('cV').value,o=$('cO').value,mk=x=>(x.m[k]||0)+(x.m.any||0);let a=P(ex)[k]+mk(myM),txt='';
+  if(o==='-'){$('cOut').textContent=`${P(ex).short}: ${a} – kein Gegenspieler`;return;}
+  let d,dn; if(o==='K'){d=KEEPER[opp].H+mk(opM);dn=KEEPER[opp].name;const path=shotPath(ex);a-=path;txt=` (Schussweg −${path})`;}
+  else{d=P(+o)[k]+mk(opM)-($('cSk').checked?1:0);dn=P(+o).short;}
+  const carrierIsMine=S.ball.carrier!=null&&P(S.ball.carrier).team===team;
+  const win=o==='K'?(a>d?team:opp):(a>d?team:a<d?opp:(carrierIsMine?team:opp));
+  $('cOut').textContent=`${P(ex).short} ${a}${txt} gegen ${dn} ${d} → Vorschlag: ${NAME[win]}${a===d?(o==='K'?' (Gleichstand hält der Torwart)':' (Gleichstand: Ballführer)'):''}`;};
+ ['cV','cO','cSk'].forEach(id=>$(id).onchange=calc); calc();
+ trig.traps=traps;
+}
+function resolve(winner){
+ const {e,team}=trig; const usedTrap=$('cTr')&&$('cTr').checked&&trig.traps.length?trig.traps[0].k:null; const out=$('cOut').textContent;
+ commit(n=>{ if(usedTrap&&n.edges[usedTrap]) n.edges[usedTrap].used=true; }, `Ergebnis: ${out.replace(/ → Vorschlag.*$/,'')} → ${NAME[winner]} setzt sich durch.`);
+ trig=null; render();
+}
+
+/* ---------- Spielsituationen ---------- */
+function possessionChange(newCarrier,prefix){
+ const nt=P(newCarrier).team, old=S.att;
+ const keep=i=>i===newCarrier||edgesOf(S.board[i]).some(k=>S.edges[k]&&!S.edges[k].open&&S.cards[S.edges[k].c].t===P(i).team);
+ const gone=Object.keys(S.board).map(Number).filter(i=>!keep(i));
+ commit(n=>{
+  for(const i of gone){n.disc[P(i).team].P.push(i);delete n.board[i];}
+  for(const [k,x] of Object.entries(n.edges)){const c=n.cards[x.c]; if(c.t===old||x.open){n.disc[c.t].A.push(x.c);delete n.edges[k];}}
+  n.att=nt; n.ball={carrier:newCarrier,field:n.board[newCarrier]};
+ }, (prefix||'')+`Ballwechsel: ${P(newCarrier).short} hat den Ball, ${NAME[nt]} greift an. Abgelegt: ${gone.map(i=>P(i).short).join(', ')||'niemand'}.`);
+ trig=null;
+}
+function sync(){ if(mode==='online'&&gameRef){const body={s:JSON.stringify(S),seq:S.seq};writing=writing.then(()=>gameRef.set(body)).catch(()=>flash('Speichern fehlgeschlagen.'));} }
+function goal(){
+ const sc=S.att, conc=OPP[sc];
+ commit(n=>{n.score[sc]++; for(const [k,x] of Object.entries(n.edges)){n.disc[n.cards[x.c].t].A.push(x.c);delete n.edges[k];}
+  const mine=Object.keys(n.board).map(Number).filter(i=>P(i).team===conc).sort((a,b)=>dist(n.board[a],'C4')-dist(n.board[b],'C4'));
+  n.att=conc; n.ball=mine.length?{carrier:mine[0],field:n.board[mine[0]]}:{carrier:null,field:'C4'}; n.turn=conc;
+ }, `TOR für ${NAME[sc]}! Anstoß ${NAME[conc]} (Platzhalter): alle Aktionskarten weg, Ball zum Spieler nächst C4.`);
+}
+const dist=(a,b)=>Math.abs(col(a)-col(b))+Math.abs(rowOf(a)-rowOf(b));
+function save(){
+ const def=OPP[S.att], goalRow=def==='L'?7:1;
+ const mine=Object.keys(S.board).map(Number).filter(i=>P(i).team===def).sort((a,b)=>Math.abs(rowOf(S.board[a])-goalRow)-Math.abs(rowOf(S.board[b])-goalRow));
+ if(!mine.length){flash(NAME[def]+' hat keinen Spieler auf dem Feld. Lege erst einen Spieler, dann „Gehalten“.');return;}
+ possessionChange(mine[0],`Gehalten von ${KEEPER[def].name}. Abstoß (Platzhalter) zu ${P(mine[0]).short}. `);
+}
+
+/* ---------- Eingaben ---------- */
+document.addEventListener('click',ev=>{
+ const t=ev.target.closest('[data-act],[data-hc],[data-hp],[data-p],[data-e],[data-slot],[data-f]'); if(!t||!S) return;
+ msgT=''; const v=viewer();
+ if(t.dataset.act){ const a=t.dataset.act;
+  if(a==='cancel'){sel=null;render();return;}
+  if(a==='skipPay'){pendingPay=null;render();return;}
+  if(a==='discardHand'){const id=sel.id;commit(n=>{n.hands[v].A=n.hands[v].A.filter(x=>x!==id);n.disc[v].A.push(id);},`${NAME[v]} legt ${S.cards[id].n} von der Hand ab.`);return;}
+  if(a==='move'){sel={kind:'move',i:sel.i};render();return;}
+  if(a==='giveBall'){const i=sel.i;commit(n=>{n.ball={carrier:i,field:n.board[i]};},`Ball zu ${P(i).short} (${S.board[i]}).`);return;}
+  if(a==='freeBall'){sel={kind:'freeball'};render();return;}
+  if(a==='removeP'){const i=sel.i;commit(n=>{n.disc[P(i).team].P.push(i);delete n.board[i];if(n.ball.carrier===i)n.ball={carrier:null,field:S.board[i]};},`${P(i).short} abgelegt.`);return;}
+  if(a==='shoot'){const i=sel.i;trigShot(i);return;}
+  if(a==='trigger'){startTrigger();return;}
+  if(a==='reveal'){const e=sel.e;commit(n=>{n.edges[e].open=true;},`Karte auf ${e.replace('|','/')} aufgedeckt: ${S.cards[S.edges[e].c].n}.`);return;}
+  if(a==='discardEdge'){const e=sel.e;const c=S.cards[S.edges[e].c];commit(n=>{n.disc[c.t].A.push(n.edges[e].c);delete n.edges[e];},`${NAME[c.t]} legt ${S.edges[e].open?c.n:'eine verdeckte Karte'} von ${e.replace('|','/')} ab.`);return;}
+  if(a==='resA'){resolve(trig.team);return;} if(a==='resD'){resolve(OPP[trig.team]);return;} if(a==='closeTrig'){trig=null;render();return;}
+  return;}
+ if(!canAct()){flash('Wähle oben im Spiel ein Team, um mitzuspielen.');render();return;}
+ if(t.dataset.hc){const id=t.dataset.hc;sel=sel&&sel.kind==='ha'&&sel.id===id?null:{kind:'ha',id,team:v};render();return;}
+ if(t.dataset.hp){const i=+t.dataset.hp;sel=sel&&sel.kind==='hp'&&sel.i===i?null:{kind:'hp',i,team:v};render();return;}
+ if(t.dataset.slot&&sel&&sel.kind==='ha'){const e=t.dataset.slot,id=sel.id;commit(n=>{n.hands[v].A=n.hands[v].A.filter(x=>x!==id);n.edges[e]={c:id,open:false,used:false};},`${NAME[v]} legt eine Karte verdeckt auf ${e.replace('|','/')}.`);return;}
+ if(t.dataset.e){const e=t.dataset.e,c=S.cards[S.edges[e].c];
+  if(pendingPay&&c.t===pendingPay){commit(n=>{n.disc[c.t].A.push(n.edges[e].c);delete n.edges[e];},`Bezahlt mit ${S.edges[e].open?c.n:'verdeckter Karte'} von ${e.replace('|','/')}.`);pendingPay=null;render();return;}
+  if(c.t!==v){flash('Das ist eine Karte von '+NAME[c.t]+'.');render();return;}
+  sel={kind:'edge',e};trig=null;render();return;}
+ if(t.dataset.p){const i=+t.dataset.p;
+  if(sel&&sel.kind==='move'){return;}
+  sel=sel&&sel.kind==='bp'&&sel.i===i?null:{kind:'bp',i};render();return;}
+ if(t.dataset.f){const f=t.dataset.f;
+  if(sel&&sel.kind==='hp'){if(!canPlacePlayer(sel.team,f)){flash(teamOn(f,sel.team).length?'Auf '+f+' steht schon ein eigener Spieler.':'Auf Felder mit Gegenspieler darf nicht gelegt werden (Einstellung).');render();return;}const i=sel.i;commit(n=>{n.hands[v].P=n.hands[v].P.filter(x=>x!==i);n.board[i]=f;},`${NAME[v]} legt ${P(i).short} auf ${f}.`);return;}
+  if(sel&&sel.kind==='move'){const i=sel.i;if(!nbrs(S.board[i]).includes(f)||!canPlacePlayer(P(i).team,f,true)){flash('Nur auf ein freies Nachbarfeld.');render();return;}const from=S.board[i];commit(n=>{n.board[i]=f;},`${P(i).short} bewegt sich ${from} → ${f}. Jetzt mit einer eigenen Karte vom Feld bezahlen.`);pendingPay=P(i).team;render();return;}
+  if(sel&&sel.kind==='freeball'){commit(n=>{n.ball={carrier:null,field:f};},`Ball liegt frei auf ${f}.`);return;}
+ }
+});
+function trigShot(i){ // Schuss direkt rechnen ohne Karte
+ sel=null; trig=null; render();
+ const pn=$('trigPanel'); pn.hidden=false;
+ const team=P(i).team,opp=OPP[team],f=S.board[i],myM=mods(f,team,[]),opM=mods(f,opp,[]),path=shotPath(i);
+ const a=P(i).S+myM.m.S+(myM.m.any||0)-path,d=3+opM.m.S+(opM.m.any||0);
+ pn.innerHTML=`<h2>Torschuss rechnen</h2><div class="calc"><div class="big">${esc(P(i).short)}: Schuss ${P(i).S} + ${myM.m.S+(myM.m.any||0)} − ${path} (Schussweg) = ${a} gegen ${KEEPER[opp].name} ${d} → ${a>d?'Tor':'gehalten'}</div><p class="hint">Gilt nur, wenn ein Schuss ausgelöst wurde und kein Schuss blocken gegriffen hat. Gleichstand hält der Torwart.</p><div class="row"><button data-act="closeTrig">Schließen</button></div></div>`;
+}
+
+$('dP').onclick=()=>{const t=S.turn;commit(n=>drawC(n,t,'P',1),NAME[t]+' zieht 1 Spieler.');};
+$('dA2').onclick=()=>{const t=S.turn;commit(n=>drawC(n,t,'A',2),NAME[t]+' zieht 2 Aktionen.');};
+$('dA1').onclick=()=>{const t=S.turn;commit(n=>drawC(n,t,'A',1),NAME[t]+' zieht 1 Aktion.');};
+function drawC(n,t,k,c){for(let x=0;x<c;x++){if(!n.decks[t][k].length){n.decks[t][k]=shuffle(n.disc[t][k]);n.disc[t][k]=[];n.log.push(NAME[t]+': Ablagestapel neu gemischt.');}const id=n.decks[t][k].shift();if(id!==undefined)n.hands[t][k].push(id);}}
+$('endT').onclick=()=>{const t=S.turn;commit(n=>{n.turn=OPP[t];},`${NAME[t]} beendet den Zug.`);pendingPay=null;trig=null;if(mode!=='online')showCover();};
+$('undo').onclick=undo;
+$('setOpp').onchange=()=>{const v=$('setOpp').checked;commit(n=>{n.settings=Object.assign({},n.settings,{oppField:v});},'Einstellung: Spieler auf Felder mit Gegenspieler legen '+(v?'erlaubt':'verboten')+'.');};
+$('setSec').onchange=()=>{const v=$('setSec').value;commit(n=>{n.settings=Object.assign({},n.settings,{secure:v});},'Einstellung: Ball sichern Variante '+v+'.');};
+$('bChange').onclick=()=>{if(!sel||sel.kind!=='bp'){flash('Erst den neuen Ballführer auf der Matte antippen.');render();return;}possessionChange(sel.i);};
+$('bGoal').onclick=goal; $('bSave').onclick=save;
+$('newGame').onclick=()=>{ if($('newGame').dataset.confirm!=='1'){ $('newGame').dataset.confirm='1'; $('newGame').textContent='Wirklich neu starten?'; setTimeout(()=>{$('newGame').dataset.confirm='';$('newGame').textContent='Neues Spiel';},4000); return; }
+ $('newGame').dataset.confirm='';$('newGame').textContent='Neues Spiel'; S=newState(); sel=null; trig=null; render(); sync(); if(mode!=='online')showCover(); };
+
+function showCover(){ const c=$('cover'); $('game').hidden=true; c.hidden=false;
+ c.innerHTML=`<div style="display:grid;gap:12px;justify-items:center"><h2>${NAME[S.turn]} ist am Zug</h2><p class="hint">Gerät an ${NAME[S.turn]} weitergeben. Die Hand wird erst nach dem Tippen sichtbar.</p><button class="pri" id="uncover">Ich bin ${NAME[S.turn]} – Hand zeigen</button></div>`;
+ $('uncover').onclick=()=>{c.hidden=true;$('game').hidden=false;render();}; }
+
+
+/* ---------- PeerJS-Ersatz für den gemeinsamen Spielstand (GitHub-Pages-Version) ---------- */
+function peerDB(){
+ return {doc(path){
+  const id='footcards-2decks-'+path.replace(/[^A-Za-z0-9_-]/g,'-');
+  let peer=null, conns=[], last=null, listeners=[], errs=[], host=false;
+  const snap=(b)=>({exists:!!b,data:()=>b,metadata:{fromCache:false,hasPendingWrites:false}});
+  const emit=(b)=>listeners.forEach(f=>{try{f(snap(b));}catch(e){}});
+  const wire=(c)=>{ conns.push(c);
+    c.on('open',()=>{ if(host&&last) c.send(last); });
+    c.on('data',(b)=>{ if(!b||typeof b.s!=='string') return; if(last&&b.seq<last.seq) return; last=b; if(host) conns.forEach(o=>{ if(o!==c&&o.open) o.send(b); }); emit(b); });
+    c.on('close',()=>{ conns=conns.filter(o=>o!==c); });
+  };
+  function asHost(){ peer=new Peer(id); host=true;
+    peer.on('open',()=>{ if(!last) listeners.forEach(f=>f({exists:false,metadata:{fromCache:false}})); });
+    peer.on('connection',wire);
+    peer.on('error',(e)=>{ if(e.type==='unavailable-id'){ host=false; try{peer.destroy();}catch(_){} asGuest(); } else errs.forEach(f=>f({code:e.type})); });
+  }
+  function asGuest(){ peer=new Peer();
+    peer.on('open',()=>{ const c=peer.connect(id,{reliable:true}); wire(c); });
+    peer.on('error',(e)=>{ if(e.type==='peer-unavailable'){ try{peer.destroy();}catch(_){} asHost(); } else errs.forEach(f=>f({code:e.type})); });
+  }
+  return {
+   set(b){ last=b; conns.forEach(c=>{ if(c.open) c.send(b); }); return Promise.resolve(); },
+   onSnapshot(cb,err){ listeners.push(cb); if(err) errs.push(err); if(!peer) asHost(); return ()=>{ listeners=[]; try{peer&&peer.destroy();}catch(_){} }; }
+  };
+ }};
+}
+
+/* ---------- Start: online, sonst Hot-Seat ---------- */
+function startLocal(note){ mode='local'; if(!S) S=newState(); $('mode').textContent='Hot-Seat auf einem Gerät'+(note?' · '+note:''); $('lobby').hidden=true; showCover(); }
+function lobby(){
+ $('game').hidden=true; $('cover').hidden=true; const L=$('lobby'); L.hidden=false;
+ const saved=lsGet('2d-team')||''; code=lsGet('2d-code')||'spiel-1';
+ L.innerHTML=`<h2>Online-Tisch</h2><p class="hint">Beide öffnen diesen Link, wählen denselben Spielnamen und je ein Team. Wer zuerst beitritt, legt das Spiel an und hält den Spielstand – dieses Fenster bitte offen lassen. Jeder sieht nur seine eigene Hand. Regelstand 1.3; Testschalter findet ihr im Spiel unter „Einstellungen zum Testen“.</p>
+ <div class="row"><label for="codeIn">Spielname</label><input type="text" id="codeIn" value="${esc(code)}" maxlength="40"></div>
+ <div class="row"><button class="tB" data-team="B">Ich spiele Blau</button><button class="tL" data-team="L">Ich spiele Lila</button><button data-team="X">Nur zuschauen</button></div>
+ <p class="hint">Zuletzt gewählt: ${saved?NAME[saved]||'Zuschauen':'–'}. Lieber auf einem Gerät abwechselnd spielen? <button id="toLocal">Hot-Seat starten</button></p>`;
+ L.querySelectorAll('[data-team]').forEach(b=>b.onclick=()=>{const c=($('codeIn').value||'spiel-1').trim().replace(/[^A-Za-z0-9_\-]/g,'-').slice(0,40)||'spiel-1';code=c;me=b.dataset.team;lsSet('2d-team',me);lsSet('2d-code',code);joinOnline();});
+ $('toLocal').onclick=()=>startLocal('auf Wunsch');
+}
+function joinOnline(){
+ mode='online'; $('lobby').hidden=true; $('game').hidden=false; $('mode').textContent='Online · verbindet …';
+ if(unsub) unsub(); gameRef=db.doc('games/'+code); let first=true;
+ const timer=setTimeout(()=>{ if(first) $('mode').textContent='Online · Spielstand noch nicht erreichbar'; },10000);
+ unsub=gameRef.onSnapshot(snap=>{
+  if(!snap.metadata.fromCache){clearTimeout(timer);}
+  if(!snap.exists){ if(first&&!snap.metadata.fromCache){ first=false; S=newState(); render(); sync(); $('mode').textContent='Online · Spiel „'+code+'“ neu angelegt'; } return; }
+  first=false; const d=snap.data(); if(!d||typeof d.s!=='string') return; if(S&&d.seq<=S.seq&&snap.metadata.hasPendingWrites) return;
+  try{ const ns=JSON.parse(d.s); if(!S||ns.seq>=S.seq){S=ns;render();} }catch(e){}
+  $('mode').textContent='Online · Spiel „'+code+'“';
+ }, err=>{ $('mode').textContent='Online nicht verfügbar ('+err.code+')'; startLocal('Online nicht erreichbar'); });
+ render();
+}
+(async function(){
+ S=newState(); render(); $('game').hidden=true;
+ let settled=false;
+ const fallback=setTimeout(()=>{ if(!settled){ settled=true; startLocal(); } },5000);
+ let d=null; try{ const c=window.claude; d=c&&c.use?await c.use('db'):null; }catch(e){ d=null; }
+ if(!d&&window.Peer) d=peerDB();
+ clearTimeout(fallback);
+ if(d){ db=d; if(!settled||S.seq===0){ settled=true; lobby(); $('mode').textContent='Online verfügbar'; } else { $('mode').textContent='Hot-Seat · Online wäre verfügbar (Neu laden)'; } }
+ else if(!settled){ settled=true; startLocal(); }
+})();
+</script>
+</body></html>

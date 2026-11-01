@@ -9,6 +9,7 @@ Fußball-Kartenspiel von Lukas und Simon. Hier liegen die spielbaren Testversion
 | Pfad | Inhalt |
 |---|---|
 | `index.html` | Startseite mit allen Spielen und Iterationen |
+| `2decks/testtisch/` | Foot Cards 2Decks, Testtisch Regelstand 1.3 (eine Datei, nicht über `build.py` gebaut) |
 | `challengers/iteration-2/` | Foot Cards Challengers, Iteration 2 – 4 Eigenschaften (aktuell) |
 | `challengers/iteration-1/` | Foot Cards Challengers, Iteration 1 – Verteidiger zuerst |
 | `challengers/*/index.html` | spielbare Seite (wird gebaut, nicht von Hand ändern) |
@@ -34,5 +35,8 @@ console.log(st.goals);
 ```
 
 ## Online-Modus
+
+2Decks-Testtisch: Beide wählen denselben Spielnamen. Wer zuerst beitritt, hält den Spielstand (Fenster offen lassen); ebenfalls über PeerJS.
+
 
 Die Verbindung läuft direkt zwischen zwei Browsern über PeerJS (kostenloser Vermittlungsserver von PeerJS). Der Spielstand liegt beim Spieler, der das Spiel angelegt hat. Regeln und Kartenmaterial liegen im gemeinsamen Google-Drive-Ordner „Foot Cards“.
