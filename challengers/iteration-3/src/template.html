@@ -310,6 +310,8 @@ table.stats td:first-child{text-align:left;color:var(--muted)}
 .bub.out{font-family:var(--font-d);font-weight:800;font-size:24px;padding:8px 18px;text-transform:uppercase;letter-spacing:.03em;border-width:3px}
 .bub.out.o-goal{font-size:40px;background:#ffd84d;color:#111}
 .bub.out svg{width:22px;height:22px}
+.bub.out.long{white-space:normal;text-align:center;font-size:20px;line-height:1.15;text-transform:none;letter-spacing:0;max-width:86%!important;border-radius:16px;padding:8px 16px}
+.bub.out.long span{overflow:visible}
 .bub.out.pop{animation:bubin .5s cubic-bezier(.2,1.4,.4,1) both,flare 1.2s ease-out .5s}
 @keyframes flare{0%{box-shadow:0 0 0 0 rgba(255,216,77,.9)}100%{box-shadow:0 0 0 26px rgba(255,216,77,0)}}
 /* Version 3c: Entscheidung an Ort und Stelle */
@@ -593,20 +595,26 @@ function bubblesHtml(st, az){
   let h = '';
   if (rp) {
     const p = rp.prev, as = p.possStart, ds = FC.other(as);
-    if (p.att && p.att.id) {
+    const pres = isPresence(p) ? p.out.duel : null;
+    if (pres && p.att && p.att.id) {
+      h += bub(`rb-${p.turn}-a`, as, `<b>${esc(card(p.att.id).name)}</b> · Präsenz ${pres.a}${pres.kind2 ? ` · Tempo ${pres.a2}` : ''}`, 'shield', above, 'act');
+    } else if (p.att && p.att.id) {
       let [v, ic] = verb(ATT_VERB, p.att.eff || p.att.action, 'att');
       if (p.shot) v += ` nach ${FC.CORNERS[p.shot.aim]}`;
       h += bub(`rb-${p.turn}-a`, as, `<b>${esc(card(p.att.id).name)}</b> ${esc(v)}`, ic, above, 'act');
     }
     if (rp.step >= 1) {
       if (p.shot) h += bub(`rb-${p.turn}-k`, ds, `<b>${esc(card(p.shot.gk).name)}</b> springt nach ${FC.CORNERS[p.shot.gkN]}`, 'glove', below, 'act');
+      else if (pres && p.def && p.def.id) h += bub(`rb-${p.turn}-d`, ds, `<b>${esc(card(p.def.id).name)}</b> · Präsenz ${pres.d}${pres.kind2 ? ` · Tempo ${pres.d2}` : ''}`, 'shield', below, 'act');
       else if (p.def && p.def.id) { const [v, ic] = verb(DEF_VERB, p.def.action, 'def'); h += bub(`rb-${p.turn}-d`, ds, `<b>${esc(card(p.def.id).name)}</b> ${esc(v)}`, ic, below, 'act'); }
     }
     if (rp.step >= 2) {
       const k = p.out.k;
       const seat = k === 'change' || k === 'save' || k === 'miss' ? p.possEnd : p.possStart;
       const ic = { goal:'star', change:'star', save:'glove', miss:'lost', yellow:'card', red:'card', ok:'ok', keep:'none' }[k] || 'ok';
-      h += bub(`rb-${p.turn}-o`, seat, esc(p.out.t), ic, [50, 50], 'out o-' + k);
+      const pseat = pres ? (pres.win === 'def' ? ds : as) : seat;
+      h += pres ? bub(`rb-${p.turn}-o`, pseat, esc(outText(p)), 'star', [50, 50], 'out long o-ok')
+                : bub(`rb-${p.turn}-o`, seat, esc(p.out.t), ic, [50, 50], 'out o-' + k);
     }
     return `<div class="fx">${h}</div>`;
   }
@@ -992,7 +1000,29 @@ function setState(next){
   // Stapel neu gemischt? Dann vor dem nächsten Ziehen das Mischen zeigen
   if (old && next && old.phase !== 'draft' && next.phase !== 'draft') for (const s of ['A','B']) if (next.teams[s].pile.length > old.teams[s].pile.length) app.shuffle[s] = true;
   if (old && next && next.prev && old.phase !== 'draft' && (!old.prev || old.prev.turn !== next.prev.turn)) startReplay(next.prev);
-  else render();
+  else if (!presenceMoment(next)) render();
+}
+// Präsenz-Duell: Wer kommt zuerst an den freien (gelben) Ball?
+const isPresence = p => !!(p && p.out && p.out.duel && p.out.duel.kind === 'Präsenz');
+function presenceText(du, attId, defId){
+  const A = attId ? card(attId).name : 'Angriff', D = defId ? card(defId).name : 'Abwehr';
+  if (du.win === 'att') return du.kind2 ? `Gleich präsent – ${A} ist schneller und kommt vor ${D} an den Ball!` : `${A} kommt vor ${D} an den Ball!`;
+  if (du.win === 'def') return du.kind2 ? `Gleich präsent – ${D} ist schneller und kommt vor ${A} an den Ball!` : `${D} kommt vor ${A} an den Ball!`;
+  return `Fast geht der Ball verloren, doch ${A} reagiert gedankenschnell!`;   // Gleichstand: Ballführender bleibt laut Regel am Ball
+}
+function outText(p){ return isPresence(p) ? presenceText(p.out.duel, p.att && p.att.id, p.def && p.def.id) : p.out.t; }
+// Gewinnt der Angriff das Präsenz-Duell, läuft sein Zug einfach weiter. Damit man trotzdem sieht,
+// wer gewonnen hat, spielen wir vorher einen eigenen kurzen Moment ab (wie eine Auflösung).
+function presenceMoment(st){
+  const c = st && st.cur;
+  if (!c || !c.presence || !c.duel || st.phase !== 'att' || app.replay) return false;
+  const key = 'pm-' + c.turn;
+  if (app.revealed.has(key)) return false;
+  app.revealed.add(key);
+  startReplay({ turn: c.turn, minute: c.minute, possStart: st.poss, possEnd: st.poss, ballStart: st.ball, ballEnd: st.ball,
+    att: { id: c.att.id, action: 'Präsenz-Duell' }, def: { id: c.def.id, action: 'Präsenz-Duell' },
+    out: { k: 'presence', t: 'Präsenz-Duell gewonnen', duel: c.duel }, shot: null, whistle: null, moment: true });
+  return true;
 }
 // Ein Takt pro Schritt: Angriff · Abwehr · Ergebnis
 const BEAT = 1500;
@@ -1002,6 +1032,7 @@ function outcomeSound(p){
   if (k === 'save') return 'applause';
   if (k === 'miss') return 'ohh';
   if (k === 'yellow' || k === 'red') return 'whistle';
+  if (k === 'presence') return 'slide';
   if (k === 'change') return (aa === 'Ballverlust' || aa === 'Fehlpass') ? 'ohh' : 'applause';
   if (da && !/^--/.test(da)) return 'slide';     // Abwehr hat es versucht und ist ins Leere gegangen
   return 'kick';
@@ -1018,7 +1049,7 @@ function startReplay(prev){
   if (prev.def && prev.def.id || prev.shot) SFX.play('flip', t1 * m);
   SFX.play(outcomeSound(prev), t2 * m);
   if (prev.whistle) SFX.play('whistle', (t2 + 1000) * m, prev.whistle === 'Abpfiff' ? 3 : 2);
-  if (!reduceMotion()) { const pl = plansFor(app.st); if (pl.length) scPlay('game', '#gscene', gameMode(), [pl[pl.length - 1]], { delay: Math.max(0, t2 - (prev.shot ? 900 : 700)) * m, labels: gameLabels(app.st) }); }
+  if (!reduceMotion() && !prev.moment) { const pl = plansFor(app.st); if (pl.length) scPlay('game', '#gscene', gameMode(), [pl[pl.length - 1]], { delay: Math.max(0, t2 - (prev.shot ? 900 : 700)) * m, labels: gameLabels(app.st) }); }
   at(t1, () => { app.replay.step = 1; render(); });
   if (dice) at(tDice, () => { app.replay.dice = 1; app.replay.step = 1; render(); });
   at(t2, () => { app.replay.step = 2; render(); });
@@ -1029,6 +1060,7 @@ function clearReplayTimers(){ if (app.replay) app.replay.timers.forEach(clearTim
 function endReplay(){
   clearReplayTimers();
   app.replay = null;
+  if (presenceMoment(app.st)) return;
   render();
   if (app.mode === 'bot') runBot();
 }
@@ -1174,14 +1206,15 @@ function choiceLabel(st, ph, x){
 }
 
 // ---------- Auflösung ----------
-const OUT_CLASS = { change:'o-change', goal:'o-goal', save:'o-save', miss:'o-change', yellow:'o-card', red:'o-card', ok:'o-ok', keep:'o-keep' };
+const OUT_CLASS = { presence:'o-ok', change:'o-change', goal:'o-goal', save:'o-save', miss:'o-change', yellow:'o-card', red:'o-card', ok:'o-ok', keep:'o-keep' };
 function replayHtml(st){
   const rp = app.replay, p = rp.prev;
   const defSeat = FC.other(p.possStart), attSeat = p.possStart;
   let h = stepsHtml(rp.step >= 2 ? 3 : rp.step >= 1 ? 2 : 1);
   h += pitchHtml(st);
   const du = p.out && p.out.duel;
-  if (du && rp.step >= 1) h += sitHtml(duelTitle(du.kind), 'Ergebnis', vsHtml(du, p.att && p.att.id, p.def && p.def.id, attSeat, defSeat), '');
+  if (du && rp.step >= 1) h += sitHtml(duelTitle(du.kind), isPresence(p) ? 'nach „--“ gegen „--“: Wer kommt zuerst an den Ball?' : 'Ergebnis', vsHtml(du, p.att && p.att.id, p.def && p.def.id, attSeat, defSeat), '');
+  else if (isPresence(p)) h += sitHtml('Präsenz-Duell', 'nach „--“ gegen „--“: Wer kommt zuerst an den Ball?', '', 'Der Ball ist frei. Es zählt die Präsenz der beiden neuen Karten, bei Gleichstand das Tempo.');
   if (p.shot && rp.step >= 1) {
     const sh = p.shot;
     const same = sh.aim === sh.gkN;
@@ -1191,7 +1224,7 @@ function replayHtml(st){
       ${!same && sh.roll && rp.dice>=1 ? `<div class="dice">${rp.step<2 && !app.rolled.has(p.turn) ? `<span class="pdie rolling" data-final="${sh.roll}" data-key="${p.turn}">${dieFace(1+Math.floor(Math.random()*6))}</span><span class="dlabel">Würfel rollt … gebraucht: unter ${sh.need}</span>` : `<span class="pdie">${dieFace(sh.roll)}</span><span class="dlabel"><b>${sh.roll}</b> – ${sh.roll<sh.need?'unter':'nicht unter'} ${sh.need}</span>`}</div>`:''}</div>`;
   }
   if (rp.step >= 2) {
-    h += `<div class="banner outcome ${OUT_CLASS[p.out.k]||''}">${esc(p.out.t)}${p.possEnd!==p.possStart&&p.out.k!=='goal'?`<small>Ballbesitz: ${esc(teamLabel(p.possEnd))}</small>`:''}${p.out.k==='goal'?`<small>${esc(card(p.shot.shooter).name)} trifft für ${esc(teamLabel(p.possStart))}</small>`:''}</div>`;
+    h += `<div class="banner outcome ${OUT_CLASS[p.out.k]||''}">${esc(outText(p))}${p.moment?'<small>Jetzt geht es mit seinem Angriff weiter.</small>':''}${p.possEnd!==p.possStart&&p.out.k!=='goal'?`<small>Ballbesitz: ${esc(teamLabel(p.possEnd))}</small>`:''}${p.out.k==='goal'?`<small>${esc(card(p.shot.shooter).name)} trifft für ${esc(teamLabel(p.possStart))}</small>`:''}</div>`;
     if (p.whistle) h += `<div class="banner o-whistle">${p.whistle==='Halbzeit'?'Halbzeitpfiff':'Abpfiff'}</div>`;
   }
   return h;
