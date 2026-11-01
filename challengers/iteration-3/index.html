@@ -263,7 +263,7 @@ table.stats td:first-child{text-align:left;color:var(--muted)}
 .scene{position:absolute;inset:0;pointer-events:none;z-index:3}
 .sc-tok{position:absolute;width:24px;height:24px;border-radius:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;
   font-family:var(--font-d);font-weight:800;font-size:12.5px;color:#fff;border:2px solid #fff;box-shadow:0 2px 0 rgba(0,0,0,.25);transition:opacity .25s}
-.sc-tok.ta{background:var(--lila)}.sc-tok.tb{background:var(--blau)}
+.sc-tok.ta{background:var(--lila)}.sc-tok.tb{background:#fff;color:#111;border-color:#111}
 .sc-tok.hold{box-shadow:0 0 0 3px color-mix(in srgb,var(--hl) 80%,transparent),0 2px 0 rgba(0,0,0,.25)}
 .sc-tok.gk{width:14px;height:14px;border-radius:4px;opacity:.85}
 .sc-ball{position:absolute;width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #111;transform:translate(calc(-50% + 11px),calc(-50% + 9px));z-index:2}
@@ -331,12 +331,70 @@ kbd{position:absolute;top:6px;right:6px;font-family:var(--font-d);font-size:12px
 .sit-r{font-size:14px}
 .sit details summary{cursor:pointer;font-size:13.5px;color:var(--muted)}
 .sit details p{margin:6px 0 0;font-size:13.5px;max-width:70ch}
+/* Version 3b: Heim | Spielfeld | Gast */
+.wrap{max-width:1440px}
+.arena{display:grid;grid-template-columns:minmax(250px,310px) minmax(0,1fr) minmax(250px,310px);gap:14px;align-items:start}
+@media (max-width:1080px){.arena{grid-template-columns:1fr 1fr}.arena .center{grid-column:1/-1;order:-1}}
+.side{gap:8px;border-top:4px solid var(--line)}
+.side.atk{border-top-color:var(--att)}
+.sidehead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sidename{display:flex;flex-direction:column;gap:4px;min-width:0}
+.sidename b{font-family:var(--font-d);font-size:22px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tdot{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid #111}
+.tdot.ta{background:var(--lila)}.tdot.tb{background:#fff}
+.roletag{font-family:var(--font-d);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:12.5px}
+.roletag.a{color:var(--att)}.roletag.d{color:var(--def)}
+.side .stack{margin:10px 10px 0 0}
+.shufnote{font-size:13px}
+.center{gap:10px}
+.rpitch.hp{aspect-ratio:16/10}
+.rpitch.hp .rgoal{top:40%;bottom:40%}
+.hz{position:absolute;border:1px solid color-mix(in srgb,var(--pitch-line) 40%,transparent);display:flex;align-items:flex-start;justify-content:flex-start;padding:4px 6px;
+  font-family:var(--font-d);font-weight:700;font-size:13px;color:var(--pitch-dark);transition:background .4s}
+.hz span{opacity:.6}
+.hz.target{background:color-mix(in srgb,#ffd84d 45%,transparent);cursor:pointer;z-index:4}
+.hz.target:hover{background:color-mix(in srgb,#ffd84d 75%,transparent)}
+.hz.glow{--gc:#9b2f9a;background:color-mix(in srgb,var(--gc) 26%,transparent);box-shadow:inset 0 0 0 3px var(--gc),inset 0 0 28px var(--gc);animation:glow 1.8s ease-in-out infinite}
+.hz.glow.g-n{--gc:#ffd84d}
+.hz.glow.g-b{--gc:#ffffff;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px rgba(0,0,0,.4),inset 0 0 30px #fff;animation-name:glowb}
+@keyframes glowb{50%{background:rgba(255,255,255,.3)}}
+@keyframes glow{50%{box-shadow:inset 0 0 0 3px var(--gc),inset 0 0 8px var(--gc)}}
+.scene.horiz .sc-ball{width:18px;height:18px;border-width:2.5px;box-shadow:0 2px 0 rgba(0,0,0,.3);transition:background .3s}
+.scene.ball-a .sc-ball{background:var(--lila);border-color:#fff}
+.scene.ball-b .sc-ball{background:#fff;border-color:#111}
+.scene.ball-n .sc-ball{background:#ffd84d;border-color:#111}
+.fx{position:absolute;inset:0;pointer-events:none;z-index:6}
+.bub{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px;padding:5px 10px 5px 8px;border-radius:999px;font-size:14.5px;white-space:nowrap;
+  border:2px solid #111;box-shadow:0 3px 0 rgba(0,0,0,.3),0 0 18px rgba(255,255,255,.35);max-width:96%}
+.bub span{overflow:hidden;text-overflow:ellipsis}
+.bub b{font-family:var(--font-d);font-size:16px}
+.bub.ta{background:var(--lila);color:#fff}
+.bub.tb{background:#fff;color:#111}
+.bub.pop{animation:bubin .45s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes bubin{0%{transform:translate(-50%,-50%) scale(.3);opacity:0;filter:brightness(2)}70%{filter:brightness(1.4)}100%{transform:translate(-50%,-50%) scale(1);opacity:1;filter:none}}
+.bub.out{font-family:var(--font-d);font-weight:800;font-size:24px;padding:8px 18px;text-transform:uppercase;letter-spacing:.03em;border-width:3px}
+.bub.out.o-goal{font-size:40px;background:#ffd84d;color:#111}
+.bub.out svg{width:22px;height:22px}
+.bub.out.pop{animation:bubin .5s cubic-bezier(.2,1.4,.4,1) both,flare 1.2s ease-out .5s}
+@keyframes flare{0%{box-shadow:0 0 0 0 rgba(255,216,77,.9)}100%{box-shadow:0 0 0 26px rgba(255,216,77,0)}}
+/* Karte ziehen und umdrehen */
+.deal{position:relative;animation:dealin .55s cubic-bezier(.2,.7,.2,1) var(--dd,0s) both;transform-origin:80% 0}
+@keyframes dealin{0%{transform:translate(40px,-120px) scale(.3) rotate(10deg);opacity:0}25%{opacity:1}100%{transform:none;opacity:1}}
+.deal .dealback{position:absolute;inset:0;z-index:2;animation:dealout .3s ease-in calc(var(--dd,0s) + .55s) both}
+.deal .dealback .pcard.back{height:100%}
+@keyframes dealout{to{transform:rotateY(90deg);opacity:0;visibility:hidden}}
+.deal .dealfront{animation:flipin .45s cubic-bezier(.2,.7,.2,1) calc(var(--dd,0s) + .85s) both}
+/* Mischen */
+.stack.shuffle i:nth-child(odd){animation:riffleL .5s ease-in-out 2}
+.stack.shuffle i:nth-child(even){animation:riffleR .5s ease-in-out 2}
+@keyframes riffleL{50%{transform:translate(-20px,-6px) rotate(-14deg)}}
+@keyframes riffleR{50%{transform:translate(26px,-10px) rotate(14deg)}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}.progress i{width:100%}}
 </style>
 
 <div class="wrap" id="app">
   <div class="top">
-    <div class="brand"><h1>Foot Cards</h1><span>Version 3 · Spielfluss</span></div>
+    <div class="brand"><h1>Foot Cards</h1><span>Version 3 · Spielfluss (Vorschlag)</span></div>
     <div class="row" id="topActions"></div>
   </div>
   <div id="view"><div class="empty">Lädt …</div></div>
@@ -345,7 +403,7 @@ kbd{position:absolute;top:6px;right:6px;font-family:var(--font-d);font-size:12px
     <ul>
       <li>Jeder Spieler hat 10 von 26 Feldspielern im Deck (zufällig oder per Draft, Reihenfolge A-B-B-A …) und einen der beiden Keeper (zufällig).</li>
       <li>Ein Spielzug: Beide ziehen ihre Karte. Der Verteidiger sieht seine Karte sofort und kann schon überlegen. Der Angreifer deckt auf und wählt seine Aktion (orange). Danach deckt der Verteidiger auf, sieht die Angriffsaktion und wählt in der gespiegelten Zone (blau). Die Option hinter „/“ kostet: Spieler erschöpfen oder Token (Angreifer rot, Verteidiger blau).</li>
-      <li>Abwehr: Passabfangen schlägt Querpass, Rückpass, Steilpass, Flanke, Vorlage und Diagonalball. Tackling schlägt Dribbling und „--“. Block schlägt Schuss und Kopfball, Schuss blocken nur den Schuss. Ballgewinn schlägt alles außer grüne Aktionen. Ball sichern ist nicht zu erobern.</li>
+      <li>Abwehr: Passabfangen schlägt Querpass, Rückpass, Steilpass, Flanke, Vorlage, Diagonalball und <b>neu in Version 3 auch „--“</b>. Tackling schlägt Dribbling und „--“. Block schlägt Schuss und Kopfball, Schuss blocken nur den Schuss. Ballgewinn schlägt alles außer grüne Aktionen. Ball sichern ist nicht zu erobern.</li>
       <li>Steilpass: Spielt die Abwehr Passabfangen, ist der Ball weg. Sonst folgt im nächsten Zug ein Tempo-Duell: Beide decken ihre nächste Karte auf, es zählt nur deren Tempo (bei Gleichstand die Präsenz), die Aktionen entfallen. Gewinnt der Angreifer, kommt der Ball in der Zone davor an, sonst erobert die Abwehr ihn dort. Sprint: Tempo-Duell der Karten, die gerade gespielt werden, danach wie Dribbling.</li>
       <li>„--“ gegen „--“: Im nächsten Zug decken beide sofort eine neue Karte auf, es zählt deren Präsenz (bei Gleichstand das Tempo). Gewinnt die Abwehr, erobert sie den Ball. Sonst bleibt der Angreifer am Ball, und der Zug läuft normal weiter: Der Angreifer wählt zuerst, sieht dabei aber schon die Abwehrkarte, danach wählt die Abwehr.</li>
       <li>Vorlage: Kommt sie an, schießt im nächsten Zug die nächste Karte des Angreifers direkt (Schusswert plus Assist des Vorlagengebers). Die Abwehr deckt dabei keine Karte auf.</li>
@@ -366,7 +424,7 @@ const P2P_BUILD = true;
 const CARD_DATA = {"players":[{"id":"c00","name":"Bjarke Jacobsen","nr":15,"col":"lila","tempo":2,"praesenz":4,"assist":0,"kopf":6,"schuss":1,"z":{"LO":{"a":[["--",0]],"at":"","d":["--","Tackling"],"dt":""},"ZO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"ZM":{"a":[["Querpass",0]],"at":"","d":["Ballgewinn"],"dt":""},"LD":{"a":[["Ball sichern",1]],"at":"","d":["Tackling","Passabfangen"],"dt":""},"ZD":{"a":[["Querpass",0]],"at":"","d":["Tackling","Block"],"dt":""},"RD":{"a":[["Ball sichern",1]],"at":"","d":["Tackling","Passabfangen"],"dt":""}}},{"id":"c01","name":"Robert Tesche","nr":8,"col":"lila","tempo":1,"praesenz":7,"assist":0,"kopf":2,"schuss":1,"z":{"LO":{"a":[["Ball sichern",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["--",0]],"at":"","d":["--"],"dt":"B"},"RO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"ZM":{"a":[["Ball sichern",0],["Querpass",0]],"at":"","d":["Passabfangen"],"dt":""},"LD":{"a":[["Querpass",0]],"at":"","d":["--","Passabfangen"],"dt":""},"ZD":{"a":[["Ball sichern",1]],"at":"G","d":["Passabfangen"],"dt":""},"RD":{"a":[["--",0],["Querpass",0]],"at":"","d":["--","Passabfangen"],"dt":""}}},{"id":"c02","name":"Sven Köhler","nr":6,"col":"lila","tempo":3,"praesenz":5,"assist":0,"kopf":3,"schuss":3,"z":{"LO":{"a":[["--",0]],"at":"","d":["--","Passabfangen"],"dt":""},"ZO":{"a":[["--",0]],"at":"","d":["--","Gelb"],"dt":"BGR"},"RO":{"a":[["--",0],["Querpass",0]],"at":"","d":["--","Passabfangen"],"dt":""},"ZM":{"a":[["Querpass",0],["Schuss",0]],"at":"","d":["Ballgewinn"],"dt":""},"LD":{"a":[["Querpass",0]],"at":"","d":["Passabfangen","Tackling"],"dt":""},"ZD":{"a":[["Querpass",0]],"at":"","d":["Passabfangen","Tackling"],"dt":""},"RD":{"a":[["--",0],["Querpass",0]],"at":"","d":["Passabfangen","Tackling"],"dt":""}}},{"id":"c03","name":"David Blacha","nr":18,"col":"lila","tempo":1,"praesenz":3,"assist":0,"kopf":1,"schuss":2,"z":{"LO":{"a":[["Querpass",0],["Flanke",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["--",0],["Vorlage",0]],"at":"","d":["--"],"dt":"B"},"RO":{"a":[["Querpass",0],["Flanke",0]],"at":"","d":["--"],"dt":""},"ZM":{"a":[["Querpass",1]],"at":"G","d":["Passabfangen"],"dt":""},"LD":{"a":[["Querpass",0]],"at":"B","d":["--","Passabfangen"],"dt":""},"ZD":{"a":[["Querpass",0]],"at":"B","d":["Passabfangen"],"dt":""},"RD":{"a":[["Querpass",0]],"at":"B","d":["--","Passabfangen"],"dt":""}}},{"id":"c04","name":"Nickenig","nr":2,"col":"lila","tempo":2,"praesenz":1,"assist":0,"kopf":4,"schuss":1,"z":{"LO":{"a":[["Rückpass",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"ZM":{"a":[["--",0],["Querpass",0]],"at":"","d":["Tackling"],"dt":""},"LD":{"a":[["--",0],["Querpass",0]],"at":"","d":["Tackling","Passabfangen"],"dt":""},"ZD":{"a":[["--",0],["Querpass",0]],"at":"","d":["Schuss blocken","Ballgewinn"],"dt":""},"RD":{"a":[["--",0],["Querpass",0]],"at":"","d":["Tackling","Passabfangen"],"dt":""}}},{"id":"c05","name":"Barletta","nr":4,"col":"lila","tempo":1,"praesenz":6,"assist":0,"kopf":3,"schuss":1,"z":{"LO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["--",0]],"at":"","d":["--","Passabfangen"],"dt":""},"ZM":{"a":[["Querpass",0],["Flanke",0]],"at":"","d":["--","Passabfangen"],"dt":"B"},"LD":{"a":[["Querpass",0]],"at":"","d":["Passabfangen"],"dt":""},"ZD":{"a":[["Querpass",1]],"at":"G","d":["Passabfangen","Ballgewinn"],"dt":""},"RD":{"a":[["Querpass",0]],"at":"","d":["Passabfangen"],"dt":""}}},{"id":"c06","name":"Gyamfi","nr":19,"col":"lila","tempo":7,"praesenz":4,"assist":0,"kopf":3,"schuss":1,"z":{"LO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["--",0]],"at":"","d":["--","Tackling"],"dt":""},"ZM":{"a":[["--",0],["Dribbling",0]],"at":"","d":["--"],"dt":""},"LD":{"a":[["Dribbling",0]],"at":"","d":["Tackling"],"dt":""},"ZD":{"a":[["Dribbling",0]],"at":"R","d":["Ballgewinn"],"dt":""},"RD":{"a":[["--",0],["Steilpass",0]],"at":"","d":["Tackling"],"dt":""}}},{"id":"c07","name":"Wiemann","nr":12,"col":"lila","tempo":4,"praesenz":2,"assist":1,"kopf":5,"schuss":1,"z":{"LO":{"a":[["--",0],["Flanke",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["--",0],["Flanke",0]],"at":"","d":["--"],"dt":""},"ZM":{"a":[["--",0],["Querpass",0]],"at":"","d":["--"],"dt":""},"LD":{"a":[["--",0],["Dribbling",0]],"at":"","d":["--","Tackling"],"dt":""},"ZD":{"a":[["Querpass",0]],"at":"","d":["Tackling","Schuss blocken"],"dt":""},"RD":{"a":[["Querpass",0]],"at":"","d":["--","Tackling"],"dt":""}}},{"id":"c08","name":"Kleinhansl","nr":3,"col":"lila","tempo":2,"praesenz":2,"assist":4,"kopf":1,"schuss":1,"z":{"LO":{"a":[["Flanke",0],["Dribbling",0]],"at":"","d":["--","Passabfangen"],"dt":""},"ZO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["--",0],["Flanke",0]],"at":"","d":["--"],"dt":""},"ZM":{"a":[["--",0],["Schuss",0]],"at":"","d":["--","Passabfangen"],"dt":""},"LD":{"a":[["Steilpass",0]],"at":"","d":["Passabfangen","Tackling"],"dt":""},"ZD":{"a":[["--",0],["Querpass",0]],"at":"","d":["--","Passabfangen"],"dt":""},"RD":{"a":[["--",0]],"at":"","d":["--"],"dt":""}}},{"id":"c09","name":"Ajdini","nr":13,"col":"lila","tempo":4,"praesenz":4,"assist":2,"kopf":2,"schuss":2,"z":{"LO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["Flanke",0]],"at":"","d":["Passabfangen"],"dt":""},"ZM":{"a":[["--",0],["Schuss",0]],"at":"","d":["--","Passabfangen"],"dt":""},"LD":{"a":[["--",0]],"at":"","d":["--","Passabfangen"],"dt":""},"ZD":{"a":[["Querpass",0]],"at":"","d":["Passabfangen"],"dt":""},"RD":{"a":[["Querpass",0],["Dribbling",0]],"at":"","d":["Tackling","Passabfangen"],"dt":""}}},{"id":"c10","name":"Agu","nr":14,"col":"lila","tempo":5,"praesenz":1,"assist":3,"kopf":2,"schuss":1,"z":{"LO":{"a":[["Flanke",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["--",0],["Flanke",0]],"at":"","d":["--"],"dt":""},"ZM":{"a":[["Querpass",0]],"at":"","d":["--"],"dt":""},"LD":{"a":[["Querpass",0]],"at":"","d":["Passabfangen","Tackling"],"dt":""},"ZD":{"a":[["--",0],["Querpass",0]],"at":"","d":["--","Passabfangen"],"dt":""},"RD":{"a":[["--",0],["Querpass",0]],"at":"","d":["--"],"dt":""}}},{"id":"c11","name":"Traore","nr":24,"col":"lila","tempo":5,"praesenz":4,"assist":3,"kopf":2,"schuss":2,"z":{"LO":{"a":[["--",0],["Flanke",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["Flanke",0]],"at":"","d":["Passabfangen"],"dt":""},"ZM":{"a":[["Querpass",0],["Steilpass",0]],"at":"","d":["--","Passabfangen"],"dt":""},"LD":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"ZD":{"a":[["Querpass",0]],"at":"","d":["Passabfangen","Schuss blocken"],"dt":""},"RD":{"a":[["Querpass",0],["Steilpass",0]],"at":"","d":["Ballgewinn"],"dt":""}}},{"id":"c12","name":"Reichenberger","nr":9,"col":"lila","tempo":1,"praesenz":3,"assist":4,"kopf":5,"schuss":5,"z":{"LO":{"a":[["Querpass",0]],"at":"","d":["--","Passabfangen"],"dt":""},"ZO":{"a":[["Schuss",0],["Vorlage",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["Querpass",0],["Flanke",0]],"at":"","d":["--","Tackling"],"dt":""},"ZM":{"a":[["Querpass",0]],"at":"","d":["--"],"dt":""},"LD":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"ZD":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"RD":{"a":[["--",0]],"at":"","d":["--"],"dt":""}}},{"id":"c13","name":"Meißner","nr":11,"col":"lila","tempo":5,"praesenz":5,"assist":2,"kopf":2,"schuss":4,"z":{"LO":{"a":[["--",0],["Dribbling",0]],"at":"","d":["Passabfangen"],"dt":""},"ZO":{"a":[["Vorlage",0],["Schuss",0]],"at":"","d":["Passabfangen"],"dt":""},"RO":{"a":[["Dribbling",0],["Flanke",0]],"at":"","d":["--","Passabfangen"],"dt":""},"ZM":{"a":[["Steilpass",0],["Dribbling",0]],"at":"","d":["--","Passabfangen"],"dt":""},"LD":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"ZD":{"a":[["Querpass",0]],"at":"","d":["--","Passabfangen"],"dt":""},"RD":{"a":[["--",0]],"at":"","d":["--"],"dt":""}}},{"id":"c14","name":"Alvarez","nr":7,"col":"lila","tempo":1,"praesenz":0,"assist":4,"kopf":1,"schuss":7,"z":{"LO":{"a":[["Dribbling",0],["Flanke",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["Schuss",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["--",0],["Flanke",0]],"at":"","d":["--"],"dt":""},"ZM":{"a":[["Schuss",0],["Dribbling",0]],"at":"","d":["--"],"dt":""},"LD":{"a":[["--",0],["Steilpass",0]],"at":"","d":["--"],"dt":""},"ZD":{"a":[["--",0],["Steilpass",0]],"at":"","d":["--"],"dt":""},"RD":{"a":[["Dribbling",0]],"at":"","d":["--"],"dt":""}}},{"id":"c15","name":"Simakala","nr":10,"col":"lila","tempo":4,"praesenz":0,"assist":0,"kopf":2,"schuss":10,"z":{"LO":{"a":[["--",0],["Dribbling",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["--",0],["Schuss",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["--",0],["Dribbling",0]],"at":"","d":["--"],"dt":""},"ZM":{"a":[["Schuss",0],["Dribbling",0]],"at":"","d":["--"],"dt":""},"LD":{"a":[["--",0]],"at":"","d":["-- und Regeneriert"],"dt":""},"ZD":{"a":[["-- und erschöpft",0]],"at":"","d":["-- und Regeneriert"],"dt":""},"RD":{"a":[["--",0],["Dribbling",0]],"at":"","d":["-- und Regeneriert"],"dt":""}}},{"id":"c16","name":"Kehl","nr":20,"col":"lila","tempo":2,"praesenz":2,"assist":4,"kopf":1,"schuss":5,"z":{"LO":{"a":[["Flanke",0],["Querpass",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["Schuss",0],["Vorlage",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["Flanke",0],["Querpass",0]],"at":"","d":["--","Passabfangen"],"dt":""},"ZM":{"a":[["Steilpass",0],["Querpass",0]],"at":"","d":["--","Passabfangen"],"dt":""},"LD":{"a":[["Querpass",0],["Steilpass",0]],"at":"","d":["--","Passabfangen"],"dt":""},"ZD":{"a":[["Querpass",0]],"at":"","d":["--"],"dt":""},"RD":{"a":[["--",0],["Querpass",0]],"at":"","d":["--"],"dt":""}}},{"id":"c17","name":"Cuisance","nr":5,"col":"lila","tempo":4,"praesenz":2,"assist":2,"kopf":1,"schuss":4,"z":{"LO":{"a":[["Dribbling",0]],"at":"","d":["--","Passabfangen"],"dt":""},"ZO":{"a":[["Schuss",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["Dribbling",0],["Flanke",0]],"at":"","d":["--","Passabfangen"],"dt":""},"ZM":{"a":[["Dribbling",0],["Steilpass",0]],"at":"","d":["Passabfangen"],"dt":""},"LD":{"a":[["--",0],["Dribbling",0]],"at":"","d":["--","Tackling"],"dt":""},"ZD":{"a":[["Querpass",0]],"at":"","d":["--"],"dt":""},"RD":{"a":[["Dribbling",0],["Steilpass",0]],"at":"","d":["--"],"dt":""}}},{"id":"c18","name":"Björn Lindemann","nr":21,"col":"lila","tempo":1,"praesenz":1,"assist":3,"kopf":1,"schuss":7,"z":{"LO":{"a":[["--",0],["Flanke",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["Schuss",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["Flanke",0]],"at":"","d":["--"],"dt":""},"ZM":{"a":[["Schuss",0]],"at":"","d":["--","Tackling"],"dt":""},"LD":{"a":[["--",0],["Querpass",0]],"at":"","d":["--"],"dt":""},"ZD":{"a":[["Querpass",0]],"at":"","d":["--"],"dt":""},"RD":{"a":[["Diagonalball",0]],"at":"","d":["--"],"dt":""}}},{"id":"c19","name":"Chris Conteh","nr":17,"col":"lila","tempo":8,"praesenz":3,"assist":1,"kopf":1,"schuss":3,"z":{"LO":{"a":[["Dribbling",0],["Flanke",0]],"at":"","d":["Tackling"],"dt":""},"ZO":{"a":[["--",0],["Schuss",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["--",0],["Dribbling",0]],"at":"","d":["--"],"dt":""},"ZM":{"a":[["Dribbling",0]],"at":"","d":["--"],"dt":""},"LD":{"a":[["Sprint",0],["Dribbling",0]],"at":"","d":["--","Tackling"],"dt":""},"ZD":{"a":[["Fehlpass",0]],"at":"","d":["--"],"dt":""},"RD":{"a":[["--",0]],"at":"","d":["--"],"dt":""}}},{"id":"c20","name":"Noel Niemann","nr":37,"col":"lila","tempo":5,"praesenz":3,"assist":1,"kopf":0,"schuss":3,"z":{"LO":{"a":[["--",0],["Dribbling",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["Dribbling",0],["Schuss",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["Flanke",0],["Dribbling",0]],"at":"","d":["--","Tackling"],"dt":""},"ZM":{"a":[["Dribbling",0]],"at":"","d":["--"],"dt":""},"LD":{"a":[["--",0],["Steilpass",0]],"at":"","d":["--"],"dt":""},"ZD":{"a":[["Querpass",0]],"at":"","d":["--"],"dt":""},"RD":{"a":[["Steilpass",0]],"at":"","d":["--","Tackling"],"dt":""}}},{"id":"c21","name":"Tony Leseure","nr":33,"col":"lila","tempo":5,"praesenz":2,"assist":1,"kopf":1,"schuss":3,"z":{"LO":{"a":[["--",0],["Flanke",0]],"at":"","d":["--"],"dt":""},"ZO":{"a":[["Dribbling",0],["Schuss",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["Dribbling",0],["Flanke",0]],"at":"","d":["Tackling"],"dt":""},"ZM":{"a":[["Steilpass",0],["Dribbling",0]],"at":"","d":["--","Passabfangen"],"dt":""},"LD":{"a":[["Querpass",0]],"at":"","d":["--"],"dt":""},"ZD":{"a":[["Dribbling",0]],"at":"","d":["--","Passabfangen"],"dt":""},"RD":{"a":[["Dribbling",0]],"at":"","d":["--","Tackling"],"dt":""}}},{"id":"c22","name":"Brian Henning","nr":16,"col":"lila","tempo":3,"praesenz":7,"assist":1,"kopf":1,"schuss":3,"z":{"LO":{"a":[["--",0]],"at":"","d":["Tackling"],"dt":""},"ZO":{"a":[["Querpass",0],["Vorlage",0]],"at":"","d":["Tackling"],"dt":""},"RO":{"a":[["Flanke",0],["Querpass",0]],"at":"","d":["Tackling"],"dt":""},"ZM":{"a":[["Querpass",0],["Dribbling",0]],"at":"","d":["Tackling","Ballgewinn"],"dt":""},"LD":{"a":[["--",0],["Querpass",0]],"at":"","d":["Tackling"],"dt":""},"ZD":{"a":[["Querpass",0]],"at":"","d":["Tackling"],"dt":""},"RD":{"a":[["Querpass",0]],"at":"","d":["Tackling"],"dt":""}}},{"id":"c23","name":"Lukas Kunze","nr":14,"col":"lila","tempo":1,"praesenz":4,"assist":0,"kopf":1,"schuss":3,"z":{"LO":{"a":[["Querpass",0],["Flanke",0]],"at":"","d":["--","Passabfangen"],"dt":""},"ZO":{"a":[["Vorlage",0],["Schuss",0]],"at":"","d":["--"],"dt":""},"RO":{"a":[["Querpass",0]],"at":"","d":["--","Passabfangen"],"dt":""},"ZM":{"a":[["Querpass",0],["Steilpass",0]],"at":"","d":["Passabfangen"],"dt":""},"LD":{"a":[["Ball sichern",1]],"at":"G","d":["--","Passabfangen"],"dt":""},"ZD":{"a":[["Querpass",0]],"at":"","d":["Schuss blocken"],"dt":""},"RD":{"a":[["Querpass",0]],"at":"","d":["--","Passabfangen"],"dt":""}}},{"id":"c24","name":"Wriedt","nr":31,"col":"lila","tempo":4,"praesenz":6,"assist":0,"kopf":4,"schuss":4,"z":{"LO":{"a":[["Ball sichern",0],["Flanke",0]],"at":"","d":["--","Tackling"],"dt":""},"ZO":{"a":[["Ball sichern",0],["Schuss",0]],"at":"","d":["--"],"dt":"R"},"RO":{"a":[["Ball sichern",0],["Flanke",0]],"at":"","d":["Tackling"],"dt":""},"ZM":{"a":[["Ball sichern",0]],"at":"R","d":["--"],"dt":"R"},"LD":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"ZD":{"a":[["--",0]],"at":"R","d":["--"],"dt":"R"},"RD":{"a":[["--",0]],"at":"","d":["--"],"dt":""}}},{"id":"c25","name":"Adi Waku Menga","nr":19,"col":"lila","tempo":5,"praesenz":2,"assist":0,"kopf":4,"schuss":6,"z":{"LO":{"a":[["Dribbling",0]],"at":"","d":["--"],"dt":"R"},"ZO":{"a":[["Schuss",0]],"at":"","d":["--"],"dt":"R"},"RO":{"a":[["Dribbling",0]],"at":"","d":["--"],"dt":"R"},"ZM":{"a":[["Dribbling",0]],"at":"","d":["--"],"dt":"R"},"LD":{"a":[["--",0]],"at":"","d":["--"],"dt":""},"ZD":{"a":[["--",0]],"at":"","d":["--"],"dt":"G"},"RD":{"a":[["--",0]],"at":"","d":["--"],"dt":""}}}],"gks":[{"id":"k1","name":"Keeper 1","pos":"TW","nr":1,"col":"blau","fields":[4,2,3]},{"id":"k2","name":"Keeper 2","pos":"TW","nr":2,"col":"blau","fields":[2,4,2]}]};
 </script>
 <script>
-// Foot Cards – Regel-Engine Version 2 (Angreifer deckt zuerst auf, Tempo/Präsenz, neuer Torschuss)
+// Foot Cards – Regel-Engine Version 3 (wie Version 2, zusätzlich: Passabfangen schlägt auch „--“)
 (function (root) {
   'use strict';
 
@@ -776,6 +834,7 @@ const CARD_DATA = {"players":[{"id":"c00","name":"Bjarke Jacobsen","nr":15,"col"
     // 6. Verteidigung
     if (da === 'Ballgewinn' && !a.green) return change(st, 'Ballgewinn');
     if (da === 'Passabfangen' && PASSES.includes(act)) return change(st, 'Pass abgefangen');
+    if (da === 'Passabfangen' && act === '--') return change(st, 'Ball abgefangen');
     if (da === 'Tackling' && (act === 'Dribbling' || act === '--')) return change(st, 'Tackling');
     if (da === 'Block' && (act === 'Schuss' || act === 'Kopfball')) return change(st, 'Geblockt');
     if (da === 'Schuss blocken' && act === 'Schuss') return change(st, 'Schuss geblockt');
@@ -929,7 +988,7 @@ const CARD_DATA = {"players":[{"id":"c00","name":"Bjarke Jacobsen","nr":15,"col"
     if (aa === 'Steilpass') return da === 'Passabfangen';
     if (aa === 'Sprint') return false;
     if (da === 'Ballgewinn') return !green;
-    if (da === 'Passabfangen') return PASSES.includes(aa);
+    if (da === 'Passabfangen') return PASSES.includes(aa) || NOTHING(aa);
     if (da === 'Tackling') return aa === 'Dribbling' || NOTHING(aa);
     if (da === 'Block') return aa === 'Schuss' || aa === 'Kopfball';
     if (da === 'Schuss blocken') return aa === 'Schuss';
@@ -1013,7 +1072,7 @@ const app = {
   db: null, user: null, uid: null,
   ref: null, unsub: null, gameDoc: null, code: null, names: {},
   busy: false, myGames: [], lobbyMsg: '', listUnsub: null,
-  replay: null, revealed: new Set(), rolled: new Set(), zoom: null, lastBall: null,
+  replay: null, revealed: new Set(), rolled: new Set(), zoom: null, lastBall: null, shuffle: { A: false, B: false },
   peer: null, conn: null, connected: false, isHost: false, p2pNames: {A:'', B:''}, p2pStatus: '',
 };
 
@@ -1076,26 +1135,112 @@ function viewSeat(){
 function inView(zone, poss){ const vs = viewSeat(); return poss === vs ? zone : FC.MIRROR[zone]; }
 const BALL_XY = { LO:[14.3,25], ZO:[50,16.7], RO:[85.7,25], ZM:[50,50], LD:[14.3,75], ZD:[50,83.3], RD:[85.7,75] };
 
-function pitchHtml(st){
-  const vs = viewSeat();
+// Waagerechtes Spielfeld, für beide Spieler gleich: Heim (A) links, spielt nach rechts; Gast (B) rechts.
+// Zonen im A-Rahmen (siehe SCN): LO liegt rechts oben, LD links oben usw.
+const ZRECT_H = (() => {
+  const R = { LO:[0,28.6,0,50], RO:[71.4,100,0,50], LD:[0,28.6,50,100], RD:[71.4,100,50,100], ZO:[28.6,71.4,0,33.3], ZM:[28.6,71.4,33.3,66.7], ZD:[28.6,71.4,66.7,100] };
+  const o = {}; for (const z in R) { const [u0,u1,v0,v1] = R[z]; o[z] = [100 - v1, 100 - v0, u0, u1]; } return o;
+})();
+const toAZone = (zone, poss) => poss === 'A' ? zone : FC.MIRROR[zone];
+function zoneCenterH(az){ const r = ZRECT_H[az]; return [(r[0] + r[1]) / 2, (r[2] + r[3]) / 2]; }
+// Wem gehört der Ball gerade sichtbar? 'a', 'b' oder 'n' (neutral, z. B. im Präsenz-Duell oder beim Steilpass)
+function ballTeam(st){
   const rp = app.replay;
-  let ballZone;
-  if (rp) ballZone = rp.step >= 2 ? inView(rp.prev.ballEnd, rp.prev.possEnd) : inView(rp.prev.ballStart, rp.prev.possStart);
-  else ballZone = inView(st.ball, st.poss);
-  const movable = !rp && st.phase === 'move' && canAct(st) ? st.cur.targets : [];
-  const zones = FC.ZONES.map(zn => {
-    const attZone = st.poss === vs ? zn : FC.MIRROR[zn];
-    const isT = movable.includes(attZone);
-    return `<div class="pz ${zn}${isT?' target':''}${ballZone===zn?' has-ball':''}" ${isT?`role="button" tabindex="0" data-move="${attZone}"`:''}>
-      <span>${zn}</span><small>${FC.ZONE_NAME[zn]}</small></div>`;
-  }).join('');
+  if (rp) {
+    const p = rp.prev, du = p.out && p.out.duel;
+    if (rp.step < 2 && du && du.kind === 'Präsenz') return 'n';
+    if (rp.step < 2 && p.att && p.att.action === 'Steilpass-Lauf') return 'n';
+    if (rp.step >= 2 && /Präsenz der nächsten|Steilpass gespielt/.test(p.out.t || '')) return 'n';
+    const poss = rp.step >= 2 ? p.possEnd : p.possStart;
+    return poss === 'A' ? 'a' : 'b';
+  }
+  if (st.cur && st.cur.through && ['att','def'].includes(st.phase)) return 'n';
+  return st.poss === 'A' ? 'a' : 'b';
+}
+function pitchHtml(st){
+  const rp = app.replay;
   const poss = rp ? (rp.step >= 2 ? rp.prev.possEnd : rp.prev.possStart) : st.poss;
-  const atk = poss === vs;
-  return `<div class="pitch" aria-label="Spielfeld">${zones}<div class="goalbar top"></div><div class="goalbar bot"></div>
-     <div class="mk box top"></div><div class="mk box bot"></div><div class="mk six top"></div><div class="mk six bot"></div><div class="mk circle"></div>
-     ${sceneHtml('gscene','in-pitch')}</div>
-   <div class="pitchcap"><span>oben: Tor von ${esc(teamLabel(FC.other(vs)))}</span><span>unten: Tor von ${esc(teamLabel(vs))}</span></div>
-   <div class="notice">${atk?'▲':'▼'} <b>${esc(teamLabel(poss))}</b> greift an${atk?' nach oben':' nach unten'}.${st.flank&&!rp?' <b>Flanke in der Luft:</b> Kopfball möglich.':''}</div>`;
+  const zoneRel = rp ? (rp.step >= 2 ? rp.prev.ballEnd : rp.prev.ballStart) : st.ball;
+  const az = toAZone(zoneRel, poss);
+  const team = ballTeam(st);
+  const movable = !rp && st.phase === 'move' && canAct(st) ? st.cur.targets : [];
+  const cells = FC.ZONES.map(zn => {
+    const rel = poss === 'A' ? zn : FC.MIRROR[zn];          // Zonenname aus Sicht des Angreifers
+    const r = ZRECT_H[zn];
+    const isT = movable.includes(rel);
+    return `<div class="hz${isT?' target':''}${az===zn?' glow g-'+team:''}" style="left:${r[0]}%;width:${r[1]-r[0]}%;top:${r[2]}%;height:${r[3]-r[2]}%" ${isT?`role="button" tabindex="0" data-move="${rel}"`:''}><span>${rel}</span></div>`;
+  }).join('');
+  return `<div class="rpitch hp" aria-label="Spielfeld"><div class="mk hline"></div><div class="mk hcircle"></div><div class="mk hbox l"></div><div class="mk hbox r"></div><div class="mk hsix l"></div><div class="mk hsix r"></div>
+      <div class="rgoal l"></div><div class="rgoal r"></div>${cells}${sceneHtml('gscene','horiz ball-'+team)}${bubblesHtml(st, az)}</div>
+    <div class="pitchcap"><span>← Tor ${esc(teamLabel('A'))}</span><span>${team==='n'?'Ball frei':`<b>${esc(teamLabel(poss))}</b> greift an ${poss==='A'?'→':'←'}`}</span><span>Tor ${esc(teamLabel('B'))} →</span></div>`;
+}
+
+// ---------- Aktionen als aufleuchtende Icons auf dem Spielfeld ----------
+const ICON = {
+  pass:'<path d="M2 8h10M9 4l4 4-4 4"/>', dribble:'<path d="M2 12l3-6 3 6 3-6 3 6"/>', sprint:'<path d="M3 3l5 5-5 5M8 3l5 5-5 5"/>',
+  shot:'<circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2"/>', head:'<circle cx="8" cy="5" r="3"/><path d="M3 14c1-3 3-4 5-4s4 1 5 4"/>',
+  lock:'<rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/>', none:'<path d="M4 8h8"/>',
+  tackle:'<path d="M2 13l12-6M3 5l4 3"/>', catch:'<path d="M2 9c2-5 10-5 12 0M8 9v5"/>', shield:'<path d="M8 2l5 2v4c0 3-2 5-5 6-3-1-5-3-5-6V4z"/>',
+  star:'<path d="M8 2l1.8 4 4.2.4-3.2 2.8 1 4.2L8 11.2 4.2 13.4l1-4.2L2 6.4l4.2-.4z"/>', card:'<rect x="4" y="2" width="8" height="12" rx="1" fill="currentColor"/>',
+  lost:'<path d="M3 3l10 10M13 3L3 13"/>', glove:'<path d="M4 14V7a1.5 1.5 0 0 1 3 0V4a1.5 1.5 0 0 1 3 0v3a1.5 1.5 0 0 1 3 0v3c0 2-1.5 4-4 4z"/>',
+  ok:'<path d="M3 8l3 3 7-7"/>',
+};
+const ATT_VERB = {
+  'Querpass':['spielt quer','pass'], 'Rückpass':['spielt zurück','pass'], 'Steilpass':['spielt steil','pass'], 'Diagonalball':['spielt diagonal','pass'],
+  'Flanke':['flankt','pass'], 'Vorlage':['legt vor','pass'], 'Dribbling':['dribbelt','dribble'], 'Sprint':['sprintet','sprint'],
+  'Schuss':['schießt','shot'], 'Kopfball':['köpft','head'], 'Direktschuss':['schießt direkt','shot'], 'Ball sichern':['sichert den Ball','lock'],
+  'Fehlpass':['spielt einen Fehlpass','lost'], 'Ballverlust':['verliert den Ball','lost'], 'Steilpass-Lauf':['läuft dem Ball hinterher','sprint'],
+  'Präsenz-Duell':['stemmt sich rein','shield'],
+};
+const DEF_VERB = {
+  'Tackling':['grätscht','tackle'], 'Ballgewinn':['geht auf den Ball','star'], 'Passabfangen':['lauert auf den Pass','catch'],
+  'Block':['blockt','shield'], 'Schuss blocken':['wirft sich in den Schuss','shield'], 'Kopfball blocken':['blockt den Kopfball','shield'],
+  'Gelb':['foult','card'], 'Gelbe Karte':['foult','card'], 'Hinterherlaufen':['läuft hinterher','sprint'], 'Kopfballduell':['steigt hoch','head'],
+  'Präsenz-Duell':['hält dagegen','shield'],
+};
+function verb(map, action, role){
+  if (!action || /^--/.test(action)) return ['–', 'none'];
+  if (role === 'att' && action === 'Kopfball') return ['steigt zum Kopfball hoch', 'head'];
+  return map[action] || [action, role === 'att' ? 'pass' : 'shield'];
+}
+function icon(k){ return `<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]||ICON.none}</svg>`; }
+// Eine Sprechblase: Name + Aktion in der Farbe der Mannschaft; ploppt nur beim ersten Erscheinen auf
+function bub(key, seat, text, ico, pos, cls){
+  const fresh = !app.revealed.has(key); app.revealed.add(key);
+  return `<div class="bub t${seat==='A'?'a':'b'} ${cls||''}${fresh?' pop':''}" style="left:${pos[0]}%;top:${pos[1]}%">${icon(ico)}<span>${text}</span></div>`;
+}
+function bubblesHtml(st, az){
+  const c = zoneCenterH(az);
+  const x = Math.max(16, Math.min(84, c[0]));
+  const above = [x, Math.max(9, c[1] - 17)], below = [x, Math.min(91, c[1] + 17)];
+  const rp = app.replay;
+  let h = '';
+  if (rp) {
+    const p = rp.prev, as = p.possStart, ds = FC.other(as);
+    if (p.att && p.att.id) {
+      let [v, ic] = verb(ATT_VERB, p.att.eff || p.att.action, 'att');
+      if (p.shot) v += ` nach ${FC.CORNERS[p.shot.aim]}`;
+      h += bub(`rb-${p.turn}-a`, as, `<b>${esc(card(p.att.id).name)}</b> ${esc(v)}`, ic, above, 'act');
+    }
+    if (rp.step >= 1) {
+      if (p.shot) h += bub(`rb-${p.turn}-k`, ds, `<b>${esc(card(p.shot.gk).name)}</b> springt nach ${FC.CORNERS[p.shot.gkN]}`, 'glove', below, 'act');
+      else if (p.def && p.def.id) { const [v, ic] = verb(DEF_VERB, p.def.action, 'def'); h += bub(`rb-${p.turn}-d`, ds, `<b>${esc(card(p.def.id).name)}</b> ${esc(v)}`, ic, below, 'act'); }
+    }
+    if (rp.step >= 2) {
+      const k = p.out.k;
+      const seat = k === 'change' || k === 'save' || k === 'miss' ? p.possEnd : p.possStart;
+      const ic = { goal:'star', change:'star', save:'glove', miss:'lost', yellow:'card', red:'card', ok:'ok', keep:'none' }[k] || 'ok';
+      h += bub(`rb-${p.turn}-o`, seat, esc(p.out.t), ic, [50, 50], 'out o-' + k);
+    }
+    return `<div class="fx">${h}</div>`;
+  }
+  // Live: die gewählte Angriffsaktion steht auf dem Platz, solange die Abwehr überlegt
+  const cur = st.cur;
+  if (cur && cur.att && cur.att.id && cur.att.action && ['def','def_pick2','dist','gk','shot','move'].includes(st.phase)) {
+    const [v, ic] = verb(ATT_VERB, cur.att.action, 'att');
+    h += bub(`lb-${cur.turn}-a`, st.poss, `<b>${esc(card(cur.att.id).name)}</b> ${esc(v)}`, ic, above, 'act');
+  }
+  return `<div class="fx">${h}</div>`;
 }
 // ---------- Spielszene: Laufwege für Ball und Spieler ----------
 // Koordinaten im „A-Rahmen“: u = links→rechts (0–100), v = oben→unten (0–100).
@@ -1372,7 +1517,7 @@ function plansFor(st){
   }
   return PLAN_CACHE.plans;
 }
-function gameMode(){ return { kind: 'v', seat: viewSeat() }; }
+function gameMode(){ return { kind: 'h' }; }
 // Nummer des nächsten Ballführers nur zeigen, wenn seine Karte für mich schon offen ist
 function gameLabels(st){
   return p => {
@@ -1442,34 +1587,77 @@ function canAct(st){
 // Darf dieser Betrachter die Karte sehen, bevor sie gespielt wurde?
 function seesCard(seat){ return app.mode === 'local' || seat === app.me; }
 
+// ---------- Sounds: im Browser erzeugt, keine Dateien ----------
+const SFX = (() => {
+  let ctx = null;
+  const on = () => { try { return JSON.parse(localStorage.getItem('fc-sound')) !== false; } catch(e) { return true; } };
+  function ac(create){
+    if (!ctx && create) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { ctx = null; } }
+    if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch(e){} }
+    return ctx;
+  }
+  function noise(c, dur){ const b = c.createBuffer(1, Math.max(1, Math.floor(c.sampleRate * dur)), c.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; const s = c.createBufferSource(); s.buffer = b; return s; }
+  function env(g, t0, a, peak, dur){ g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(peak, t0 + a); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); }
+  function filt(c, type, f, q){ const x = c.createBiquadFilter(); x.type = type; x.frequency.value = f; if (q) x.Q.value = q; return x; }
+  const P = {
+    flip(c, t){ const n = noise(c, .08), f = filt(c, 'highpass', 2600), g = c.createGain(); env(g, t, .004, .22, .07); n.connect(f).connect(g).connect(c.destination); n.start(t); n.stop(t + .09); },
+    shuffle(c, t){ for (let i = 0; i < 16; i++) P.flip(c, t + i * .05 + Math.random() * .02); },
+    kick(c, t){ const o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t + .12); env(g, t, .003, .45, .16); o.connect(g).connect(c.destination); o.start(t); o.stop(t + .17); },
+    slide(c, t){ const n = noise(c, .65), f = filt(c, 'bandpass', 1800, 1.1), g = c.createGain(); f.frequency.setValueAtTime(2200, t); f.frequency.exponentialRampToValueAtTime(260, t + .6); env(g, t, .03, .55, .65); n.connect(f).connect(g).connect(c.destination); n.start(t); n.stop(t + .66); },
+    applause(c, t, len){ const dur = len || 1.8; for (let i = 0; i < 90; i++) { const s = t + Math.random() * dur * .85, fade = 1 - (s - t) / dur; const n = noise(c, .04), f = filt(c, 'bandpass', 1100 + Math.random() * 2400, .9), g = c.createGain(); env(g, s, .002, .05 + .14 * fade, .035); n.connect(f).connect(g).connect(c.destination); n.start(s); n.stop(s + .05); } },
+    cheer(c, t){ P.applause(c, t, 2.6); const n = noise(c, 2.8), f = filt(c, 'bandpass', 650, .7), g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.4, t + .45); g.gain.exponentialRampToValueAtTime(.0001, t + 2.8); n.connect(f).connect(g).connect(c.destination); n.start(t); n.stop(t + 2.8); },
+    ohh(c, t){ const n = noise(c, 1.3), f = filt(c, 'lowpass', 900), g = c.createGain(); f.frequency.setValueAtTime(950, t); f.frequency.exponentialRampToValueAtTime(220, t + 1.2); env(g, t, .3, .35, 1.3); n.connect(f).connect(g).connect(c.destination); n.start(t); n.stop(t + 1.3); },
+    whistle(c, t, times){ const k = times || 1; for (let i = 0; i < k; i++) { const t0 = t + i * .42, len = (i === k - 1 && k > 1) ? .75 : .28; const o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain(); o.frequency.value = 2900; l.frequency.value = 36; lg.gain.value = 110; l.connect(lg).connect(o.frequency); env(g, t0, .01, .16, len); o.connect(g).connect(c.destination); o.start(t0); l.start(t0); o.stop(t0 + len); l.stop(t0 + len); } },
+  };
+  return {
+    on,
+    toggle(){ try { localStorage.setItem('fc-sound', JSON.stringify(!on())); } catch(e){} if (on()) ac(true); },
+    unlock(){ if (on()) ac(true); },
+    play(name, delayMs, arg){ if (!on()) return; const c = ac(false); if (!c || !P[name]) return; try { P[name](c, c.currentTime + .02 + (delayMs || 0) / 1000, arg); } catch(e){ console.error(e); } },
+  };
+})();
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => SFX.unlock(), { capture: true }));
+
 // ---------- Tempo und Auflösungsmoment ----------
 const SPEEDS = { langsam: 1.7, normal: 1, schnell: .5 };
 function speed(){ const v = (typeof LS!=='undefined' && LS.get('fc-speed')) || 'normal'; return SPEEDS[v] ? v : 'normal'; }
 function setState(next){
   const old = app.st;
   app.st = next;
+  // Stapel neu gemischt? Dann vor dem nächsten Ziehen das Mischen zeigen
+  if (old && next && old.phase !== 'draft' && next.phase !== 'draft') for (const s of ['A','B']) if (next.teams[s].pile.length > old.teams[s].pile.length) app.shuffle[s] = true;
   if (old && next && next.prev && old.phase !== 'draft' && (!old.prev || old.prev.turn !== next.prev.turn)) startReplay(next.prev);
   else render();
+}
+// Ein Takt pro Schritt: Angriff · Abwehr · Ergebnis
+const BEAT = 1500;
+function outcomeSound(p){
+  const k = p.out.k, da = p.def && p.def.action, aa = p.att && (p.att.eff || p.att.action);
+  if (k === 'goal') return 'cheer';
+  if (k === 'save') return 'applause';
+  if (k === 'miss') return 'ohh';
+  if (k === 'yellow' || k === 'red') return 'whistle';
+  if (k === 'change') return (aa === 'Ballverlust' || aa === 'Fehlpass') ? 'ohh' : 'applause';
+  if (da && !/^--/.test(da)) return 'slide';     // Abwehr hat es versucht und ist ins Leere gegangen
+  return 'kick';
 }
 function startReplay(prev){
   clearReplayTimers();
   const m = SPEEDS[speed()];
   const dice = prev.shot && prev.shot.roll ? 1 : 0;
-  const steps = [ [1, 350], [2, 1150 + dice*1300] ];
-  if (dice) for (let i=0;i<dice;i++) steps.splice(1+i, 0, [1.1 + i*0.01, 1150 + i*650]);
-  const total = (prev.shot ? 3800 + dice*1300 : (prev.out && prev.out.duel ? 3300 : 2700)) + (prev.whistle ? 1200 : 0);
-  app.replay = { prev, step: 0, dice: 0, total: total*m, t0: Date.now(), timers: [] };
-  if (!reduceMotion()) { const pl = plansFor(app.st); if (pl.length) scPlay('game', '#gscene', gameMode(), [pl[pl.length - 1]], { delay: 350 * m, labels: gameLabels(app.st) }); }
-  let di = 0;
-  steps.forEach(([s, t]) => {
-    app.replay.timers.push(setTimeout(() => {
-      if (!app.replay) return;
-      if (s > 1 && s < 2) { app.replay.dice = ++di; app.replay.step = 1; }
-      else app.replay.step = s;
-      render();
-    }, t*m));
-  });
-  app.replay.timers.push(setTimeout(endReplay, total*m));
+  const t1 = BEAT, tDice = 2 * BEAT, t2 = 2 * BEAT + dice * 1600;
+  const total = t2 + 1900 + (prev.whistle ? 1400 : 0);
+  app.replay = { prev, step: 0, dice: 0, total: total * m, t0: Date.now(), timers: [] };
+  const at = (ms, f) => app.replay.timers.push(setTimeout(() => { if (app.replay && app.replay.prev === prev) f(); }, ms * m));
+  if (prev.att && prev.att.id && !/^--/.test(prev.att.eff || prev.att.action || '--')) SFX.play('kick');
+  if (prev.def && prev.def.id || prev.shot) SFX.play('flip', t1 * m);
+  SFX.play(outcomeSound(prev), t2 * m);
+  if (prev.whistle) SFX.play('whistle', (t2 + 1000) * m, prev.whistle === 'Abpfiff' ? 3 : 2);
+  if (!reduceMotion()) { const pl = plansFor(app.st); if (pl.length) scPlay('game', '#gscene', gameMode(), [pl[pl.length - 1]], { delay: Math.max(0, t2 - (prev.shot ? 900 : 700)) * m, labels: gameLabels(app.st) }); }
+  at(t1, () => { app.replay.step = 1; render(); });
+  if (dice) at(tDice, () => { app.replay.dice = 1; app.replay.step = 1; render(); });
+  at(t2, () => { app.replay.step = 2; render(); });
+  at(total, endReplay);
   render();
 }
 function clearReplayTimers(){ if (app.replay) app.replay.timers.forEach(clearTimeout); }
@@ -1479,7 +1667,6 @@ function endReplay(){
   render();
   if (app.mode === 'bot') runBot();
 }
-
 function boardHtml(st){
   const pct = Math.min(100, st.minute / 95 * 100);
   const waitingB = (app.mode==='online' && !(app.gameDoc && app.gameDoc.seats && app.gameDoc.seats.B)) || (app.mode==='p2p' && !app.connected);
@@ -1515,14 +1702,26 @@ function revealCard(key, html){
 function slotHtml(st, role, src, seat, turn, opts){
   opts = opts || {};
   const c = src;
-  const head = `<div class="role ${role==='def'?'d':'a'}"><span>${opts.step?`<span class="stepno">${opts.step}</span>`:''}${role==='def'?'Abwehr':'Angriff'} · ${esc(teamLabel(seat))}</span><span>Zone ${c&&c.zone?c.zone:'–'}</span></div>`;
+  const head = `<div class="role ${role==='def'?'d':'a'}"><span>${opts.step?`<span class="stepno">${opts.step}</span>`:''}${role==='def'?'Abwehr':'Angriff'}</span><span>Zone ${c&&c.zone?c.zone:'–'}</span></div>`;
   if (!c || !c.id) return `<div class="slot">${head}${cardBack(role==='def'?'deckt nach dem Angriff auf':'')}</div>`;
   // Lokal am selben Gerät bleibt die Abwehrkarte verdeckt, bis der Angriff gewählt hat
   const hotseatHidden = app.mode === 'local' && role === 'def' && !c.action && !c.open && st.phase === 'att';
   const visible = !hotseatHidden && (c.action || seesCard(seat) || opts.forceShow || c.open);
-  if (!visible) return `<div class="slot">${head}${cardBack(role==='def' && st.phase==='att' ? 'Karte liegt bereit' : 'überlegt …')}<div class="muted">${role==='def' && st.phase==='att' ? esc(teamLabel(seat))+' wartet auf den Angriff …' : esc(teamLabel(seat))+' wählt …'}</div></div>`;
+  // Neue Karte im Zug: fliegt vom Stapel herein und wird (wenn ich sie sehen darf) umgedreht
+  const dealKey = `deal-${turn}-${role}`;
+  const dealing = !app.replay && !app.revealed.has(dealKey) && !reduceMotion();
+  app.revealed.add(dealKey);
+  const dd = opts.dealDelay || 0;
+  if (dealing) SFX.play('flip', (dd + (visible ? 0.55 : 0.1)) * 1000);
+  if (!visible) {
+    const back = cardBack(role==='def' && st.phase==='att' ? 'Karte liegt bereit' : 'überlegt …');
+    return `<div class="slot">${head}${dealing?`<div class="deal" style="--dd:${dd}s">${back}</div>`:back}<div class="muted">${role==='def' && st.phase==='att' ? esc(teamLabel(seat))+' wartet auf den Angriff …' : esc(teamLabel(seat))+' wählt …'}</div></div>`;
+  }
   const key = `${turn}-${role}-${c.id}-${c.action?'a':'d'}`;
-  const body = opts.hideFace ? cardBack('') : revealCard(key, cardHtml(c.id, { zone: c.zone, team: st.teams[seat] }));
+  let body;
+  if (opts.hideFace) body = cardBack('');
+  else if (dealing) { app.revealed.add(key); body = `<div class="deal" style="--dd:${dd}s"><div class="dealback">${cardBack('')}</div><div class="dealfront">${cardHtml(c.id, { zone: c.zone, team: st.teams[seat] })}</div></div>`; }
+  else body = revealCard(key, cardHtml(c.id, { zone: c.zone, team: st.teams[seat] }));
   return `<div class="slot">${head}${body}${opts.hideFace?'':(actionLine(c, role) || `<div class="muted">${seesCard(seat)&&canAct(st)?'Deine Wahl …':esc(teamLabel(seat))+' wählt …'}</div>`)}</div>`;
 }
 function stepsHtml(active){
@@ -1535,16 +1734,17 @@ function render(){
   const top = $('#topActions');
   if (!app.mode) { top.innerHTML=''; v.innerHTML = lobbyHtml(); setDock(''); bindLobby(); return; }
   const sp = speed();
-  top.innerHTML = `<label class="row" style="gap:6px"><span class="label">Tempo</span><select id="speed" aria-label="Tempo">${Object.keys(SPEEDS).map(k=>`<option value="${k}"${k===sp?' selected':''}>${k}</option>`).join('')}</select></label><button class="btn" id="leave">Zur Übersicht</button>`;
+  top.innerHTML = `<button class="btn" id="sound" aria-pressed="${SFX.on()}">${SFX.on()?'Ton an':'Ton aus'}</button><label class="row" style="gap:6px"><span class="label">Tempo</span><select id="speed" aria-label="Tempo">${Object.keys(SPEEDS).map(k=>`<option value="${k}"${k===sp?' selected':''}>${k}</option>`).join('')}</select></label><button class="btn" id="leave">Zur Übersicht</button>`;
   $('#leave').onclick = leave;
   $('#speed').onchange = e => { LS.set('fc-speed', e.target.value); };
+  $('#sound').onclick = () => { SFX.toggle(); render(); };
   const st = app.st;
   if (!st) { v.innerHTML = '<div class="empty">Spiel wird geladen …</div>'; setDock(''); return; }
   const scrollY = window.scrollY;
   app.flipIdx = 0;
   if (st.phase === 'draft') { v.innerHTML = boardHtml(st) + draftHtml(st); setDock(''); bindGame(); return; }
   const ctl = app.replay ? replayBar() : st.phase==='over' ? overBar() : controlsHtml(st);
-  v.innerHTML = boardHtml(st) + `<div class="main"><div class="panel">${pitchHtml(st)}</div><div class="panel">${tableHtml(st, ctl)}</div></div>` + decksHtml(st) + (st.phase==='over'?statsHtml(st):'') + logHtml(st) + modalHtml();
+  v.innerHTML = boardHtml(st) + `<div class="arena">${sideHtml(st,'A')}<div class="panel center">${centerHtml(st, ctl)}</div>${sideHtml(st,'B')}</div>` + decksHtml(st) + (st.phase==='over'?statsHtml(st):'') + logHtml(st) + modalHtml();
   setDock(ctl.bar, ctl.cls);
   bindGame();
   bindDist();
@@ -1553,7 +1753,6 @@ function render(){
   scheduleAuto(st);
   if (Math.abs(window.scrollY - scrollY) > 2) window.scrollTo(0, scrollY);
 }
-
 // ---------- Feste Aktionsleiste ----------
 // Alles, was der Spieler gerade tun kann (oder worauf er wartet), steht immer unten am Bildschirm.
 function setDock(html, cls){
@@ -1618,7 +1817,7 @@ function scheduleAuto(st){
     if (app.st !== autoSt) return;
     const f2 = forcedAct(app.st);
     if (f2) act(f2);
-  }, (special ? 1600 : 900) * SPEEDS[speed()]);
+  }, (special ? 2300 : 1700) * SPEEDS[speed()]);
 }
 function choiceLabel(st, ph, x){
   const c = st.cur, side = c[ph];
@@ -1634,11 +1833,10 @@ const OUT_CLASS = { change:'o-change', goal:'o-goal', save:'o-save', miss:'o-cha
 function replayHtml(st){
   const rp = app.replay, p = rp.prev;
   const defSeat = FC.other(p.possStart), attSeat = p.possStart;
-  let h = stepsHtml(rp.step >= 2 ? 3 : 2);
+  let h = stepsHtml(rp.step >= 2 ? 3 : rp.step >= 1 ? 2 : 1);
+  h += pitchHtml(st);
   const du = p.out && p.out.duel;
   if (du && rp.step >= 1) h += sitHtml(duelTitle(du.kind), 'Ergebnis', vsHtml(du, p.att && p.att.id, p.def && p.def.id, attSeat, defSeat), '');
-  const rs = { att: slotHtml(st,'att',p.att,attSeat,p.turn,{forceShow:true, step:1}), def: slotHtml(st,'def',p.def,defSeat,p.turn,{forceShow:true, hideFace: rp.step<1, step:2}) };
-  h += seatsHtml(attSeat, rs);
   if (p.shot && rp.step >= 1) {
     const sh = p.shot;
     const same = sh.aim === sh.gkN;
@@ -1653,7 +1851,6 @@ function replayHtml(st){
   }
   return h;
 }
-
 // ---------- Sondersituationen ----------
 const DUEL_KEY = { 'Tempo':'tempo', 'Präsenz':'praesenz', 'Kopfball':'kopf' };
 function duelTitle(kind){ return ({'Kopfball':'Kopfballduell','Tempo':'Tempo-Duell','Präsenz':'Präsenz-Duell'})[kind] || kind + '-Duell'; }
@@ -1731,35 +1928,41 @@ function stopHint(a, green, defOpts){
 }
 
 // Heim immer links, Gast immer rechts; die Seite im Angriff sitzt etwas höher
-function seatsHtml(attSeat, html){
-  return `<div class="table seats">${['A','B'].map(s=>{ const role = s===attSeat?'att':'def'; return `<div class="seat ${role==='att'?'atk':'dfn'}">${html[role]}</div>`; }).join('')}</div>`;
-}
-function tableHtml(st, ctl){
+// Mitte: Ablauf, Spielfeld, Duell-Banner und was sonst zum Zug gehört
+function centerHtml(st, ctl){
   ctl = ctl || {};
   if (app.replay) return replayHtml(st);
-  let h = '';
   if (st.phase==='over') {
-    h += `<div class="banner outcome o-goal">Abpfiff · ${st.goals.A}:${st.goals.B} · ${esc(st.goals.A===st.goals.B?'Unentschieden':'Sieg '+teamLabel(st.goals.A>st.goals.B?'A':'B'))}</div>`;
-    h += recapHtml(st);
-    return h;
-  }
-  const defSeat = FC.other(st.poss), attSeat = st.poss;
-  if (st.phase==='def_pick2' && canAct(st)) {
-    const d = st.cur.def;
-    h += `<div class="role d"><span>Blauer Token: Welchen Verteidiger behältst du?</span><span>Zone ${d.zone}</span></div><div class="table">
-      ${[d.id,d.alt].map(id=>`<div class="slot">${cardHtml(id,{zone:d.zone, team: st.teams[defSeat]})}</div>`).join('')}</div>
-      <div class="muted">Die andere Karte kommt unter deinen Stapel.</div>`;
-    return h;
+    return `<div class="banner outcome o-goal">Abpfiff · ${st.goals.A}:${st.goals.B} · ${esc(st.goals.A===st.goals.B?'Unentschieden':'Sieg '+teamLabel(st.goals.A>st.goals.B?'A':'B'))}</div>` + recapHtml(st);
   }
   const active = st.phase==='att' ? 1 : st.phase==='def'||st.phase==='def_pick2' ? 2 : 3;
-  h += stepsHtml(active);
-  h += situationHtml(st);
-  h += ctl.top || '';
-  h += seatsHtml(attSeat, { att: slotHtml(st,'att',st.cur.att,attSeat,st.cur.turn,{step:1}), def: slotHtml(st,'def',st.cur.def,defSeat,st.cur.turn,{step:2}) });
-  h += ctl.info || '';
-  return h;
+  return stepsHtml(active) + pitchHtml(st) + situationHtml(st) + (ctl.top || '') + (ctl.info || '');
 }
-
+// Seiten: Heim immer links, Gast immer rechts, für beide Spieler gleich
+function sideHtml(st, s){
+  const t = st.teams[s];
+  const rp = app.replay;
+  const attSeat = rp ? rp.prev.possStart : st.poss;
+  const role = st.phase === 'over' ? null : (s === attSeat ? 'att' : 'def');
+  const shuffling = !rp && app.shuffle[s] && !reduceMotion();
+  if (shuffling) { app.shuffle[s] = false; SFX.play('shuffle'); }
+  const head = `<div class="sidehead"><div class="sidename"><span class="tdot t${s==='A'?'a':'b'}"></span><b>${esc(teamLabel(s))}</b>${role?`<span class="roletag ${role==='att'?'a':'d'}">${role==='att'?'im Angriff':'in der Abwehr'}</span>`:''}</div>
+    <div class="stack${shuffling?' shuffle':''}" aria-label="Nachziehstapel: ${t.pile.length} Karten" title="${t.pile.length} im Stapel">${'<i></i>'.repeat(4)}<b>${t.pile.length}</b></div></div>
+    ${shuffling?'<div class="muted shufnote">Stapel leer – wird neu gemischt …</div>':''}`;
+  let body = '';
+  if (rp) {
+    const p = rp.prev;
+    body = slotHtml(st, role, p[role], s, p.turn, { forceShow: true, hideFace: role==='def' && rp.step<1, step: role==='att'?1:2 });
+  } else if (st.phase === 'over') {
+    body = '';
+  } else if (st.phase === 'def_pick2' && role === 'def' && canAct(st)) {
+    const d = st.cur.def;
+    body = `<div class="role d"><span>Blauer Token: Welchen behältst du?</span><span>Zone ${d.zone}</span></div>` + [d.id, d.alt].map((id,i)=>`<div class="slot"><span class="label">Taste ${i+1}</span>${cardHtml(id,{zone:d.zone, team:t})}</div>`).join('');
+  } else {
+    body = slotHtml(st, role, st.cur[role], s, st.cur.turn, { step: role==='att'?1:2, dealDelay: shuffling ? 1 : 0 });
+  }
+  return `<div class="panel side side-${s}${role==='att'?' atk':''}">${head}${body}</div>`;
+}
 function payLabel(pay, role){
   if (pay==='exhaust') return 'Spieler erschöpfen';
   if (pay==='token') return role==='def'?'blauen Token ausgeben':'roten Token ausgeben';
@@ -1854,7 +2057,7 @@ function attHint(a, green){
   if (a === 'Steilpass') return 'Nur Passabfangen stoppt ihn sicher, sonst entscheidet das Tempo-Duell.';
   if (a === 'Sprint') return 'Es entscheidet das Tempo-Duell.';
   if (a === 'Kopfball') return 'Block oder Ballgewinn stoppen den Kopfball.';
-  if (/^--/.test(a)) return 'Tackling erobert den Ball. Bei „--“ gegen „--“ entscheidet die Präsenz.';
+  if (/^--/.test(a)) return 'Tackling und Passabfangen erobern den Ball. Bei „--“ gegen „--“ entscheidet die Präsenz.';
   return green ? 'Grüne Aktion: Ballgewinn hilft hier nicht.' : '';
 }
 

@@ -1,4 +1,4 @@
-// Foot Cards – Regel-Engine Version 2 (Angreifer deckt zuerst auf, Tempo/Präsenz, neuer Torschuss)
+// Foot Cards – Regel-Engine Version 3 (wie Version 2, zusätzlich: Passabfangen schlägt auch „--“)
 (function (root) {
   'use strict';
 
@@ -408,6 +408,7 @@
     // 6. Verteidigung
     if (da === 'Ballgewinn' && !a.green) return change(st, 'Ballgewinn');
     if (da === 'Passabfangen' && PASSES.includes(act)) return change(st, 'Pass abgefangen');
+    if (da === 'Passabfangen' && act === '--') return change(st, 'Ball abgefangen');
     if (da === 'Tackling' && (act === 'Dribbling' || act === '--')) return change(st, 'Tackling');
     if (da === 'Block' && (act === 'Schuss' || act === 'Kopfball')) return change(st, 'Geblockt');
     if (da === 'Schuss blocken' && act === 'Schuss') return change(st, 'Schuss geblockt');
@@ -561,7 +562,7 @@
     if (aa === 'Steilpass') return da === 'Passabfangen';
     if (aa === 'Sprint') return false;
     if (da === 'Ballgewinn') return !green;
-    if (da === 'Passabfangen') return PASSES.includes(aa);
+    if (da === 'Passabfangen') return PASSES.includes(aa) || NOTHING(aa);
     if (da === 'Tackling') return aa === 'Dribbling' || NOTHING(aa);
     if (da === 'Block') return aa === 'Schuss' || aa === 'Kopfball';
     if (da === 'Schuss blocken') return aa === 'Schuss';
