@@ -9,6 +9,7 @@ Fußball-Kartenspiel von Lukas und Simon. Hier liegen die spielbaren Testversion
 | Pfad | Inhalt |
 |---|---|
 | `index.html` | Startseite mit allen Spielen und Iterationen |
+| `2decks/iteration-1/` | Foot Cards 2Decks, Iteration 1 – geführtes Spiel nach Regelstand 1.3 (Quellen in `src/`, gebaut mit `build.py`) |
 | `2decks/testtisch/` | Foot Cards 2Decks, Testtisch Regelstand 1.3 (eine Datei, nicht über `build.py` gebaut) |
 | `challengers/iteration-3/` | Foot Cards Challengers, Iteration 3 – Spielfluss (Vorschlag: neues Interface; Regeln wie Iteration 2, aber Passabfangen schlägt auch „--“ und nach dem Präsenz-Duell spielt der Gewinner den Zug) |
 | `challengers/iteration-2/` | Foot Cards Challengers, Iteration 2 – 4 Eigenschaften (aktuell) |

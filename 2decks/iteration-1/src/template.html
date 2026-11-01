@@ -1,0 +1,288 @@
+<title>Foot Cards 2Decks · Iteration 1</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<!--PEERJS-->
+<style>
+:root{--bg:#eef1ea;--paper:#fff;--fg:#1d2a1f;--muted:#5d6b5f;--line:#cfd6c8;--pitch:#d9ecd3;--pitch-line:#b3cdb0;
+ --blue:#2c62b8;--blue-soft:#dbe6f7;--lila:#7a3fa6;--lila-soft:#ebdff4;--warn:#a2561a;--warn-soft:#f7e8d8;--ok:#2f7d4a;
+ --fd:"Barlow Condensed","Arial Narrow",Arial,sans-serif;--fb:"Barlow","Segoe UI",Arial,sans-serif;--fm:"JetBrains Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#111612;--paper:#1a221c;--fg:#e6eee4;--muted:#9bab9d;--line:#334036;--pitch:#1d3021;--pitch-line:#33503a;
+ --blue:#86aaea;--blue-soft:#21314a;--lila:#c59de3;--lila-soft:#34263f;--warn:#e3a76f;--warn-soft:#3a2a1c;--ok:#7cc796;color-scheme:dark}}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.45 var(--fb);padding:12px max(12px,env(safe-area-inset-right,0px)) 40px max(12px,env(safe-area-inset-left,0px))}
+h1,h2,h3{font-family:var(--fd);font-weight:600;margin:0}
+h1{font-size:28px;font-weight:800;text-transform:uppercase;letter-spacing:.02em} h2{font-size:20px} h3{font-size:17px}
+button{font:inherit;font-size:14.5px;padding:7px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--paper);color:var(--fg);cursor:pointer}
+button:hover:not(:disabled){border-color:var(--muted)} button:disabled{opacity:.45;cursor:default}
+button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+button.pri{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+button.big{font-family:var(--fd);font-size:20px;padding:12px 16px;display:grid;text-align:left;gap:2px}
+button.big small{font-family:var(--fb);font-size:13px;opacity:.8}
+input,select{font:inherit;font-size:14.5px;padding:7px 9px;border-radius:8px;border:1.5px solid var(--line);background:var(--paper);color:var(--fg)}
+.wrap{max-width:1200px;margin:0 auto;display:grid;gap:12px}
+.top{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+.score{font:800 26px var(--fd);display:flex;gap:10px;align-items:center}.score .b{color:var(--blue)}.score .l{color:var(--lila)}
+.pill{font:600 12px var(--fm);letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1.5px solid currentColor}
+.pB{color:var(--blue)}.pL{color:var(--lila)}
+.grid{display:grid;grid-template-columns:minmax(0,500px) minmax(0,1fr);gap:12px}
+@media (max-width:880px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:8px;align-content:start;min-width:0}
+.side{display:grid;gap:12px;align-content:start;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.muted{color:var(--muted);font-size:13.5px;margin:0}
+.step{font-size:15px;margin:0}.step b{font-family:var(--fd);font-size:18px}
+.note{border-left:4px solid var(--warn);background:var(--warn-soft);padding:7px 10px;border-radius:0 8px 8px 0;font-size:14px}
+.duel{font:600 13.5px var(--fm);background:var(--warn-soft);border-radius:8px;padding:8px 10px}
+#board{width:100%;display:block;user-select:none;touch-action:manipulation}
+.fld{fill:var(--pitch);stroke:var(--pitch-line)}.fld.tg{fill:var(--warn-soft);stroke:var(--warn);stroke-width:2;cursor:pointer}
+.boxl{fill:none;stroke:var(--muted);stroke-dasharray:5 4}
+.ax{font:11px var(--fm);fill:var(--muted);text-anchor:middle}
+.pl rect{stroke-width:1.3}.plB rect{fill:var(--blue-soft);stroke:var(--blue)}.plL rect{fill:var(--lila-soft);stroke:var(--lila)}
+.pl.ball rect{stroke-width:3.4}.pl.can{cursor:pointer}.pl.can rect{stroke-dasharray:4 2}.pl.sel rect{stroke:var(--warn);stroke-width:3}
+.pl text{fill:var(--fg);text-anchor:middle}.pn{font:600 12px var(--fb)}.pv{font:11px var(--fm);fill:var(--muted)!important}
+.ballc{fill:#fff;stroke:#111;stroke-width:1.4;pointer-events:none}.ax{pointer-events:none}
+.ed rect{stroke-width:1.7}.edB rect{stroke:var(--blue)}.edL rect{stroke:var(--lila)}
+.edB.hid rect{fill:var(--blue-soft);stroke-dasharray:3 2}.edL.hid rect{fill:var(--lila-soft);stroke-dasharray:3 2}
+.edB.op rect{fill:var(--blue)}.edL.op rect{fill:var(--lila)}.ed.used{opacity:.45}
+.ed text{font:600 11px var(--fm);text-anchor:middle}.ed.op text{fill:var(--paper)}.ed.hid text{fill:var(--fg)}
+.ed.can{cursor:pointer}.ed.can rect{stroke:var(--warn);stroke-width:3}
+.slot rect{fill:transparent;stroke:var(--warn);stroke-width:2;stroke-dasharray:3 2;cursor:pointer}.slot:hover rect{fill:var(--warn-soft)}
+.hand{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.card{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;display:grid;gap:3px;text-align:left;font-size:13px;line-height:1.35;background:var(--paper)}
+.card.can{cursor:pointer;border-color:var(--muted)}.card.sel{border-color:var(--warn);box-shadow:0 0 0 2px var(--warn-soft)}
+.card .nm{font:600 17px var(--fd)}.card .k{font:11px var(--fm);color:var(--muted)}.card .m{font:600 11px var(--fm);color:var(--warn)}
+.vals{font:600 12.5px var(--fm)}
+.opts{display:grid;gap:6px}.opts button{text-align:left}
+.log{max-height:260px;overflow:auto;margin:0;padding:0 0 0 18px;font-size:13px;display:grid;gap:3px}
+textarea{width:100%;min-height:120px;font:12px var(--fm)}
+.cover{min-height:360px;display:grid;place-items:center;text-align:center}
+.lobby{max-width:760px;margin:0 auto;display:grid;gap:12px}
+header.hero{background:#17321b;color:#eaf5e4;border-radius:12px;padding:16px 18px}
+header.hero p{margin:4px 0 0;opacity:.85}
+.code{font:600 22px var(--fm);letter-spacing:.15em;text-transform:uppercase;width:8ch}
+</style>
+<div id="app" class="wrap"></div>
+<script>
+const CARDS = /*CARDS*/null;
+/*ENGINE*/
+const P2P_BUILD = /*P2P*/false;
+const FC = window.FC; FC.setData(CARDS);
+const D = CARDS, NAME = FC.NAME, OPP = FC.OPP;
+const AB={Querpass:'QP',Steilpass:'SP',Diagonalball:'DB',Flanke:'FL',Dribbling:'DR','Übersteiger':'ÜS',Sprint:'SR',Schuss:'SC',Tackling:'TK',Passabfangen:'PA','Schuss blocken':'SB',Pressing:'PR',Taktik:'TA','Rückpass':'RP','Ball sichern A':'BS','Ball sichern B':'BS'};
+const ALT={aktiv:'Alternative: aktive Aktion des Spielers',passiv:'Alternative: passive Aktion des Spielers',sturm:'Alternative: Aktion eines Stürmers','-':'keine Alternative'};
+const VALN={T:'Tempo',Z:'Zweikampf',S:'Schuss','*':'beliebig'};
+const $=s=>document.querySelector(s);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LS={get(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+const P=i=>D.players[i];
+
+const app={view:'lobby',mode:null,st:null,me:null,sel:null,cover:false,hist:[],msg:'',copy:false,
+ peer:null,conn:null,code:'',isHost:false,connected:false,p2pStatus:'',lobbyMsg:''};
+
+/* ---------- Zustand ---------- */
+function viewer(){ if(app.mode==='p2p') return app.me; if(app.mode==='bot') return 'B'; return app.st?app.st.turn:'B'; }
+function myTurn(){ const st=app.st; return st&&!st.over&&(app.mode==='local'||st.turn===app.me||(app.mode==='bot'&&st.turn==='B')); }
+function act(a){
+ const st=app.st; app.msg='';
+ if(app.mode==='p2p'&&!app.isHost){ p2pSend({t:'act',a,seq:st.seq}); app.sel=null; app.busy=true; render(); return; }
+ let next; try{ next=FC.apply(st,st.turn,a); }catch(e){ app.msg=e.message; render(); return; }
+ if(app.mode!=='p2p') app.hist.push(st); if(app.hist.length>40) app.hist.shift();
+ const turnChanged=next.turn!==st.turn;
+ app.sel=null;
+ if(app.mode==='p2p') p2pSetState(next); else setState(next);
+ if(app.mode==='local'&&turnChanged&&!next.over) { app.cover=true; render(); }
+ if(app.mode==='bot') botLoop();
+}
+function setState(s){ app.st=s; render(); }
+function undo(){ if(!app.hist.length) return; app.st=app.hist.pop(); app.sel=null; app.cover=false; render(); }
+function botLoop(){ const st=app.st; if(!st||st.over||st.turn!=='L') return; setTimeout(()=>{ const s=app.st; if(s.turn!=='L')return; const a=FC.botAct(s); if(!a)return; try{ app.st=FC.apply(s,'L',a);}catch(e){console.error(e);return;} render(); botLoop(); },350); }
+
+/* ---------- Matte ---------- */
+const W=92,H=76,X0=24,Y0=34;
+const fx=f=>X0+FC.col(f)*W, fy=f=>Y0+(7-FC.row(f))*H;
+function boardSvg(){
+ const st=app.st, v=viewer(), sel=app.sel, opts=myTurn()?FC.options(st):[];
+ const tgF=new Set(), tgE=new Set(), canP=new Set(), canE=new Set();
+ if(sel&&sel.kind==='handP') opts.filter(o=>o.type==='placePlayer'&&o.p===sel.p).forEach(o=>tgF.add(o.f));
+ if(sel&&sel.kind==='handA') opts.filter(o=>o.type==='placeCard'&&o.c===sel.c).forEach(o=>tgE.add(o.e));
+ if(sel&&sel.kind==='mover') opts.filter(o=>o.type==='move'&&o.p===sel.p).forEach(o=>tgF.add(o.f));
+ if(sel&&sel.kind==='pay') opts.filter(o=>o.type==='move'&&o.p===sel.p&&o.f===sel.f).forEach(o=>canE.add(o.pay));
+ if(sel&&sel.kind==='trig') (sel.fields||[]).forEach(f=>tgF.add(f));
+ if(!sel&&st.phase==='move') opts.filter(o=>o.type==='move').forEach(o=>canP.add(o.p));
+ if(!sel&&st.phase==='trigger') opts.filter(o=>o.type==='trigger').forEach(o=>canE.add(o.e));
+ let o=`<svg id="board" viewBox="0 0 ${X0+5*W+8} ${Y0+7*H+46}" role="img" aria-label="Spielmatte">`;
+ for(let c=0;c<5;c++)for(let r=1;r<=7;r++){const f=FC.fid(c,r);o+=`<rect class="fld${tgF.has(f)?' tg':''}" data-f="${f}" x="${fx(f)}" y="${fy(f)}" width="${W}" height="${H}"/>`;}
+ o+=`<rect class="boxl" x="${X0+W}" y="${Y0}" width="${3*W}" height="${2*H}"/><rect class="boxl" x="${X0+W}" y="${Y0+5*H}" width="${3*W}" height="${2*H}"/>`;
+ o+=`<rect x="${X0+2*W+12}" y="${Y0-22}" width="${W-24}" height="18" rx="3" fill="var(--lila-soft)" stroke="var(--lila)"/><text class="ax" x="${X0+2.5*W}" y="${Y0-9}">Kühn · 3</text>`;
+ o+=`<rect x="${X0+2*W+12}" y="${Y0+7*H+4}" width="${W-24}" height="18" rx="3" fill="var(--blue-soft)" stroke="var(--blue)"/><text class="ax" x="${X0+2.5*W}" y="${Y0+7*H+17}">Sauter · 3</text>`;
+ for(let r=1;r<=7;r++) o+=`<text class="ax" x="${X0-12}" y="${fy('A'+r)+H/2+4}">${r}</text>`;
+ for(let c=0;c<5;c++) o+=`<text class="ax" x="${X0+c*W+W/2}" y="${Y0+7*H+40}">${'ABCDE'[c]}</text>`;
+ const occ={}; for(const [i,f] of Object.entries(st.board)) (occ[f]=occ[f]||[]).push(+i);
+ for(const [f,l] of Object.entries(occ)){ l.sort((a,b)=>P(a).team<P(b).team?-1:1); const hh=(H-16)/l.length;
+  l.forEach((i,k)=>{const p=P(i),x=fx(f)+8,y=fy(f)+8+k*hh,ball=st.ball.carrier===i;
+   const cls=`pl pl${p.team}${ball?' ball':''}${canP.has(i)?' can':''}${sel&&sel.p===i&&(sel.kind==='mover'||sel.kind==='pay')?' sel':''}`;
+   o+=`<g class="${cls}" data-p="${i}"><title>${esc(p.name)} · ${p.pos} · Tempo ${p.T}, Zweikampf ${p.Z}, Schuss ${p.S} · aktiv: ${p.act}, passiv: ${p.pas}</title><rect x="${x}" y="${y+1}" width="${W-16}" height="${hh-2}" rx="5"/>`+
+   (hh>36?`<text class="pn" x="${x+(W-16)/2}" y="${y+hh/2-2}">${esc(p.short)}</text><text class="pv" x="${x+(W-16)/2}" y="${y+hh/2+12}">${p.T}·${p.Z}·${p.S}</text>`:`<text class="pn" x="${x+(W-16)/2}" y="${y+hh/2+4}">${esc(p.short)} ${p.T}${p.Z}${p.S}</text>`)+
+   (ball?`<circle class="ballc" cx="${x+W-24}" cy="${y+9}" r="6"/>`:'')+`</g>`;});}
+ if(st.ball.carrier==null&&st.ball.field){const f=st.ball.field;o+=`<circle class="ballc" cx="${fx(f)+W/2}" cy="${fy(f)+H/2}" r="9"/>`;}
+ const all=new Set(); for(let c=0;c<5;c++)for(let r=1;r<=7;r++) FC.edgesOf(FC.fid(c,r)).forEach(e=>all.add(e));
+ for(const e of all){const [a,b]=e.split('/');const hz=FC.row(a)===FC.row(b);let x,y,w,h;
+  if(hz){x=fx(b)-9;y=fy(a)+H/2-20;w=18;h=40;}else{x=fx(a)+W/2-22;y=fy(b)+H-9;w=44;h=18;}
+  const ed=st.edges[e];
+  if(ed){const c=st.cards[ed.c],mine=c.t===v,show=ed.open||mine,lab=show?AB[c.n]:'';
+   const tip=ed.open?`${FC.cardName(c.n)}${ed.used?' (genutzt)':' (offen, noch nutzbar)'} · ${NAME[c.t]}`:(mine?`${FC.cardName(c.n)} (verdeckt) · ${ALT[c.a]}`:`verdeckte Karte · ${NAME[c.t]}`);
+   o+=`<g class="ed ed${c.t} ${ed.open?'op':'hid'}${ed.used?' used':''}${canE.has(e)?' can':''}" data-e="${e}"><title>${esc(tip)}</title><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3"/>`+(lab?(hz?`<text transform="translate(${x+w/2+4},${y+h/2}) rotate(-90)">${lab}</text>`:`<text x="${x+w/2}" y="${y+h/2+4}">${lab}</text>`):'')+`</g>`;}
+  else if(tgE.has(e)) o+=`<g class="slot" data-slot="${e}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3"/></g>`;}
+ return o+'</svg>';
+}
+
+/* ---------- Seitenleiste ---------- */
+function stepPanel(){
+ const st=app.st, t=st.turn, sel=app.sel;
+ if(st.over) return `<p class="step"><b>Spiel beendet.</b> Endstand Blau ${st.score.B}:${st.score.L} Lila.</p>`;
+ if(!myTurn()) return `<p class="step">${NAME[t]} ist am Zug${app.mode==='bot'?' (Bot)':''} …</p>`;
+ const o=FC.options(st); let h='';
+ if(st.phase==='choose') h=`<p class="step"><b>${NAME[t]}: Zugart wählen</b></p><div class="row"><button class="big" data-a='{"type":"mode","mode":"build"}'>Aufbauen<small>1 Spieler oder 2 Aktionen ziehen, dann 1 Spieler oder bis zu 2 Aktionen legen</small></button><button class="big" data-a='{"type":"mode","mode":"exec"}'>Ausführen<small>1 Aktion ziehen, evtl. bewegen, 1 Aktion legen, auslösen</small></button></div>`;
+ else if(st.phase==='draw') h=`<p class="step"><b>Aufbauen · Ziehen</b></p><div class="row"><button data-a='{"type":"drawP"}'>1 Spieler ziehen</button><button data-a='{"type":"drawA"}'>2 Aktionen ziehen</button></div>`;
+ else if(st.phase==='build') h=`<p class="step"><b>Aufbauen · Legen</b> ${st.t.placedA?`(${st.t.placedA} von 2 Aktionen gelegt)`:''}</p><p class="muted">${st.t.placedP||st.t.placedA===2?'Fertig gelegt.':'Tippe unten einen Spieler oder eine Aktion an, dann ein markiertes Feld bzw. eine markierte Kante.'}</p><div class="row"><button class="pri" data-a='{"type":"end"}'>Zug beenden</button></div>`;
+ else if(st.phase==='move'){
+  if(sel&&sel.kind==='mover') h=`<p class="step"><b>Bewegen:</b> ${esc(P(sel.p).short)} – tippe ein markiertes Nachbarfeld an.</p><div class="row"><button data-x="cancel">Abbrechen</button></div>`;
+  else if(sel&&sel.kind==='pay') h=`<p class="step"><b>Bezahlen:</b> tippe eine eigene Karte auf der Matte an, die abgelegt wird.</p><div class="row"><button data-x="cancel">Abbrechen</button></div>`;
+  else h=`<p class="step"><b>Ausführen · Bewegen (optional)</b></p><p class="muted">${o.some(x=>x.type==='move')?'Tippe einen markierten eigenen Spieler ohne Ball an. Bezahlt wird mit einer eigenen Karte vom Feld.':'Kein Spieler kann sich bewegen (keine eigene Karte auf dem Feld zum Bezahlen).'}</p><div class="row"><button class="pri" data-a='{"type":"skipMove"}'>Nicht bewegen – weiter</button></div>`;}
+ else if(st.phase==='place') h=`<p class="step"><b>Ausführen · 1 Aktion verdeckt legen</b></p><p class="muted">Tippe unten eine Aktion an, dann eine markierte Kante.</p>${o.some(x=>x.type==='skipPlace')?`<div class="row"><button data-a='{"type":"skipPlace"}'>Keine Kante frei – weiter</button></div>`:''}`;
+ else if(st.phase==='trigger'){
+  if(sel&&sel.kind==='trig'){const list=o.filter(x=>x.type==='trigger'&&x.e===sel.e);
+   h=`<p class="step"><b>Auslösen: Karte auf ${sel.e}</b></p><div class="opts">${list.map(x=>`<button data-a='${esc(JSON.stringify(x))}'>${esc(P(x.ex).short)}: ${esc(FC.cardName(x.use))}${x.target==='Tor'?' aufs Tor':x.target==='Hand'?'':x.use.startsWith('Ball sichern')?'':' → '+x.target}</button>`).join('')}</div><div class="row"><button data-x="cancel">Abbrechen</button></div>`;}
+  else {const n=new Set(o.filter(x=>x.type==='trigger').map(x=>x.e)).size;
+   h=`<p class="step"><b>Ausführen · Auslösen</b></p><p class="muted">${n?'Tippe eine markierte eigene Karte auf der Matte an. Du kannst mehrere nacheinander auslösen.':'Keine Karte kann gerade ausgelöst werden.'}</p><div class="row"><button class="pri" data-a='{"type":"end"}'>Zug beenden</button></div>`;}}
+ else if(st.phase==='taktik') h=`<p class="step"><b>Taktik:</b> tippe unten eine Aktion an, die du ablegst.</p>`;
+ return h;
+}
+function cardHtml(id,can,sel){const c=app.st.cards[id],i=D.info[c.n];return `<button class="card${can?' can':''}${sel?' sel':''}" data-hc="${id}" ${can?'':'disabled'}><span class="nm">${esc(FC.cardName(c.n))}</span><span>${esc(i[1])}</span><span class="k">Richtung: ${esc(i[0])} · Konter: ${esc(i[2])}</span><span class="k">${esc(ALT[c.a])}</span><span class="m">Kleindruck +1 ${VALN[i[3]]}</span></button>`;}
+function playerHtml(i,can,sel){const p=P(i);return `<button class="card${can?' can':''}${sel?' sel':''}" data-hp="${i}" ${can?'':'disabled'}><span class="nm">${esc(p.name)}</span><span class="vals">${p.pos} · Tempo ${p.T} · Zweikampf ${p.Z} · Schuss ${p.S}</span><span class="k">aktiv: ${esc(p.act)} · passiv: ${esc(p.pas)}</span></button>`;}
+function handPanel(){
+ const st=app.st,v=viewer(); if(!(v==='B'||v==='L')) return '';
+ const h=st.hand[v], o=myTurn()&&st.turn===v?FC.options(st):[];
+ const canC=new Set(o.filter(x=>x.type==='placeCard'||x.type==='discard').map(x=>x.c)), canPl=new Set(o.filter(x=>x.type==='placePlayer').map(x=>x.p));
+ return `<div class="panel"><div class="row" style="justify-content:space-between"><h2>Hand ${NAME[v]}</h2><span class="muted">${h.A.length} Aktionen · ${h.P.length} Spieler · Gegner: ${st.hand[OPP[v]].A.length} Aktionen, ${st.hand[OPP[v]].P.length} Spieler</span></div>
+ <div class="hand">${h.A.map(id=>cardHtml(id,canC.has(id),app.sel&&app.sel.c===id)).join('')}${h.P.map(i=>playerHtml(i,canPl.has(i),app.sel&&app.sel.kind==='handP'&&app.sel.p===i)).join('')}</div></div>`;
+}
+function deckInfo(t){const st=app.st;return `${NAME[t]}: ${st.deck[t].A.length} Aktionen und ${st.deck[t].P.length} Spieler im Stapel · abgelegt ${st.disc[t].A.length}/${st.disc[t].P.length}`;}
+
+/* ---------- Seiten ---------- */
+function render(){
+ const r=$('#app');
+ if(app.view==='lobby'){ r.innerHTML=lobbyHtml(); bindLobby(); return; }
+ const st=app.st;
+ if(!st){ r.innerHTML=`<div class="panel cover"><div><h2>Verbinde …</h2><p class="muted">${esc(app.p2pStatus||'')}</p><button data-x="leave">Zurück</button></div></div>`; bindX(); return; }
+ if(app.cover&&app.mode==='local'){ r.innerHTML=`<div class="panel cover"><div style="display:grid;gap:12px;justify-items:center"><h2>${NAME[st.turn]} ist am Zug</h2><p class="muted">Gerät an ${NAME[st.turn]} weitergeben. Die Hand wird erst nach dem Tippen sichtbar.</p><button class="pri" data-x="uncover">Ich bin ${NAME[st.turn]} – los</button></div></div>`; bindX(); return; }
+ const v=viewer();
+ r.innerHTML=`<div class="top"><div class="row"><h1>2Decks</h1><span class="muted">Iteration 1 · Regelstand 1.3 · ${app.mode==='p2p'?'Online, Code '+esc(app.code)+(app.connected?'':' · '+esc(app.p2pStatus||'wartet auf Gegner')):app.mode==='bot'?'gegen den Bot':'zu zweit an einem Gerät'}</span></div>
+  <div class="score"><span class="b">Blau</span><span>${st.score.B} : ${st.score.L}</span><span class="l">Lila</span></div>
+  <div class="row"><span class="pill p${st.turn}">Am Zug: ${NAME[st.turn]}</span><span class="pill p${st.att}">Angriff: ${NAME[st.att]} ${st.att==='B'?'↑':'↓'}</span><span class="muted">Runde ${st.turnNo}${v==='B'||v==='L'?' · du: '+NAME[v]:''}</span></div></div>
+ <div class="grid"><div class="panel">${boardSvg()}<p class="muted">Blau spielt nach oben auf Kühn, Lila nach unten auf Sauter. Spieler zeigen Tempo·Zweikampf·Schuss. Karten an den Kanten: gestrichelt = verdeckt, gefüllt = offen, blass = genutzt.</p></div>
+ <div class="side"><div class="panel">${stepPanel()}${app.msg?`<p class="note">${esc(app.msg)}</p>`:''}</div>
+ ${st.last?`<div class="duel">${esc(st.last.text)}</div>`:''}
+ <div class="panel"><div class="row" style="justify-content:space-between"><h3>Protokoll</h3><div class="row"><button data-x="copy">Protokoll kopieren</button>${app.mode!=='p2p'?`<button data-x="undo" ${app.hist.length?'':'disabled'}>Rückgängig</button>`:''}</div></div>
+  ${app.copy?`<textarea id="logtxt" readonly>${esc(st.log.join('\n'))}</textarea><p class="muted">Text ist markiert – mit Strg+C bzw. „Kopieren“ übernehmen.</p>`:''}
+  <ol class="log" reversed>${st.log.slice().reverse().slice(0,60).map(l=>`<li>${esc(l)}</li>`).join('')}</ol></div>
+ <div class="panel"><h3>Stapel und Einstellungen</h3><p class="muted">${deckInfo('B')}<br>${deckInfo('L')}</p>
+  <label class="row"><input type="checkbox" id="setOpp" ${st.settings.oppField?'checked':''} ${myTurn()?'':'disabled'}> Spieler auf Felder mit Gegenspieler legen erlaubt (Test)</label>
+  <div class="row"><button data-x="finish">Spiel beenden</button><button data-x="leave">Zur Startseite</button></div></div>
+ </div></div>${handPanel()}`;
+ bindGame();
+ if(app.copy){const ta=$('#logtxt');if(ta){ta.focus();ta.select();}}
+}
+function bindX(){document.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>xAct(b.dataset.x));}
+function bindGame(){
+ const st=app.st;
+ document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>act(JSON.parse(b.dataset.a)));
+ document.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>xAct(b.dataset.x));
+ const so=$('#setOpp'); if(so) so.onchange=()=>act({type:'setting',key:'oppField',value:so.checked});
+ document.querySelectorAll('[data-hc]').forEach(b=>b.onclick=()=>{const c=b.dataset.hc;
+  if(st.phase==='taktik'){act({type:'discard',c});return;}
+  app.sel=app.sel&&app.sel.c===c?null:{kind:'handA',c};render();});
+ document.querySelectorAll('[data-hp]').forEach(b=>b.onclick=()=>{const p=+b.dataset.hp;app.sel=app.sel&&app.sel.kind==='handP'&&app.sel.p===p?null:{kind:'handP',p};render();});
+ const bd=$('#board'); if(!bd) return;
+ bd.onclick=ev=>{ if(!myTurn()) return; const t=ev.target.closest('[data-f],[data-p],[data-e],[data-slot]'); if(!t) return; const sel=app.sel;
+  if(t.dataset.slot&&sel&&sel.kind==='handA'){act({type:'placeCard',c:sel.c,e:t.dataset.slot});return;}
+  if(t.dataset.e){const e=t.dataset.e;
+   if(sel&&sel.kind==='pay'){act({type:'move',p:sel.p,f:sel.f,pay:e});return;}
+   if(st.phase==='trigger'&&FC.options(st).some(o=>o.type==='trigger'&&o.e===e)){app.sel={kind:'trig',e};render();return;}
+   return;}
+  if(t.dataset.p&&st.phase==='move'){const p=+t.dataset.p;if(FC.options(st).some(o=>o.type==='move'&&o.p===p)){app.sel={kind:'mover',p};render();}return;}
+  const f=t.dataset.f||(t.dataset.p!=null?st.board[t.dataset.p]:null); if(!f) return;
+  if(sel&&sel.kind==='handP'){if(FC.options(st).some(o=>o.type==='placePlayer'&&o.p===sel.p&&o.f===f))act({type:'placePlayer',p:sel.p,f});else{app.msg='Dort darf der Spieler nicht hin.';render();}return;}
+  if(sel&&sel.kind==='mover'){if(FC.options(st).some(o=>o.type==='move'&&o.p===sel.p&&o.f===f)){app.sel={kind:'pay',p:sel.p,f};render();}return;}
+ };
+}
+function xAct(x){
+ if(x==='cancel'){app.sel=null;render();}
+ else if(x==='uncover'){app.cover=false;render();}
+ else if(x==='undo') undo();
+ else if(x==='copy'){const txt=app.st.log.join('\n');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>{app.msg='Protokoll kopiert ('+app.st.log.length+' Zeilen).';app.copy=false;render();}).catch(()=>{app.copy=true;render();});}
+  else{app.copy=true;render();}}
+ else if(x==='finish'){ if(confirmTwice('finish')) act({type:'finish'}); }
+ else if(x==='leave'){p2pClose();app.view='lobby';app.st=null;app.mode=null;app.hist=[];render();}
+}
+let confirmKey=null,confirmT=null;
+function confirmTwice(k){ if(confirmKey===k){confirmKey=null;return true;} confirmKey=k;app.msg='Zum Bestätigen noch einmal tippen.';render();clearTimeout(confirmT);confirmT=setTimeout(()=>{confirmKey=null;},4000);return false; }
+
+/* ---------- Lobby ---------- */
+function lobbyHtml(){
+ const saved=P2P_BUILD?LS.get('fc2d-host'):null;
+ return `<div class="lobby"><header class="hero"><h1>Foot Cards 2Decks</h1><p>Iteration 1 · Regelstand 1.3 · Spieler und Aktionen auf der Matte, Fallen an den Kanten</p></header>
+ ${P2P_BUILD?`<div class="panel"><h2>Online gegeneinander</h2><p class="muted">Jeder spielt an seinem Gerät. Einer legt ein Spiel an (spielt Blau) und schickt den Code, der andere tritt bei (spielt Lila). Das Fenster des Anlegenden muss offen bleiben.</p>
+  <div class="row"><button class="pri" id="host">Spiel anlegen</button>${saved&&saved.st&&!saved.st.over?`<button id="resume">Eigenes Spiel ${esc(saved.code)} fortsetzen (${saved.st.score.B}:${saved.st.score.L})</button>`:''}</div>
+  <div class="row"><input class="code" id="code" maxlength="5" placeholder="CODE" aria-label="Spielcode" value="${esc(LS.get('fc2d-join')||'')}"><button id="join">Beitreten</button></div>
+  ${app.lobbyMsg?`<p class="note">${esc(app.lobbyMsg)}</p>`:''}</div>`:''}
+ <div class="panel"><h2>Zu zweit an einem Gerät</h2><p class="muted">Ihr gebt das Gerät nach jedem Zug weiter. Vor jedem Zug kommt ein Sichtschutz.</p><div class="row"><button id="local">Starten</button></div></div>
+ <div class="panel"><h2>Gegen den Bot</h2><p class="muted">Du spielst Blau. Der Bot zieht zufällige erlaubte Züge – gut zum Kennenlernen der Bedienung, nicht als Gegner.</p><div class="row"><button id="bot">Starten</button></div></div>
+ <div class="panel"><h2>Kurzregeln</h2><p class="muted">Am Zug wählst du <b>Aufbauen</b> (1 Spieler oder 2 Aktionen ziehen, dann 1 Spieler oder bis zu 2 Aktionen verdeckt legen) oder <b>Ausführen</b> (1 Aktion ziehen, optional einen Spieler ohne Ball 1 Feld bewegen und mit einer eigenen Karte vom Feld bezahlen, 1 Aktion verdeckt legen, dann beliebig viele eigene Karten auslösen). Karten an eine Kante nur, wenn dort ein eigener Spieler steht oder beide Felder leer sind. Beim Auslösen werden alle Kanten am Feld des Ausführenden aufgedeckt: gegnerische Konter sind Fallen, ungenutzte Karten zählen als Modifikator. Gleichstand gewinnt der Ballführende, beim Torschuss der Torwart. Beim Ballwechsel bleiben nur Spieler an eigenen verdeckten Karten.</p></div></div>`;
+}
+function bindLobby(){
+ const b=id=>$('#'+id);
+ if(b('local')) b('local').onclick=()=>{app.mode='local';app.view='game';app.st=FC.newGame();app.hist=[];app.cover=true;render();};
+ if(b('bot')) b('bot').onclick=()=>{app.mode='bot';app.view='game';app.st=FC.newGame();app.hist=[];render();};
+ if(b('host')) b('host').onclick=()=>p2pHost(false);
+ if(b('resume')) b('resume').onclick=()=>p2pHost(true);
+ if(b('join')) b('join').onclick=()=>p2pJoin(b('code').value);
+}
+
+/* ---------- Online über PeerJS ---------- */
+const PFX='footcards-2decks-i1-';
+function newCode(){const al='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i<5;i++)c+=al[Math.floor(Math.random()*al.length)];return c;}
+function p2pClose(){try{if(app.conn)app.conn.close();}catch(e){}try{if(app.peer)app.peer.destroy();}catch(e){}app.peer=null;app.conn=null;app.connected=false;app.isHost=false;}
+function p2pSend(m){if(app.conn&&app.conn.open){try{app.conn.send(m);}catch(e){console.error(e);}}}
+function p2pSetState(next){setState(next);LS.set('fc2d-host',{code:app.code,st:next,t:Date.now()});p2pSend({t:'state',st:next});}
+function p2pHost(resume){
+ if(typeof Peer!=='function'){app.lobbyMsg='Die Verbindungsbibliothek fehlt. Bist du online?';render();return;}
+ p2pClose(); const saved=resume?LS.get('fc2d-host'):null;
+ app.mode='p2p';app.isHost=true;app.me='B';app.view='game';app.code=saved?saved.code:newCode();app.st=saved?saved.st:FC.newGame();
+ LS.set('fc2d-host',{code:app.code,st:app.st,t:Date.now()}); app.p2pStatus='Verbinde mit dem Vermittlungsserver …'; render();
+ let tries=0; const open=()=>{const peer=new Peer(PFX+app.code.toLowerCase());app.peer=peer;
+  peer.on('open',()=>{app.p2pStatus='Warte auf Gegner – Code '+app.code+' weitergeben.';render();});
+  peer.on('connection',c=>{const old=app.conn;app.conn=c;if(old){try{old.close();}catch(e){}}
+   c.on('open',()=>{app.connected=true;app.p2pStatus='';p2pSend({t:'state',st:app.st});render();});
+   c.on('data',d=>{if(!d||d.t!=='act')return;const st=app.st;if(st.turn!=='L'||d.seq!==st.seq){p2pSend({t:'state',st});return;}
+    let n;try{n=FC.apply(st,'L',d.a);}catch(e){p2pSend({t:'state',st});return;}p2pSetState(n);});
+   c.on('close',()=>{if(app.conn===c){app.connected=false;app.conn=null;app.p2pStatus='Verbindung getrennt.';render();}});});
+  peer.on('disconnected',()=>{try{peer.reconnect();}catch(e){}});
+  peer.on('error',e=>{if(e.type==='unavailable-id'&&tries++<6){app.p2pStatus='Code noch belegt, versuche es erneut …';render();try{peer.destroy();}catch(_){}setTimeout(open,4000);return;}app.p2pStatus='Verbindungsproblem ('+e.type+').';render();});};
+ open();
+}
+function p2pJoin(code){
+ code=(code||'').trim().toUpperCase();
+ if(!/^[A-Z0-9]{5}$/.test(code)){app.lobbyMsg='Der Code hat fünf Zeichen, zum Beispiel K7QXA.';render();return;}
+ if(typeof Peer!=='function'){app.lobbyMsg='Die Verbindungsbibliothek fehlt. Bist du online?';render();return;}
+ p2pClose(); LS.set('fc2d-join',code); app.mode='p2p';app.isHost=false;app.me='L';app.code=code;app.st=null;app.view='game';app.p2pStatus='Suche das Spiel …';render();
+ const peer=new Peer();app.peer=peer;
+ peer.on('open',()=>{const c=peer.connect(PFX+code.toLowerCase(),{reliable:true});app.conn=c;
+  c.on('open',()=>{app.connected=true;app.p2pStatus='';render();});
+  c.on('data',d=>{if(d&&d.t==='state'){app.busy=false;app.sel=null;setState(d.st);}});
+  c.on('close',()=>{if(app.conn===c){app.connected=false;app.p2pStatus='Verbindung getrennt.';render();}});});
+ peer.on('error',e=>{if(e.type==='peer-unavailable'){app.lobbyMsg='Kein offenes Spiel mit dem Code '+code+' gefunden. Hat dein Gegner die Seite offen?';p2pClose();app.view='lobby';app.mode=null;render();return;}app.p2pStatus='Verbindungsproblem ('+e.type+').';render();});
+}
+window.addEventListener('beforeunload',()=>{try{if(app.conn)app.conn.close();}catch(e){}});
+render();
+</script>

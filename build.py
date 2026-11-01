@@ -1,7 +1,7 @@
 """Baut die spielbaren Seiten aus den Quelldateien.
 
 Aufruf: python build.py
-Für jede Iteration unter challengers/ wird aus src/template.html, src/engine.js
+Für jede Iteration unter challengers/ und 2decks/ wird aus src/template.html, src/engine.js
 und src/cards.json die Datei index.html erzeugt (Online-Version mit PeerJS).
 """
 from pathlib import Path
@@ -12,7 +12,7 @@ HEAD = ('<!doctype html><html lang="de"><head><meta charset="utf-8">'
         '<style>[hidden]{display:none!important}body{margin:0}</style></head><body>')
 
 root = Path(__file__).parent
-for src in sorted(root.glob('challengers/*/src')):
+for src in sorted(list(root.glob('challengers/*/src')) + list(root.glob('2decks/*/src'))):
     t = (src / 'template.html').read_text(encoding='utf-8')
     t = t.replace('/*CARDS*/null', (src / 'cards.json').read_text(encoding='utf-8'))
     t = t.replace('/*ENGINE*/', (src / 'engine.js').read_text(encoding='utf-8'))
