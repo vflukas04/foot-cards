@@ -42,7 +42,7 @@ function newGame(opt){
   st.deck[t].P=shuffle(st,D.players.map((p,i)=>i).filter(i=>P(i).team===t));
   st.hand[t].A=st.deck[t].A.splice(0,4); st.hand[t].P=st.deck[t].P.splice(0,2);
  }
- st.log.push(`Neues Spiel (Regelstand 1.3). Leere Matte, Ball frei auf C4. Blau beginnt. Starthand je 2 Spieler und 4 Aktionen. Je Kante ein Platz pro Team. Einstellungen: Aufbauen ${st.settings.buildMany?'beliebig viele Aktionen legen (Test)':'bis zu 2 Aktionen legen'}; Spieler auf Felder mit Gegenspieler ${st.settings.oppField?'erlaubt (Test)':'verboten'}.`);
+ st.log.push(`Neues Spiel (Regelstand 1.3). Leere Matte, Ball frei auf C4. Blau beginnt. Starthand je 2 Spieler und 4 Aktionen. Je Kante ein Platz pro Team. Einstellungen: Aufbauen ${st.settings.buildMany?'beliebig viele Karten legen, Spieler und Aktionen gemischt (Test)':'1 Spieler oder bis zu 2 Aktionen legen'}; Spieler auf Felder mit Gegenspieler ${st.settings.oppField?'erlaubt (Test)':'verboten'}.`);
  return st;
 }
 
@@ -227,7 +227,7 @@ function trigger(st,t,e,ex,use,tg){
 }
 
 /* ---------- Zugablauf ---------- */
-const maxA=st=>st.settings.buildMany?99:2;
+const canBP=st=>st.settings.buildMany||(st.t.placedP===0&&st.t.placedA===0), canBA=st=>st.settings.buildMany||(st.t.placedP===0&&st.t.placedA<2);
 function freshT(){return {placedP:0,placedA:0,moved:false,pendingMove:null,taktik:0};}
 function actor(st){return st.turn;}
 function hasLegalPlace(st,t){return st.hand[t].A.length>0&&legalCardEdges(st,t).length>0;}
@@ -239,8 +239,8 @@ function options(st){
  if(st.phase==='choose'){o.push({type:'mode',mode:'build'});o.push({type:'mode',mode:'exec'});}
  else if(st.phase==='draw'){o.push({type:'drawP'});o.push({type:'drawA'});}
  else if(st.phase==='build'){
-  if(st.t.placedP===0&&st.t.placedA===0) for(const p of st.hand[t].P) for(const f of legalPlayerFields(st,t)) o.push({type:'placePlayer',p,f});
-  if(st.t.placedP===0&&st.t.placedA<maxA(st)) for(const c of st.hand[t].A) for(const e of legalCardEdges(st,t)) o.push({type:'placeCard',c,e});
+  if(canBP(st)) for(const p of st.hand[t].P) for(const f of legalPlayerFields(st,t)) o.push({type:'placePlayer',p,f});
+  if(canBA(st)) for(const c of st.hand[t].A) for(const e of legalCardEdges(st,t)) o.push({type:'placeCard',c,e});
   o.push({type:'end'});}
  else if(st.phase==='move'){
   o.push({type:'skipMove'});
@@ -270,12 +270,12 @@ function apply(st0,who,a){
   case 'drawP': need(st.phase==='draw'); draw(st,t,'P',1); st.phase='build'; st.log.push(`${NAME[t]} zieht 1 Spieler.`); break;
   case 'drawA': need(st.phase==='draw'); draw(st,t,'A',2); st.phase='build'; st.log.push(`${NAME[t]} zieht 2 Aktionen.`); break;
   case 'placePlayer':
-   need(st.phase==='build'&&st.t.placedP===0&&st.t.placedA===0&&st.hand[t].P.includes(a.p)&&canPlayer(st,t,a.f));
-   st.hand[t].P=st.hand[t].P.filter(x=>x!==a.p); st.board[a.p]=a.f; st.t.placedP=1;
+   need(st.phase==='build'&&canBP(st)&&st.hand[t].P.includes(a.p)&&canPlayer(st,t,a.f));
+   st.hand[t].P=st.hand[t].P.filter(x=>x!==a.p); st.board[a.p]=a.f; st.t.placedP++;
    st.log.push(`${NAME[t]} legt ${P(a.p).short} auf ${a.f}.`); enterField(st,a.p,a.f); break;
   case 'placeCard':
    need(st.hand[t].A.includes(a.c)&&canCard(st,t,a.e));
-   if(st.phase==='build'){need(st.t.placedP===0&&st.t.placedA<maxA(st));st.t.placedA++;}
+   if(st.phase==='build'){need(canBA(st));st.t.placedA++;}
    else need(st.phase==='place');
    st.hand[t].A=st.hand[t].A.filter(x=>x!==a.c); st.edges[sk(a.e,t)]={c:a.c,open:false,used:false};
    st.log.push(`${NAME[t]} legt eine Karte verdeckt auf ${a.e}.`);
@@ -302,7 +302,7 @@ function apply(st0,who,a){
    need(st.phase==='build'||st.phase==='trigger');
    st.log.push(`${NAME[t]} beendet den Zug.`); st.turn=OPP[t]; st.phase='choose'; st.mode=null; st.t=freshT(); if(t==='L')st.turnNo++; break;
   case 'finish': st.over=true; st.log.push(`Spiel beendet. Endstand Blau ${st.score.B}:${st.score.L} Lila.`); break;
-  case 'setting': st.settings[a.key]=a.value; st.log.push(`Einstellung: ${a.key==='oppField'?'Spieler auf Felder mit Gegenspieler legen '+(a.value?'erlaubt':'verboten'):a.key==='buildMany'?'Aufbauen: '+(a.value?'beliebig viele Aktionen legen':'bis zu 2 Aktionen legen'):a.key}.`); break;
+  case 'setting': st.settings[a.key]=a.value; st.log.push(`Einstellung: ${a.key==='oppField'?'Spieler auf Felder mit Gegenspieler legen '+(a.value?'erlaubt':'verboten'):a.key==='buildMany'?'Aufbauen: '+(a.value?'beliebig viele Karten legen (Spieler und Aktionen gemischt)':'1 Spieler oder bis zu 2 Aktionen legen'):a.key}.`); break;
   default: throw new Error('Unbekannte Aktion');
  }
  st.seq=(st0.seq||0)+1;
