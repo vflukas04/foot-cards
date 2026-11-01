@@ -1,4 +1,4 @@
-// Foot Cards – Regel-Engine Version 3 (wie Version 2, zusätzlich: Passabfangen schlägt auch „--“)
+// Foot Cards – Regel-Engine Version 3 (wie Version 2; neu: Passabfangen schlägt „--“, aber keine grünen Pässe; Schuss blocken schlägt „--“; Gewinner des Präsenz-Duells spielt den Zug)
 (function (root) {
   'use strict';
 
@@ -48,7 +48,7 @@
     return { squad: [], gk: null, pile: [], discard: [], exhausted: [], yellow: {}, out: [], tok: { R: false, G: false, B: false } };
   }
   function emptyStats() { return { turns: 0, shots: 0, onTarget: 0, won: 0, lost: 0, passes: 0, yellow: 0, out: 0, duels: 0 }; }
-  function setOut(st, k, text, extra) { if (st.cur) st.cur.out = Object.assign({ k, t: text }, st.cur.duel ? { duel: st.cur.duel } : {}, extra || {}); }
+  function setOut(st, k, text, extra) { if (st.cur) st.cur.out = Object.assign({ k, t: text }, st.cur.duel && st.cur.duel.kind !== 'Präsenz' ? { duel: st.cur.duel } : {}, extra || {}); }
 
   function newGame(opts) {
     opts = opts || {};
@@ -293,7 +293,7 @@
         break;
       }
       case 'move': {
-        setOut(st, 'ok', `${st.cur.moveLabel} gelingt`, st.cur.duel ? { duel: st.cur.duel } : null);
+        setOut(st, 'ok', `${st.cur.moveLabel} gelingt`, st.cur.duel && st.cur.duel.kind !== 'Präsenz' ? { duel: st.cur.duel } : null);
         st.ball = act.zone;
         log(st, `Ball nach ${ZONE_NAME[act.zone]}.`, 'move');
         endTurn(st, false);
@@ -393,7 +393,7 @@
     const z = st.ball;
     // 4. Steilpass und Sprint: Tempo-Duell
     if (act === 'Steilpass') {
-      if (da === 'Passabfangen') return change(st, 'Pass abgefangen');
+      if (da === 'Passabfangen' && !a.green) return change(st, 'Pass abgefangen');
       st.flank = false; st.through = { to: FORWARD[z] || z };
       log(st, 'Steilpass gespielt. Im nächsten Zug entscheidet das Tempo der nächsten beiden Karten.', 'ok');
       setOut(st, 'ok', 'Steilpass gespielt – jetzt zählt das Tempo der nächsten Karten');
@@ -417,11 +417,12 @@
     }
     // 6. Verteidigung
     if (da === 'Ballgewinn' && !a.green) return change(st, 'Ballgewinn');
-    if (da === 'Passabfangen' && PASSES.includes(act)) return change(st, 'Pass abgefangen');
+    if (da === 'Passabfangen' && PASSES.includes(act) && !a.green) return change(st, 'Pass abgefangen');
     if (da === 'Passabfangen' && act === '--') return change(st, 'Ball abgefangen');
     if (da === 'Tackling' && (act === 'Dribbling' || act === '--')) return change(st, 'Tackling');
     if (da === 'Block' && (act === 'Schuss' || act === 'Kopfball')) return change(st, 'Geblockt');
     if (da === 'Schuss blocken' && act === 'Schuss') return change(st, 'Schuss geblockt');
+    if (da === 'Schuss blocken' && act === '--') return change(st, 'Ball erobert');
     if (da === 'Kopfball blocken' && act === 'Kopfball') return change(st, 'Kopfball geblockt');
     // 7. Erfolg
     switch (act) {
@@ -497,7 +498,7 @@
     if (targets.length === 1) {
       st.ball = targets[0];
       log(st, `${label} gelingt. Ball nach ${ZONE_NAME[st.ball]}.`, 'ok');
-      setOut(st, 'ok', `${label} gelingt`, st.cur.duel ? { duel: st.cur.duel } : null);
+      setOut(st, 'ok', `${label} gelingt`, st.cur.duel && st.cur.duel.kind !== 'Präsenz' ? { duel: st.cur.duel } : null);
       return endTurn(st, false);
     }
     st.cur.targets = targets;
@@ -571,13 +572,13 @@
   const DEF_BEATS = (da, aa, green) => {
     if (aa === 'Ball sichern') return false;
     if (da === 'Gelb') return true;
-    if (aa === 'Steilpass') return da === 'Passabfangen';
+    if (aa === 'Steilpass') return da === 'Passabfangen' && !green;
     if (aa === 'Sprint') return false;
     if (da === 'Ballgewinn') return !green;
-    if (da === 'Passabfangen') return PASSES.includes(aa) || NOTHING(aa);
+    if (da === 'Passabfangen') return (PASSES.includes(aa) && !green) || NOTHING(aa);
     if (da === 'Tackling') return aa === 'Dribbling' || NOTHING(aa);
     if (da === 'Block') return aa === 'Schuss' || aa === 'Kopfball';
-    if (da === 'Schuss blocken') return aa === 'Schuss';
+    if (da === 'Schuss blocken') return aa === 'Schuss' || NOTHING(aa);
     if (da === 'Kopfball blocken') return aa === 'Kopfball';
     return false;
   };
