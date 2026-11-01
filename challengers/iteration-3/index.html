@@ -371,6 +371,65 @@ button.tokb.sel{box-shadow:0 0 0 4px var(--hl);animation:none}
 .gkfield.pick{cursor:pointer}
 .gkfield.pick:hover{background:color-mix(in srgb,var(--hl) 50%,transparent)}
 .nextrow{justify-content:space-between;flex-wrap:nowrap}
+/* Torchance: Frontansicht */
+.gv{position:relative;aspect-ratio:16/10;border-radius:8px;overflow:hidden;border:2px solid var(--pitch-line);background:linear-gradient(#1d3a5f 0 34%,#2c5a3a 34%)}
+.gv.intro{animation:gvzoom .9s cubic-bezier(.2,.7,.2,1) both}
+@keyframes gvzoom{0%{transform:scale(.55);opacity:0;filter:blur(3px)}100%{transform:none;opacity:1;filter:none}}
+.gv-stand{position:absolute;left:0;right:0;top:0;height:34%;background:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 6px,transparent 6px 14px),repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 3px,transparent 3px 9px)}
+.gv-grass{position:absolute;left:0;right:0;top:34%;bottom:0;background:repeating-linear-gradient(90deg,#3f8f45 0 12.5%,#46994c 12.5% 25%)}
+.gv-box{position:absolute;left:2%;right:2%;top:30%;height:58%;border:2px solid rgba(255,255,255,.75);border-bottom:none}
+.gv-spot{position:absolute;left:50%;top:80%;width:8px;height:5px;border-radius:50%;background:#fff;transform:translate(-50%,-50%)}
+.gv-goal{position:absolute;left:8%;width:84%;top:10%;height:46%;border:7px solid #f4f4f4;border-bottom:none;box-shadow:0 2px 0 rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.2)}
+.gv-net{position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.28) 0 1px,transparent 1px 12px),repeating-linear-gradient(-45deg,rgba(255,255,255,.28) 0 1px,transparent 1px 12px),rgba(0,0,0,.18)}
+.gv-net.shake{animation:netshake .7s ease-out .55s}
+@keyframes netshake{20%{transform:scale(1.04,1.06) translateY(-3px)}40%{transform:scale(.98,.97)}60%{transform:scale(1.02,1.03)}100%{transform:none}}
+.gv-fields{position:absolute;inset:0;z-index:6;display:grid;grid-template-columns:repeat(3,1fr)}
+.gv-f{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;padding-top:6px;border-right:1px dashed rgba(255,255,255,.35);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.gv-f:last-child{border-right:none}
+.gv-f .label{color:#fff;opacity:.85}
+.gv-f b{font-family:var(--font-d);font-size:34px;line-height:1}
+.gv-f small{font-size:12px;opacity:.85}
+.gv-f.pick{cursor:pointer}
+.gv-f.pick:hover{background:rgba(111,176,255,.35)}
+.gv-f.decide{background:rgba(255,216,77,.16)}
+.gv-f.hit{background:rgba(255,216,77,.35)}
+.gv-pm{display:flex;gap:4px;margin-top:2px}
+.gv-pm .btn{padding:2px 10px;text-shadow:none}
+.gv-kp{position:absolute;height:33%;pointer-events:none;aspect-ratio:6/10;transform:translate(-50%,-50%) rotate(var(--kr,0deg));z-index:5;filter:drop-shadow(0 4px 3px rgba(0,0,0,.4))}
+.gv-kp svg{width:100%;height:100%}
+.gv-kp.dive{animation:kpdive .55s cubic-bezier(.2,.8,.3,1) both}
+@keyframes kpdive{from{left:50%;top:41%;transform:translate(-50%,-50%) rotate(0deg)}}
+.gv-name{position:absolute;left:50%;top:57%;transform:translateX(-50%);font-family:var(--font-d);font-weight:700;font-size:13px;color:#fff;background:rgba(0,0,0,.45);padding:1px 8px;border-radius:999px;white-space:nowrap}
+.gv-arrows{position:absolute;left:18%;right:18%;top:61%;height:22%;display:grid;grid-template-columns:repeat(3,1fr);gap:4%;z-index:4}
+.gv-ar{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;color:#fff;border-radius:10px;font:inherit;font-family:var(--font-d);font-weight:700;font-size:14px;border:none;background:rgba(0,0,0,.18);padding:2px}
+.gv-ar svg{height:58%;width:auto}
+.gv-ar small{font-size:11.5px;font-weight:600;opacity:.9}
+button.gv-ar{cursor:pointer;background:rgba(0,0,0,.28)}
+button.gv-ar:hover{background:var(--att);color:#fff}
+.gv-ar.sel{background:var(--att);color:#fff;box-shadow:0 0 0 3px #ffd84d}
+.gv-ar.off{opacity:.25}
+.gv-ball{position:absolute;width:26px;height:26px;border-radius:50%;transform:translate(-50%,-50%);z-index:7;
+  background:radial-gradient(circle at 35% 30%,#fff 0 30%,#ddd 60%,#999 100%);border:2px solid #111;box-shadow:0 3px 4px rgba(0,0,0,.4)}
+.gv-ball::after{content:'';position:absolute;inset:30%;background:#111;clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%)}
+.gv-ball.fly{animation:gvfly .6s cubic-bezier(.25,.6,.35,1) both}
+@keyframes gvfly{from{left:50%;top:87%;transform:translate(-50%,-50%) scale(1.35)}to{transform:translate(-50%,-50%) scale(.8)}}
+.gv-result{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9;font-family:var(--font-d);font-weight:800;font-size:34px;line-height:1.05;text-align:center;
+  padding:8px 22px;border-radius:14px;border:3px solid #111;box-shadow:0 4px 0 rgba(0,0,0,.35);display:flex;flex-direction:column;align-items:center;white-space:nowrap}
+.gv-result small{font-size:17px;font-weight:700}
+.gv-result.ta{background:var(--lila);color:#fff}.gv-result.tb{background:#fff;color:#111}
+.gv-result.r-tor{font-size:44px;background:#ffd84d;color:#111}
+.gv-result.r-vorbei{background:var(--surface);color:var(--fg)}
+.gv-result.pop{animation:gvres .5s cubic-bezier(.2,1.4,.4,1) .55s both}
+@keyframes gvres{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.gv-chance{position:absolute;left:50%;top:44%;z-index:8;font-family:var(--font-d);font-weight:800;font-size:56px;letter-spacing:.06em;color:#ffd84d;-webkit-text-stroke:2px #111;
+  text-shadow:0 4px 0 rgba(0,0,0,.4);white-space:nowrap;pointer-events:none;animation:chance 1.9s cubic-bezier(.3,.7,.3,1) both}
+@keyframes chance{0%{transform:translate(-160%,-50%) skewX(-12deg);opacity:0}25%{transform:translate(-50%,-50%) skewX(-12deg) scale(1.1);opacity:1}70%{transform:translate(-50%,-50%) skewX(-12deg) scale(1);opacity:1}100%{transform:translate(80%,-50%) skewX(-12deg);opacity:0}}
+.gv-dice{position:absolute;right:3%;top:63%;z-index:6;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.92);color:#111;border-radius:10px;padding:6px 10px;border:2px solid #111}
+.gv-confetti{position:absolute;inset:0;pointer-events:none;z-index:6;overflow:hidden}
+.gv-confetti i{position:absolute;top:-6%;width:8px;height:12px;border-radius:2px;animation-name:confetti;animation-timing-function:cubic-bezier(.3,.6,.5,1);animation-fill-mode:both}
+@keyframes confetti{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(560px) rotate(var(--r));opacity:.2}}
+.gv-flash{position:absolute;width:90px;height:90px;border-radius:50%;transform:translate(-50%,-50%);z-index:4;background:radial-gradient(circle,rgba(255,255,255,.95) 0,rgba(255,216,77,.6) 35%,transparent 70%);animation:gvflash .7s ease-out .5s both}
+@keyframes gvflash{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}40%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.8)}}
 /* Karte ziehen und umdrehen */
 .deal{position:relative;animation:dealin .55s cubic-bezier(.2,.7,.2,1) var(--dd,0s) both;transform-origin:80% 0}
 @keyframes dealin{0%{transform:translate(40px,-120px) scale(.3) rotate(10deg);opacity:0}25%{opacity:1}100%{transform:none;opacity:1}}
@@ -1608,6 +1667,7 @@ const SFX = (() => {
     slide(c, t){ const n = noise(c, .65), f = filt(c, 'bandpass', 1800, 1.1), g = c.createGain(); f.frequency.setValueAtTime(2200, t); f.frequency.exponentialRampToValueAtTime(260, t + .6); env(g, t, .03, .55, .65); n.connect(f).connect(g).connect(c.destination); n.start(t); n.stop(t + .66); },
     applause(c, t, len){ const dur = len || 1.8; for (let i = 0; i < 90; i++) { const s = t + Math.random() * dur * .85, fade = 1 - (s - t) / dur; const n = noise(c, .04), f = filt(c, 'bandpass', 1100 + Math.random() * 2400, .9), g = c.createGain(); env(g, s, .002, .05 + .14 * fade, .035); n.connect(f).connect(g).connect(c.destination); n.start(s); n.stop(s + .05); } },
     cheer(c, t){ P.applause(c, t, 2.6); const n = noise(c, 2.8), f = filt(c, 'bandpass', 650, .7), g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.4, t + .45); g.gain.exponentialRampToValueAtTime(.0001, t + 2.8); n.connect(f).connect(g).connect(c.destination); n.start(t); n.stop(t + 2.8); },
+    murmur(c, t, len){ const d = len || 2.4; const n = noise(c, d), f = filt(c, 'bandpass', 420, .8), g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.22, t + d * .6); g.gain.exponentialRampToValueAtTime(.0001, t + d); n.connect(f).connect(g).connect(c.destination); n.start(t); n.stop(t + d); },
     ohh(c, t){ const n = noise(c, 1.3), f = filt(c, 'lowpass', 900), g = c.createGain(); f.frequency.setValueAtTime(950, t); f.frequency.exponentialRampToValueAtTime(220, t + 1.2); env(g, t, .3, .35, 1.3); n.connect(f).connect(g).connect(c.destination); n.start(t); n.stop(t + 1.3); },
     whistle(c, t, times){ const k = times || 1; for (let i = 0; i < k; i++) { const t0 = t + i * .42, len = (i === k - 1 && k > 1) ? .75 : .28; const o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain(); o.frequency.value = 2900; l.frequency.value = 36; lg.gain.value = 110; l.connect(lg).connect(o.frequency); env(g, t0, .01, .16, len); o.connect(g).connect(c.destination); o.start(t0); l.start(t0); o.stop(t0 + len); l.stop(t0 + len); } },
   };
@@ -1673,13 +1733,14 @@ function startReplay(prev){
   const m = SPEEDS[speed()];
   const dice = prev.shot && prev.shot.roll ? 1 : 0;
   const t1 = BEAT, tDice = 2 * BEAT, t2 = 2 * BEAT + dice * 1600;
-  const total = t2 + 1900 + (prev.whistle ? 1400 : 0);
+  const total = t2 + (prev.shot ? 3200 : 1900) + (prev.whistle ? 1400 : 0);   // Torszene: Ergebnis länger stehen lassen
   app.replay = { prev, step: 0, dice: 0, total: total * m, t0: Date.now(), timers: [] };
   const at = (ms, f) => app.replay.timers.push(setTimeout(() => { if (app.replay && app.replay.prev === prev) f(); }, ms * m));
   if (prev.att && prev.att.id && !/^--/.test(prev.att.eff || prev.att.action || '--')) SFX.play('kick');
   if (prev.def && prev.def.id || prev.shot) SFX.play('flip', t1 * m);
   SFX.play(outcomeSound(prev), t2 * m);
   if (prev.whistle) SFX.play('whistle', (t2 + 1000) * m, prev.whistle === 'Abpfiff' ? 3 : 2);
+  if (prev.shot) { SFX.play('kick', (t2 - 150) * m); if (dice) SFX.play('murmur', tDice * m, 1.8); }
   if (!reduceMotion() && !prev.moment) { const pl = plansFor(app.st); if (pl.length) scPlay('game', '#gscene', gameMode(), [pl[pl.length - 1]], { delay: Math.max(0, t2 - (prev.shot ? 900 : 700)) * m, labels: gameLabels(app.st) }); }
   at(t1, () => { app.replay.step = 1; render(); });
   if (dice) at(tDice, () => { app.replay.dice = 1; app.replay.step = 1; render(); });
@@ -1842,20 +1903,12 @@ function replayHtml(st){
   const rp = app.replay, p = rp.prev;
   const defSeat = FC.other(p.possStart), attSeat = p.possStart;
   let h = stepsHtml(rp.step >= 2 ? 3 : rp.step >= 1 ? 2 : 1);
-  h += pitchHtml(st);
+  h += p.shot ? goalView(st, null) : pitchHtml(st);
   const du = p.out && p.out.duel;
   if (du && rp.step >= 1) h += sitHtml(duelTitle(du.kind), isPresence(p) ? 'nach „--“ gegen „--“: Wer kommt zuerst an den Ball?' : 'Ergebnis', vsHtml(du, p.att && p.att.id, p.def && p.def.id, attSeat, defSeat), '');
   else if (isPresence(p)) h += sitHtml('Präsenz-Duell', 'nach „--“ gegen „--“: Wer kommt zuerst an den Ball?', '', 'Der Ball ist frei. Es zählt die Präsenz der beiden neuen Karten, bei Gleichstand das Tempo.');
-  if (p.shot && rp.step >= 1) {
-    const sh = p.shot;
-    const same = sh.aim === sh.gkN;
-    h += `<div class="banner o-shot">${sh.kind} von ${esc(card(sh.shooter).name)}: ${sh.points + (sh.boost?1:0)} Punkte verteilt${sh.assist?` (inkl. Assist ${sh.assist} von ${esc(card(sh.assistId).name)})`:''}
-      ${gkHtml(sh.gk, {fields: sh.fields, mark: rp.step>=1?sh.gkN:null, aim: sh.aim})}
-      <div class="vs">Schuss nach <b>${FC.CORNERS[sh.aim]}</b> · Keeper springt nach <b>${FC.CORNERS[sh.gkN]}</b>${same?' · richtige Ecke!':''}</div>
-      ${!same && sh.roll && rp.dice>=1 ? `<div class="dice">${rp.step<2 && !app.rolled.has(p.turn) ? `<span class="pdie rolling" data-final="${sh.roll}" data-key="${p.turn}">${dieFace(1+Math.floor(Math.random()*6))}</span><span class="dlabel">Würfel rollt … gebraucht: unter ${sh.need}</span>` : `<span class="pdie">${dieFace(sh.roll)}</span><span class="dlabel"><b>${sh.roll}</b> – ${sh.roll<sh.need?'unter':'nicht unter'} ${sh.need}</span>`}</div>`:''}</div>`;
-  }
   if (rp.step >= 2) {
-    h += `<div class="banner outcome ${OUT_CLASS[p.out.k]||''}">${esc(outText(p))}${p.moment?'<small>Jetzt geht es mit seinem Angriff weiter.</small>':''}${p.possEnd!==p.possStart&&p.out.k!=='goal'?`<small>Ballbesitz: ${esc(teamLabel(p.possEnd))}</small>`:''}${p.out.k==='goal'?`<small>${esc(card(p.shot.shooter).name)} trifft für ${esc(teamLabel(p.possStart))}</small>`:''}</div>`;
+    if (!p.shot) h += `<div class="banner outcome ${OUT_CLASS[p.out.k]||''}">${esc(outText(p))}${p.moment?'<small>Jetzt geht es mit seinem Angriff weiter.</small>':''}${p.possEnd!==p.possStart&&p.out.k!=='goal'?`<small>Ballbesitz: ${esc(teamLabel(p.possEnd))}</small>`:''}${p.out.k==='goal'?`<small>${esc(card(p.shot.shooter).name)} trifft für ${esc(teamLabel(p.possStart))}</small>`:''}</div>`;
     if (p.whistle) h += `<div class="banner o-whistle">${p.whistle==='Halbzeit'?'Halbzeitpfiff':'Abpfiff'}</div>`;
   }
   return h;
@@ -2013,25 +2066,117 @@ function tokenRow(st, s, D, dec){
   return `<div class="tokrow"><span class="label">Token</span>${html}${hints.length ? `<span class="tokhint">${hints.join(' · ')}</span>` : ''}</div>`;
 }
 // Tor in der Mitte: Punkte verteilen, Keeper-Ecke oder Schussecke direkt anklicken
-function goalPanel(st, D){
-  const ph = st.phase;
-  if (!['dist','gk','shot'].includes(ph)) return '';
-  const sh = st.cur.shot;
-  const mine = D && !D.forced && D.seat === FC.actor(st);
-  if (!mine) return gkHtml(sh.gk, { fields: ph === 'dist' ? sh.gkBase : sh.fields });
-  const pct = v => Math.round(Math.max(0, Math.min(6, v - 1)) / 6 * 100);
-  if (ph === 'dist') {
-    const d = app.dist && app.dist.turn === st.cur.turn ? app.dist : (app.dist = { turn: st.cur.turn, add: [0,0,0], boost: false });
-    const total = sh.points + (d.boost ? 1 : 0), used = d.add.reduce((x, y) => x + y, 0);
-    const fields = sh.gkBase.map((v, i) => v + d.add[i]);
-    const hasBoost = D.acts.some(x => x.boost);
-    return `<div class="goalbox"><div class="goalhead"><b>Schusspunkte verteilen</b><span>${esc(sh.kind)} von ${esc(card(sh.shooter).name)}: ${sh.kind==='Kopfball'?'Kopfball':'Schuss'} ${sh.base}${sh.assist?` + Assist ${sh.assist} von ${esc(card(sh.assistId).name)}`:''}${sh.fern?' − 1 Fernschuss':''}${d.boost?' + 1 Token':''} = <b>${total}</b> · noch <b>${total-used}</b> übrig${hasBoost&&!d.boost?' · roter Token über deiner Karte bringt +1':''}</span></div>
-      <div class="gkgoal big">${fields.map((v,i)=>`<div class="gkfield decide decide-a"><span class="label">${FC.CORNERS[i]}</span><b>${v}</b><div class="row" style="gap:4px;justify-content:center"><button class="btn small" data-dist="${i}:-1" ${d.add[i]===0?'disabled':''} aria-label="weniger ${FC.CORNERS[i]}">−</button><button class="btn small" data-dist="${i}:1" ${used>=total?'disabled':''} aria-label="mehr ${FC.CORNERS[i]}">+</button></div><small>Treffer ${pct(v)} %</small></div>`).join('')}</div>
-      <div class="row"><button class="btn primary" id="distOk" data-enter ${used!==total?'disabled':''}>Punkte bestätigen</button><span class="muted">Der Gegner sieht die Verteilung.</span></div></div>`;
+// ---------- Torchance: Frontansicht des Tors (Bildershow, nur der Schuss selbst ist bewegt) ----------
+// Koordinaten in Prozent der Torszene (Seitenverhältnis 16:10). Tor: links 8 %, Breite 84 %, oben 10 %, Höhe 46 %.
+const GV = { fx: [22, 50, 78], fy: 33, spot: [50, 87], stand: [50, 41] };
+const GV_DIVE = [ { x: 25, y: 30, r: -72 }, { x: 50, y: 25, r: 0 }, { x: 75, y: 30, r: 72 } ];
+const GV_MISS = [ [3, 16], [50, 3], [97, 16] ];
+function keeperSvg(team){
+  const body = team === 'A' ? '#9b2f9a' : '#ffffff', line = team === 'A' ? '#ffffff' : '#111111';
+  return `<svg viewBox="0 0 60 100" aria-hidden="true"><line x1="19" y1="32" x2="5" y2="12" stroke="${body}" stroke-width="8" stroke-linecap="round"/><line x1="41" y1="32" x2="55" y2="12" stroke="${body}" stroke-width="8" stroke-linecap="round"/>
+    <line x1="19" y1="32" x2="5" y2="12" stroke="${line}" stroke-width="1.5" stroke-linecap="round" opacity=".5"/><line x1="41" y1="32" x2="55" y2="12" stroke="${line}" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+    <circle cx="5" cy="10" r="6.5" fill="#ffd84d" stroke="#111" stroke-width="1.5"/><circle cx="55" cy="10" r="6.5" fill="#ffd84d" stroke="#111" stroke-width="1.5"/>
+    <rect x="21" y="60" width="8" height="34" rx="3" fill="#222"/><rect x="31" y="60" width="8" height="34" rx="3" fill="#222"/>
+    <rect x="17" y="24" width="26" height="40" rx="7" fill="${body}" stroke="#111" stroke-width="1.8"/><circle cx="30" cy="13" r="9.5" fill="#f1c27d" stroke="#111" stroke-width="1.5"/></svg>`;
+}
+const ARROW_PATH = ['M30 54 L8 10 M8 10 L9 24 M8 10 L20 17', 'M30 54 L30 6 M30 6 L22 16 M30 6 L38 16', 'M30 54 L52 10 M52 10 L51 24 M52 10 L40 17'];
+function arrowSvg(n){ return `<svg viewBox="0 0 60 60" aria-hidden="true"><path d="${ARROW_PATH[n]}" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
+function confettiHtml(seat){
+  const cols = seat === 'A' ? ['#9b2f9a', '#d07ad0', '#ffd84d', '#ffffff'] : ['#ffffff', '#e8e8e8', '#ffd84d', '#111111'];
+  let h = '';
+  for (let i = 0; i < 46; i++) {
+    const x = Math.random() * 100, d = Math.random() * .7, dur = 1.4 + Math.random() * 1.2, r = Math.random() * 720 - 360, c = cols[i % cols.length];
+    h += `<i style="left:${x.toFixed(1)}%;background:${c};animation-delay:${d.toFixed(2)}s;animation-duration:${dur.toFixed(2)}s;--r:${r.toFixed(0)}deg"></i>`;
   }
-  const isGk = ph === 'gk';
-  return `<div class="goalbox"><div class="goalhead"><b>${isGk ? 'Keeper: Wohin springst du?' : 'Wohin schießt du?'}</b><span>${isGk ? `Richtige Ecke = sicher gehalten.${app.mode==='local'?' Der Angreifer schaut bitte weg.':''}` : 'Der Keeper hat schon verdeckt gewählt. Andere Ecke: Würfel muss unter dem Feldwert liegen.'}</span></div>
-    <div class="gkgoal big">${[0,1,2].map(n=>`<div class="gkfield pick decide ${isGk?'decide-d':'decide-a'}" role="button" tabindex="0" data-act='{"type":"${isGk?'gk':'aim'}","n":${n}}' data-key="${n+1}" title="${FC.CORNERS[n]}"><span class="label">${FC.CORNERS[n]}</span><b>${sh.fields[n]}</b><small>${isGk ? 'Feldwert' : pct(sh.fields[n]) + ' %, wenn der Keeper falsch liegt'}</small></div>`).join('')}</div></div>`;
+  return `<div class="gv-confetti">${h}</div>`;
+}
+// Torszene für die laufende Torchance (live) oder die Auflösung (replay)
+function goalView(st, D){
+  const rp = app.replay;
+  const sh = rp ? rp.prev.shot : st.cur.shot;
+  const attSeat = rp ? rp.prev.possStart : st.poss, defSeat = FC.other(attSeat);
+  const shooter = card(sh.shooter), gk = card(sh.gk);
+  const ph = rp ? 'replay' : st.phase;
+  const mine = !rp && D && !D.forced && D.seat === FC.actor(st);
+  const pct = v => Math.round(Math.max(0, Math.min(6, v - 1)) / 6 * 100);
+  const turn = rp ? rp.prev.turn : st.cur.turn;
+  // Ankündigung nur beim ersten Erscheinen dieser Torchance
+  const introKey = 'tc-' + turn;
+  const intro = !rp && !app.revealed.has(introKey) && !reduceMotion();
+  app.revealed.add(introKey);
+  if (intro) SFX.play('murmur');
+  let fields = sh.fields || sh.gkBase, dist = null;
+  if (ph === 'dist' && mine) {
+    dist = app.dist && app.dist.turn === st.cur.turn ? app.dist : (app.dist = { turn: st.cur.turn, add: [0,0,0], boost: false });
+    fields = sh.gkBase.map((v, i) => v + dist.add[i]);
+  }
+  const total = dist ? sh.points + (dist.boost ? 1 : 0) : 0, used = dist ? dist.add.reduce((x, y) => x + y, 0) : 0;
+  // Kopfzeile: was passiert gerade, wer ist dran
+  const kind = sh.kind === 'Kopfball' ? 'Kopfball' : 'Schuss';
+  const calc = `${kind} ${sh.base}${sh.assist ? ` + Assist ${sh.assist} von ${esc(card(sh.assistId).name)}` : ''}${sh.fern ? ' − 1 Fernschuss' : ''}`;
+  let title = '', sub = '';
+  if (ph === 'dist') { title = mine ? 'Schusspunkte verteilen' : `${esc(shooter.name)} verteilt die Schusspunkte …`; sub = mine ? `${calc}${dist.boost ? ' + 1 Token' : ''} = <b>${total}</b> · noch <b>${total - used}</b> übrig. Je höher ein Feld, desto leichter triffst du dort.` : calc; }
+  else if (ph === 'gk') { title = mine ? 'Keeper: Wohin springst du?' : `${esc(teamLabel(defSeat))} entscheidet, wohin ${esc(gk.name)} springt …`; sub = mine ? 'Klicke ein Feld im Tor. Der Schütze sieht deine Wahl erst nach seinem Schuss.' : 'Danach zielt der Schütze.'; }
+  else if (ph === 'shot') { title = mine ? 'Keeper hat sich entschieden. Wohin schießt du?' : `Keeper hat sich entschieden. ${esc(shooter.name)} zielt …`; sub = mine ? 'Klicke einen Pfeil. Liegt der Keeper falsch, wird gewürfelt: Der Würfel muss unter dem Feldwert liegen.' : ''; }
+  else {
+    const same = sh.aim === sh.gkN;
+    title = `${esc(shooter.name)} ${sh.kind === 'Kopfball' ? 'köpft' : 'schießt'} nach ${FC.CORNERS[sh.aim]}`;
+    sub = rp.step >= 1 ? `${esc(gk.name)} springt nach ${FC.CORNERS[sh.gkN]}${same ? ' – richtige Ecke!' : ' – falsche Ecke, jetzt entscheidet der Würfel.'}` : 'Und der Keeper …?';
+  }
+  // Felder im Tor
+  const fieldHtml = fields.map((v, i) => {
+    if (ph === 'dist' && mine) return `<div class="gv-f decide decide-a"><span class="label">${FC.CORNERS[i]}</span><b>${v}</b><span class="gv-pm"><button class="btn small" data-dist="${i}:-1" ${dist.add[i]===0?'disabled':''} aria-label="weniger ${FC.CORNERS[i]}">−</button><button class="btn small" data-dist="${i}:1" ${used>=total?'disabled':''} aria-label="mehr ${FC.CORNERS[i]}">+</button></span><small>Treffer ${pct(v)} %</small></div>`;
+    if (ph === 'gk' && mine) return `<div class="gv-f pick decide decide-d" role="button" tabindex="0" data-act='{"type":"gk","n":${i}}' data-key="${i+1}" title="Keeper springt nach ${FC.CORNERS[i]}"><span class="label">${FC.CORNERS[i]}</span><b>${v}</b><small>hierhin springen</small></div>`;
+    const hit = ph === 'replay' && rp.step >= 2 && i === sh.aim;
+    return `<div class="gv-f${hit ? ' hit' : ''}"><span class="label">${FC.CORNERS[i]}</span><b>${v}</b>${ph !== 'replay' ? `<small>Treffer ${pct(v)} %</small>` : ''}</div>`;
+  }).join('');
+  // Keeper: steht, bis in der Auflösung alles feststeht; dann hechtet er
+  let kp = { x: GV.stand[0], y: GV.stand[1], r: 0 }, kpCls = '';
+  if (ph === 'replay' && rp.step >= 1) {
+    kp = GV_DIVE[sh.gkN];
+    const k = 'kp-' + turn; if (!app.revealed.has(k)) { app.revealed.add(k); kpCls = ' dive'; }
+  }
+  const keeper = `<div class="gv-kp${kpCls}" style="left:${kp.x}%;top:${kp.y}%;--kr:${kp.r}deg">${keeperSvg(defSeat)}</div>`;
+  // Pfeile: im Zielen anklickbar, in der Auflösung ist der gewählte markiert
+  let arrows = '';
+  if (ph === 'shot' || ph === 'replay') {
+    arrows = `<div class="gv-arrows">${[0,1,2].map(n => {
+      if (ph === 'shot' && mine) return `<button type="button" class="gv-ar decide decide-a" data-act='{"type":"aim","n":${n}}' data-key="${n+1}" title="Schuss nach ${FC.CORNERS[n]}">${arrowSvg(n)}<span>${FC.CORNERS[n]}</span><small>${pct(fields[n])} %</small></button>`;
+      const sel = ph === 'replay' && n === sh.aim;
+      return `<div class="gv-ar${sel ? ' sel' : ''}${ph === 'replay' && !sel ? ' off' : ''}">${arrowSvg(n)}<span>${FC.CORNERS[n]}</span></div>`;
+    }).join('')}</div>`;
+  }
+  // Ball: liegt am Punkt; fliegt erst im letzten Schritt
+  let ball = `<div class="gv-ball" style="left:${GV.spot[0]}%;top:${GV.spot[1]}%"></div>`, result = '', extra = '', netCls = '';
+  if (ph === 'replay' && rp.step >= 2) {
+    const o = sh.outcome;
+    const tgt = o === 'tor' ? [GV.fx[sh.aim], GV.fy - 6] : o === 'parade' ? [GV_DIVE[sh.gkN].x, GV_DIVE[sh.gkN].y - 6] : GV_MISS[sh.aim];
+    const k = 'gvb-' + turn, fresh = !app.revealed.has(k); app.revealed.add(k);
+    ball = `<div class="gv-ball${fresh ? ' fly' : ''}" style="left:${tgt[0]}%;top:${tgt[1]}%"></div>`;
+    const txt = o === 'tor' ? `${esc(shooter.name)} trifft!${sh.assistId ? `<small>Vorlage: ${esc(card(sh.assistId).name)}</small>` : ''}` : o === 'parade' ? `Glanzparade von ${esc(gk.name)}!` : 'Knapp vorbei!';
+    result = `<div class="gv-result r-${o}${fresh ? ' pop' : ''} t${(o === 'tor' ? attSeat : o === 'parade' ? defSeat : attSeat) === 'A' ? 'a' : 'b'}">${txt}</div>`;
+    if (o === 'tor') { netCls = fresh ? ' shake' : ''; if (fresh) extra = confettiHtml(attSeat); }
+    if (o === 'parade' && fresh) extra = `<div class="gv-flash" style="left:${GV_DIVE[sh.gkN].x}%;top:${GV_DIVE[sh.gkN].y - 8}%"></div>`;
+  }
+  // Würfel im Bild, wenn der Keeper falsch lag
+  let dice = '';
+  if (ph === 'replay' && sh.aim !== sh.gkN && sh.roll && rp.dice >= 1) {
+    const p = rp.prev;
+    dice = `<div class="gv-dice">${rp.step < 2 && !app.rolled.has(p.turn) ? `<span class="pdie rolling" data-final="${sh.roll}" data-key="${p.turn}">${dieFace(1 + Math.floor(Math.random() * 6))}</span><span class="dlabel">Würfel rollt … gebraucht: unter ${sh.need}</span>` : `<span class="pdie">${dieFace(sh.roll)}</span><span class="dlabel"><b>${sh.roll}</b> – ${sh.roll < sh.need ? 'unter' : 'nicht unter'} ${sh.need}</span>`}</div>`;
+  }
+  const head = `<div class="goalhead"><b>${title}</b>${sub ? `<span>${sub}</span>` : ''}</div>`;
+  const scene = `<div class="gv${intro ? ' intro' : ''}" aria-label="Torszene">
+      <div class="gv-stand"></div><div class="gv-grass"><div class="gv-box"></div><div class="gv-spot"></div></div>
+      <div class="gv-goal"><div class="gv-net${netCls}"></div><div class="gv-fields">${fieldHtml}</div></div>
+      ${keeper}${arrows}${ball}${dice}${extra}${result}
+      ${intro ? `<div class="gv-chance">TORCHANCE!</div>` : ''}
+      <div class="gv-name">${esc(gk.name)}</div></div>`;
+  let foot = '';
+  if (ph === 'dist' && mine) {
+    const hasBoost = D.acts.some(x => x.boost);
+    foot = `<div class="row"><button class="btn primary" id="distOk" data-enter ${used !== total ? 'disabled' : ''}>Punkte bestätigen</button><span class="muted">Der Gegner sieht die Verteilung.${hasBoost && !dist.boost ? ' Roter Token über deiner Karte: +1 Punkt.' : ''}</span></div>`;
+  }
+  return head + scene + foot;
 }
 function centerNotice(st){
   if (app.mode === 'online' && !(app.gameDoc && app.gameDoc.seats && app.gameDoc.seats.B)) return `<div class="notice wait">Das Spiel startet, sobald dein Gegner beigetreten ist.</div>`;
@@ -2048,7 +2193,8 @@ function centerHtml(st, D){
     return `<div class="banner outcome o-goal">Abpfiff · ${st.goals.A}:${st.goals.B} · ${esc(st.goals.A===st.goals.B?'Unentschieden':'Sieg '+teamLabel(st.goals.A>st.goals.B?'A':'B'))}</div>` + recapHtml(st) + `<div class="row"><button class="btn primary" id="again" data-enter>Neues Spiel</button></div>`;
   }
   const active = st.phase === 'att' ? 1 : st.phase === 'def' || st.phase === 'def_pick2' ? 2 : 3;
-  return centerNotice(st) + stepsHtml(active) + pitchHtml(st) + situationHtml(st) + goalPanel(st, D);
+  if (['dist','gk','shot'].includes(st.phase)) return centerNotice(st) + stepsHtml(active) + goalView(st, D);
+  return centerNotice(st) + stepsHtml(active) + pitchHtml(st) + situationHtml(st);
 }
 // Seiten: Heim immer links, Gast immer rechts, für beide Spieler gleich
 function sideHtml(st, s, D){
