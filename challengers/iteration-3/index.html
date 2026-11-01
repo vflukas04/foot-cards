@@ -1849,7 +1849,7 @@ function replayHtml(st){
   if (p.shot && rp.step >= 1) {
     const sh = p.shot;
     const same = sh.aim === sh.gkN;
-    h += `<div class="banner o-shot">${sh.kind} von ${esc(card(sh.shooter).name)}: ${sh.points + (sh.boost?1:0)} Punkte verteilt${sh.assist?` (inkl. Assist ${sh.assist})`:''}
+    h += `<div class="banner o-shot">${sh.kind} von ${esc(card(sh.shooter).name)}: ${sh.points + (sh.boost?1:0)} Punkte verteilt${sh.assist?` (inkl. Assist ${sh.assist} von ${esc(card(sh.assistId).name)})`:''}
       ${gkHtml(sh.gk, {fields: sh.fields, mark: rp.step>=1?sh.gkN:null, aim: sh.aim})}
       <div class="vs">Schuss nach <b>${FC.CORNERS[sh.aim]}</b> · Keeper springt nach <b>${FC.CORNERS[sh.gkN]}</b>${same?' · richtige Ecke!':''}</div>
       ${!same && sh.roll && rp.dice>=1 ? `<div class="dice">${rp.step<2 && !app.rolled.has(p.turn) ? `<span class="pdie rolling" data-final="${sh.roll}" data-key="${p.turn}">${dieFace(1+Math.floor(Math.random()*6))}</span><span class="dlabel">Würfel rollt … gebraucht: unter ${sh.need}</span>` : `<span class="pdie">${dieFace(sh.roll)}</span><span class="dlabel"><b>${sh.roll}</b> – ${sh.roll<sh.need?'unter':'nicht unter'} ${sh.need}</span>`}</div>`:''}</div>`;
@@ -2025,7 +2025,7 @@ function goalPanel(st, D){
     const total = sh.points + (d.boost ? 1 : 0), used = d.add.reduce((x, y) => x + y, 0);
     const fields = sh.gkBase.map((v, i) => v + d.add[i]);
     const hasBoost = D.acts.some(x => x.boost);
-    return `<div class="goalbox"><div class="goalhead"><b>Schusspunkte verteilen</b><span>${esc(sh.kind)} von ${esc(card(sh.shooter).name)}: ${sh.kind==='Kopfball'?'Kopfball':'Schuss'} ${sh.base}${sh.assist?` + Assist ${sh.assist}`:''}${sh.fern?' − 1 Fernschuss':''}${d.boost?' + 1 Token':''} = <b>${total}</b> · noch <b>${total-used}</b> übrig${hasBoost&&!d.boost?' · roter Token über deiner Karte bringt +1':''}</span></div>
+    return `<div class="goalbox"><div class="goalhead"><b>Schusspunkte verteilen</b><span>${esc(sh.kind)} von ${esc(card(sh.shooter).name)}: ${sh.kind==='Kopfball'?'Kopfball':'Schuss'} ${sh.base}${sh.assist?` + Assist ${sh.assist} von ${esc(card(sh.assistId).name)}`:''}${sh.fern?' − 1 Fernschuss':''}${d.boost?' + 1 Token':''} = <b>${total}</b> · noch <b>${total-used}</b> übrig${hasBoost&&!d.boost?' · roter Token über deiner Karte bringt +1':''}</span></div>
       <div class="gkgoal big">${fields.map((v,i)=>`<div class="gkfield decide decide-a"><span class="label">${FC.CORNERS[i]}</span><b>${v}</b><div class="row" style="gap:4px;justify-content:center"><button class="btn small" data-dist="${i}:-1" ${d.add[i]===0?'disabled':''} aria-label="weniger ${FC.CORNERS[i]}">−</button><button class="btn small" data-dist="${i}:1" ${used>=total?'disabled':''} aria-label="mehr ${FC.CORNERS[i]}">+</button></div><small>Treffer ${pct(v)} %</small></div>`).join('')}</div>
       <div class="row"><button class="btn primary" id="distOk" data-enter ${used!==total?'disabled':''}>Punkte bestätigen</button><span class="muted">Der Gegner sieht die Verteilung.</span></div></div>`;
   }
