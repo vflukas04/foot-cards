@@ -20,6 +20,7 @@ const edgesOf=f=>nbrs(f).map(n=>ekey(f,n));
 const other=(e,f)=>{const [a,b]=e.split('/');return a===f?b:a;};
 const inBox=(t,f)=>{const c=col(f),r=row(f);return c>=1&&c<=3&&(t==='B'?r>=6:r<=2);};
 const clone=o=>JSON.parse(JSON.stringify(o));
+const sk=(e,t)=>e+'#'+t, edgeOf=k=>k.split('#')[0], teamOfKey=k=>k.split('#')[1];
 const cardName=n=>n==='Ball sichern A'?'Ball sichern (alle)':n==='Ball sichern B'?'Ball sichern (gegnerische)':n;
 
 /* ---------- Zufall (im Spielstand, damit Host und Gast gleich rechnen) ---------- */
@@ -31,7 +32,7 @@ function newGame(opt){
  opt=opt||{};
  const st={v:1,seq:0,seed:(opt.seed!=null?opt.seed:Math.floor(Math.random()*2147483647))||1,
   turn:'B',att:'B',phase:'choose',mode:null,turnNo:1,score:{B:0,L:0},
-  settings:{oppField:!!opt.oppField},
+  settings:{oppField:!!opt.oppField,buildMany:opt.buildMany!==false},
   board:{},ball:{carrier:null,field:'C4'},cards:{},edges:{},
   hand:{B:{A:[],P:[]},L:{A:[],P:[]}},deck:{B:{A:[],P:[]},L:{A:[],P:[]}},disc:{B:{A:[],P:[]},L:{A:[],P:[]}},
   t:{placedP:0,placedA:0,moved:false,pendingMove:null,taktik:0},log:[],last:null,over:false};
@@ -41,14 +42,15 @@ function newGame(opt){
   st.deck[t].P=shuffle(st,D.players.map((p,i)=>i).filter(i=>P(i).team===t));
   st.hand[t].A=st.deck[t].A.splice(0,4); st.hand[t].P=st.deck[t].P.splice(0,2);
  }
- st.log.push('Neues Spiel (Regelstand 1.3). Leere Matte, Ball frei auf C4. Blau beginnt. Starthand je 2 Spieler und 4 Aktionen.');
+ st.log.push(`Neues Spiel (Regelstand 1.3). Leere Matte, Ball frei auf C4. Blau beginnt. Starthand je 2 Spieler und 4 Aktionen. Je Kante ein Platz pro Team. Einstellungen: Aufbauen ${st.settings.buildMany?'beliebig viele Aktionen legen (Test)':'bis zu 2 Aktionen legen'}; Spieler auf Felder mit Gegenspieler ${st.settings.oppField?'erlaubt (Test)':'verboten'}.`);
  return st;
 }
 
 /* ---------- Abfragen ---------- */
 const on=(st,f,t)=>Object.keys(st.board).map(Number).filter(i=>st.board[i]===f&&(!t||P(i).team===t));
 const carrierField=st=>st.ball.carrier!=null?st.board[st.ball.carrier]:null;
-function canCard(st,t,e){ if(st.edges[e]) return false; const fs=e.split('/'); return fs.some(f=>on(st,f,t).length)||fs.every(f=>!on(st,f).length); }
+function slotsAt(st,f){const o=[];for(const e of edgesOf(f))for(const t of ['B','L'])if(st.edges[sk(e,t)])o.push(sk(e,t));return o;}
+function canCard(st,t,e){ if(st.edges[sk(e,t)]) return false; const fs=e.split('/'); return fs.some(f=>on(st,f,t).length)||fs.every(f=>!on(st,f).length); }
 function canPlayer(st,t,f,moving){ if(on(st,f,t).length) return false; if(!moving&&!st.settings.oppField&&on(st,f,OPP[t]).length) return false; return true; }
 function legalCardEdges(st,t){const o=[];for(let c=0;c<5;c++)for(let r=1;r<=7;r++){const f=fid(c,r);for(const e of edgesOf(f)) if(!o.includes(e)&&canCard(st,t,e)) o.push(e);}return o;}
 function legalPlayerFields(st,t){const o=[];for(let c=0;c<5;c++)for(let r=1;r<=7;r++){const f=fid(c,r);if(canPlayer(st,t,f))o.push(f);}return o;}
@@ -56,7 +58,7 @@ function uses(st,cid,pl){const c=st.cards[cid],p=P(pl),u=[c.n];
  if(c.a==='aktiv')u.push(p.act); else if(c.a==='passiv')u.push(p.pas); else if(c.a==='sturm'&&p.area==='S'){u.push(p.act);u.push(p.pas);}
  return [...new Set(u)];}
 function mods(st,f,t,excl){const m={T:0,Z:0,S:0,any:0},src=[];
- for(const e of edgesOf(f)){const x=st.edges[e]; if(!x||!x.open||x.used||(excl||[]).includes(e)) continue; const c=st.cards[x.c]; if(c.t!==t) continue;
+ for(const e of slotsAt(st,f)){const x=st.edges[e]; if(!x||!x.open||x.used||(excl||[]).includes(e)) continue; const c=st.cards[x.c]; if(c.t!==t) continue;
   const k=D.info[c.n][3]; if(k==='*'){m.any++;src.push(cardName(c.n)+' +1');} else {m[k]++;src.push(cardName(c.n)+' +1 '+VAL[k]);}}
  return {m,src};}
 const modv=(mm,k)=>(mm.m[k]||0)+mm.m.any;
@@ -72,7 +74,7 @@ function change(st,carrier,why){
  for(const i of Object.keys(st.board).map(Number)){
   if(i===carrier) continue;
   const t=P(i).team;
-  if(!edgesOf(st.board[i]).some(e=>st.edges[e]&&!st.edges[e].open&&st.cards[st.edges[e].c].t===t)){removePlayer(st,i);gone.push(P(i).short);}
+  if(!edgesOf(st.board[i]).some(e=>st.edges[sk(e,t)]&&!st.edges[sk(e,t)].open)){removePlayer(st,i);gone.push(P(i).short);}
  }
  for(const e of Object.keys(st.edges)){const x=st.edges[e];if(st.cards[x.c].t===old||x.open)discardEdge(st,e);}
  st.att=P(carrier).team; st.ball={carrier,field:null};
@@ -139,8 +141,8 @@ function triggerOptions(st,t){
  const out=[];
  for(const [e,x] of Object.entries(st.edges)){
   if(x.used||st.cards[x.c].t!==t) continue;
-  for(const f of e.split('/')) for(const ex of on(st,f,t)) for(const use of uses(st,x.c,ex)){
-   const tg=targets(st,use,ex,e); if(tg.length) out.push({e,ex,use,targets:tg});
+  for(const f of edgeOf(e).split('/')) for(const ex of on(st,f,t)) for(const use of uses(st,x.c,ex)){
+   const tg=targets(st,use,ex,edgeOf(e)); if(tg.length) out.push({e,ex,use,targets:tg});
   }
  }
  return out;
@@ -149,23 +151,23 @@ function triggerOptions(st,t){
 /* ---------- Falle suchen ---------- */
 function findTrap(st,f,use,attT){
  const d=OPP[attT]; let best=null;
- for(const e of edgesOf(f)){const x=st.edges[e]; if(!x||!x.open||x.used||st.cards[x.c].t!==d) continue;
-  for(const fl of e.split('/')) for(const pl of on(st,fl,d)) for(const u of uses(st,x.c,pl))
+ for(const e of slotsAt(st,f)){const x=st.edges[e]; if(!x||!x.open||x.used||st.cards[x.c].t!==d) continue;
+  for(const fl of edgeOf(e).split('/')) for(const pl of on(st,fl,d)) for(const u of uses(st,x.c,pl))
    if(COUNTER[u]&&COUNTER[u].includes(use)&&(!best||P(pl).Z>P(best.pl).Z)) best={e,pl,u};}
  return best;
 }
-function reveal(st,f){const o=[];for(const e of edgesOf(f))if(st.edges[e]&&!st.edges[e].open){st.edges[e].open=true;o.push(e);}return o;}
-function revText(st,f,list){return list.length?`Aufgedeckt an ${f}: `+list.map(e=>`${cardName(st.cards[st.edges[e].c].n)} ${e} (${NAME[st.cards[st.edges[e].c].t]})`).join(', ')+'.':'';}
+function reveal(st,f){const o=[];for(const e of slotsAt(st,f))if(!st.edges[e].open){st.edges[e].open=true;o.push(e);}return o;}
+function revText(st,f,list){return list.length?`Aufgedeckt an ${f}: `+list.map(e=>`${cardName(st.cards[st.edges[e].c].n)} ${edgeOf(e)} (${NAME[st.cards[st.edges[e].c].t]})`).join(', ')+'.':'';}
 
 /* ---------- Schuss ---------- */
 function shotPath(st,i,f){const t=P(i).team,r=row(f),c=col(f);const rows=[];if(t==='B')for(let x=r+1;x<=7;x++)rows.push(x);else for(let x=1;x<r;x++)rows.push(x);
  let n=0;for(const rr of rows)for(let cc=Math.min(c,2);cc<=Math.max(c,2);cc++)n+=on(st,fid(cc,rr)).length; n+=on(st,f,OPP[t]).length; return n;}
 function shoot(st,i,f,kopf,res){
  const t=P(i).team,d=OPP[t];
- if(kopf){const rv=reveal(st,f);if(rv.length)res.push(revText(st,f,rv));const tr=findTrap(st,f,'Kopfball',t);if(tr){st.edges[tr.e].used=true;const a=P(i).S+modv(mods(st,f,t),'S'),b=P(tr.pl).Z+modv(mods(st,f,d,[tr.e]),'Z');res.push(`Falle Schuss blocken (${tr.e}): ${P(i).short} ${a} gegen ${P(tr.pl).short} ${b}.`);if(b>a){change(st,tr.pl,res.join(' ')+` ${P(tr.pl).short} blockt.`);return 'lost';}}}
+ if(kopf){const rv=reveal(st,f);if(rv.length)res.push(revText(st,f,rv));const tr=findTrap(st,f,'Kopfball',t);if(tr){st.edges[tr.e].used=true;const a=P(i).S+modv(mods(st,f,t),'S'),b=P(tr.pl).Z+modv(mods(st,f,d,[tr.e]),'Z');res.push(`Falle Schuss blocken (${edgeOf(tr.e)}): ${P(i).short} ${a} gegen ${P(tr.pl).short} ${b}.`);if(b>a){change(st,tr.pl,res.join(' ')+` ${P(tr.pl).short} blockt.`);return 'lost';}}}
  const mm=mods(st,f,t),path=shotPath(st,i,f),r=row(f),dd=t==='B'?Math.max(0,6-r):Math.max(0,r-2);
  const a=P(i).S+modv(mm,'S')-path-dd, k=D.keepers[d].H+modv(mods(st,f,d),'S');
- const txt=`${kopf?'Kopfball':'Schuss'} ${P(i).short} von ${f}: ${P(i).S}${modv(mm,'S')?' + '+modv(mm,'S'):''}${path?' − '+path+' (Schussweg)':''}${dd?' − '+dd+' (Entfernung)':''} = ${a} gegen ${D.keepers[d].name} ${k}`;
+ const km=modv(mods(st,f,d),'S');const txt=`${kopf?'Kopfball':'Schuss'} ${P(i).short} von ${f}: Schuss ${P(i).S} + ${modv(mm,'S')} (Modifikatoren) − ${path} (Schussweg) − ${dd} (Entfernung) = ${a} gegen ${D.keepers[d].name} ${D.keepers[d].H} + ${km} = ${k}`;
  st.last={kind:'shot',text:txt+(a>k?' → TOR':' → gehalten')};
  if(a>k){st.log.push([...res,txt+' → TOR!'].join(' '));goal(st,t);st.turn=d;st.phase='choose';st.mode=null;st.t=freshT();return 'goal';}
  st.log.push([...res,txt+' → gehalten.'].join(' ')); keeperSave(st,d); return 'saved';
@@ -174,7 +176,7 @@ function shoot(st,i,f,kopf,res){
 /* ---------- Auslösen ---------- */
 function trigger(st,t,e,ex,use,tg){
  const x=st.edges[e], f=st.board[ex], res=[];
- const label=`${NAME[t]}: ${P(ex).short} (${f}) löst ${cardName(st.cards[x.c].n)}${use!==st.cards[x.c].n?' als '+cardName(use):''} auf ${e} aus.`;
+ const label=`${NAME[t]}: ${P(ex).short} (${f}) löst ${cardName(st.cards[x.c].n)}${use!==st.cards[x.c].n?' als '+cardName(use):''} auf ${edgeOf(e)} aus.`;
  res.push(label);
  const rv=reveal(st,f); x.open=true; x.used=true; const rt=revText(st,f,rv.filter(k=>k!==e)); if(rt)res.push(rt);
  const d=OPP[t];
@@ -186,7 +188,7 @@ function trigger(st,t,e,ex,use,tg){
   const txt=`Tackling: ${P(ex).short} ${b} gegen ${P(car).short} ${a}`; st.last={kind:'duel',text:txt+(b>a?' → Ballgewinn':' → Ballführer bleibt am Ball')};
   if(b>a){res.push(txt+` → ${P(ex).short} erobert den Ball.`);change(st,ex,res.join(' '));}else{res.push(txt+' → Gleichstand oder weniger: der Ballführer bleibt am Ball.');st.log.push(res.join(' '));}
   return;}
- if(use==='Ball sichern A'||use==='Ball sichern B'){const gone=[];for(const k of edgesOf(f)){if(k===e||!st.edges[k])continue;if(use==='Ball sichern A'||st.cards[st.edges[k].c].t===d){gone.push(k);discardEdge(st,k);}}
+ if(use==='Ball sichern A'||use==='Ball sichern B'){const gone=[];for(const k of slotsAt(st,f)){if(k===e)continue;if(use==='Ball sichern A'||st.cards[st.edges[k].c].t===d){gone.push(edgeOf(k)+' ('+NAME[teamOfKey(k)]+')');discardEdge(st,k);}}
   if(use==='Ball sichern A'){discardEdge(st,e);} res.push(`Ball gesichert: abgelegt ${gone.join(', ')||'nichts'}.`);st.log.push(res.join(' '));return;}
  if(!isBall) {st.log.push(res.join(' '));return;}
  // Falle
@@ -195,7 +197,7 @@ function trigger(st,t,e,ex,use,tg){
  if(tr){st.edges[tr.e].used=true;
   let a,b; if(use==='Schuss'){a=P(ex).S+modv(mods(st,f,t,[e]),'S');b=P(tr.pl).Z+modv(mods(st,f,d,[tr.e]),'Z');}
   else{a=P(ex)[stat]+modv(mods(st,f,t,[e]),stat);b=P(tr.pl)[stat]+modv(mods(st,f,d,[tr.e]),stat);}
-  const txt=`Falle ${tr.u} (${tr.e}): ${P(ex).short} ${a} gegen ${P(tr.pl).short} ${b}`;
+  const txt=`Falle ${tr.u} (${edgeOf(tr.e)}): ${P(ex).short} ${a} gegen ${P(tr.pl).short} ${b}`;
   st.last={kind:'duel',text:txt+(b>a?' → abgefangen':' → durch')};
   if(b>a){res.push(txt+` → ${P(tr.pl).short} gewinnt.`);change(st,tr.pl,res.join(' '));return;}
   res.push(txt+' → hält stand.');}
@@ -225,6 +227,7 @@ function trigger(st,t,e,ex,use,tg){
 }
 
 /* ---------- Zugablauf ---------- */
+const maxA=st=>st.settings.buildMany?99:2;
 function freshT(){return {placedP:0,placedA:0,moved:false,pendingMove:null,taktik:0};}
 function actor(st){return st.turn;}
 function hasLegalPlace(st,t){return st.hand[t].A.length>0&&legalCardEdges(st,t).length>0;}
@@ -237,7 +240,7 @@ function options(st){
  else if(st.phase==='draw'){o.push({type:'drawP'});o.push({type:'drawA'});}
  else if(st.phase==='build'){
   if(st.t.placedP===0&&st.t.placedA===0) for(const p of st.hand[t].P) for(const f of legalPlayerFields(st,t)) o.push({type:'placePlayer',p,f});
-  if(st.t.placedP===0&&st.t.placedA<2) for(const c of st.hand[t].A) for(const e of legalCardEdges(st,t)) o.push({type:'placeCard',c,e});
+  if(st.t.placedP===0&&st.t.placedA<maxA(st)) for(const c of st.hand[t].A) for(const e of legalCardEdges(st,t)) o.push({type:'placeCard',c,e});
   o.push({type:'end'});}
  else if(st.phase==='move'){
   o.push({type:'skipMove'});
@@ -272,9 +275,9 @@ function apply(st0,who,a){
    st.log.push(`${NAME[t]} legt ${P(a.p).short} auf ${a.f}.`); enterField(st,a.p,a.f); break;
   case 'placeCard':
    need(st.hand[t].A.includes(a.c)&&canCard(st,t,a.e));
-   if(st.phase==='build'){need(st.t.placedP===0&&st.t.placedA<2);st.t.placedA++;}
+   if(st.phase==='build'){need(st.t.placedP===0&&st.t.placedA<maxA(st));st.t.placedA++;}
    else need(st.phase==='place');
-   st.hand[t].A=st.hand[t].A.filter(x=>x!==a.c); st.edges[a.e]={c:a.c,open:false,used:false};
+   st.hand[t].A=st.hand[t].A.filter(x=>x!==a.c); st.edges[sk(a.e,t)]={c:a.c,open:false,used:false};
    st.log.push(`${NAME[t]} legt eine Karte verdeckt auf ${a.e}.`);
    if(st.phase==='place') st.phase='trigger';
    break;
@@ -283,13 +286,13 @@ function apply(st0,who,a){
    need(st.phase==='move'&&st.board[a.p]!=null&&P(a.p).team===t&&a.p!==st.ball.carrier&&nbrs(st.board[a.p]).includes(a.f)&&canPlayer(st,t,a.f,true)&&st.edges[a.pay]&&st.cards[st.edges[a.pay].c].t===t);
    const from=st.board[a.p], pc=st.edges[a.pay], pn=pc.open?cardName(st.cards[pc.c].n):'verdeckte Karte';
    discardEdge(st,a.pay); st.board[a.p]=a.f;
-   st.log.push(`${NAME[t]} bewegt ${P(a.p).short} ${from} → ${a.f} und bezahlt mit ${pn} von ${a.pay}.`);
+   st.log.push(`${NAME[t]} bewegt ${P(a.p).short} ${from} → ${a.f} und bezahlt mit ${pn} von ${edgeOf(a.pay)}.`);
    enterField(st,a.p,a.f); if(st.turn!==t) break;
    st.phase=hasLegalPlace(st,t)?'place':'trigger'; if(st.phase==='trigger')st.log.push(`${NAME[t]} kann keine Karte legen.`); break;}
   case 'skipPlace': need(st.phase==='place'&&!hasLegalPlace(st,t)); st.phase='trigger'; break;
   case 'trigger': {
-   need(st.phase==='trigger'&&st.edges[a.e]&&!st.edges[a.e].used&&st.cards[st.edges[a.e].c].t===t&&st.board[a.ex]!=null&&a.e.split('/').includes(st.board[a.ex])&&P(a.ex).team===t);
-   need(uses(st,st.edges[a.e].c,a.ex).includes(a.use)&&targets(st,a.use,a.ex,a.e).includes(a.target),'Ziel nicht möglich');
+   need(st.phase==='trigger'&&st.edges[a.e]&&!st.edges[a.e].used&&st.cards[st.edges[a.e].c].t===t&&st.board[a.ex]!=null&&edgeOf(a.e).split('/').includes(st.board[a.ex])&&P(a.ex).team===t);
+   need(uses(st,st.edges[a.e].c,a.ex).includes(a.use)&&targets(st,a.use,a.ex,edgeOf(a.e)).includes(a.target),'Ziel nicht möglich');
    const before=st.score.B+st.score.L;
    trigger(st,t,a.e,a.ex,a.use,a.target);
    if(st.score.B+st.score.L>before) break; // Tor: Zugwechsel schon gesetzt
@@ -299,7 +302,7 @@ function apply(st0,who,a){
    need(st.phase==='build'||st.phase==='trigger');
    st.log.push(`${NAME[t]} beendet den Zug.`); st.turn=OPP[t]; st.phase='choose'; st.mode=null; st.t=freshT(); if(t==='L')st.turnNo++; break;
   case 'finish': st.over=true; st.log.push(`Spiel beendet. Endstand Blau ${st.score.B}:${st.score.L} Lila.`); break;
-  case 'setting': st.settings[a.key]=a.value; st.log.push(`Einstellung: ${a.key==='oppField'?'Spieler auf Felder mit Gegenspieler legen '+(a.value?'erlaubt':'verboten'):a.key}.`); break;
+  case 'setting': st.settings[a.key]=a.value; st.log.push(`Einstellung: ${a.key==='oppField'?'Spieler auf Felder mit Gegenspieler legen '+(a.value?'erlaubt':'verboten'):a.key==='buildMany'?'Aufbauen: '+(a.value?'beliebig viele Aktionen legen':'bis zu 2 Aktionen legen'):a.key}.`); break;
   default: throw new Error('Unbekannte Aktion');
  }
  st.seq=(st0.seq||0)+1;
@@ -321,7 +324,7 @@ function botAct(st){
  return o[0];
 }
 
-const API={setData,newGame,apply,options,actor,botAct,triggerOptions,targets,uses,legalCardEdges,legalPlayerFields,canCard,canPlayer,edgesOf,nbrs,ekey,cardName,mods,shotPath,
+const API={sk,edgeOf,teamOfKey,slotsAt,setData,newGame,apply,options,actor,botAct,triggerOptions,targets,uses,legalCardEdges,legalPlayerFields,canCard,canPlayer,edgesOf,nbrs,ekey,cardName,mods,shotPath,
  NAME,OPP,COLS,col,row,fid,inBox,get D(){return D;}};
 if(typeof module!=='undefined'&&module.exports) module.exports=API; else root.FC=API;
 })(typeof window!=='undefined'?window:this);
