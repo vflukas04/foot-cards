@@ -378,7 +378,7 @@ kbd{position:absolute;top:6px;right:6px;font-family:var(--font-d);font-size:12px
 .bub.out.pop{animation:bubin .5s cubic-bezier(.2,1.4,.4,1) both,flare 1.2s ease-out .5s}
 @keyframes flare{0%{box-shadow:0 0 0 0 rgba(255,216,77,.9)}100%{box-shadow:0 0 0 26px rgba(255,216,77,0)}}
 /* Version 3c: Entscheidung an Ort und Stelle */
-.decide{position:relative}
+.decide:not(.hz){position:relative}
 .decide::after{content:'';position:absolute;inset:-2px;pointer-events:none;z-index:3;--ant:var(--att);
   background:linear-gradient(90deg,var(--ant) 55%,transparent 0) repeat-x 0 0/12px 3px,linear-gradient(90deg,var(--ant) 55%,transparent 0) repeat-x 0 100%/12px 3px,
     linear-gradient(0deg,var(--ant) 55%,transparent 0) repeat-y 0 0/3px 12px,linear-gradient(0deg,var(--ant) 55%,transparent 0) repeat-y 100% 0/3px 12px;
@@ -420,6 +420,11 @@ button.tokb.sel{box-shadow:0 0 0 4px var(--hl);animation:none}
 .pickcard{cursor:pointer;border-radius:10px}
 .pickcard:hover .pcard{outline:3px solid var(--hl)}
 .hz.target.decide::after{inset:2px}
+.hz .tgt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--font-d);font-weight:800;font-size:22px;padding:2px 12px;border-radius:999px;background:var(--surface);color:var(--att);border:2px solid var(--att);box-shadow:0 2px 0 rgba(0,0,0,.2);pointer-events:none}
+.hz.target:hover .tgt,.hz.target:focus-visible .tgt{background:var(--att);color:#fff}
+.mvarrows{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;color:var(--att)}
+.mvarrows line{stroke:currentColor;stroke-width:1.6;stroke-dasharray:3 2.2;stroke-linecap:round;animation:mvdash .8s linear infinite}
+@keyframes mvdash{to{stroke-dashoffset:-5.2}}
 .goalbox{display:flex;flex-direction:column;gap:8px;border:2px solid var(--fg);border-radius:var(--r);padding:10px 12px;background:var(--surface2)}
 .goalhead{display:flex;flex-direction:column;gap:2px}
 .goalhead b{font-family:var(--font-d);font-size:22px}
@@ -1224,11 +1229,27 @@ function pitchHtml(st){
     const r = ZRECT_H[zn];
     const isT = movable.includes(rel);
     const key = isT ? movable.indexOf(rel) + 1 : 0;
-    return `<div class="hz${isT?' target decide decide-a':''}${az===zn?' glow g-'+team:''}" style="left:${r[0]}%;width:${r[1]-r[0]}%;top:${r[2]}%;height:${r[3]-r[2]}%" ${isT?`role="button" tabindex="0" data-move="${rel}" data-key="${key}" title="Ball nach ${rel}${rel===st.ball?' (bleibt)':''}"`:''}><span>${rel}</span></div>`;
+    return `<div class="hz${isT?' target decide decide-a':''}${az===zn?' glow g-'+team:''}" style="left:${r[0]}%;width:${r[1]-r[0]}%;top:${r[2]}%;height:${r[3]-r[2]}%" ${isT?`role="button" tabindex="0" data-move="${rel}" data-key="${key}" title="Ball nach ${rel}${rel===st.ball?' (bleibt)':''}"`:''}><span>${rel}</span>${isT?`<b class="tgt">${rel===st.ball?'bleibt':rel}</b>`:''}</div>`;
   }).join('');
   return `<div class="rpitch hp" aria-label="Spielfeld"><div class="mk hline"></div><div class="mk hcircle"></div><div class="mk hbox l"></div><div class="mk hbox r"></div><div class="mk hsix l"></div><div class="mk hsix r"></div>
-      <div class="rgoal l"></div><div class="rgoal r"></div>${cells}${sceneHtml('gscene','horiz ball-'+team)}${bubblesHtml(st, az)}</div>
+      <div class="rgoal l"></div><div class="rgoal r"></div>${cells}${sceneHtml('gscene','horiz ball-'+team)}${moveArrows(az, movable, poss)}${bubblesHtml(st, az)}</div>
     <div class="pitchcap"><span>← Tor ${esc(teamLabel('A'))}</span><span>${team==='n'?'Ball frei':`<b>${esc(teamLabel(poss))}</b> greift an ${poss==='A'?'→':'←'}`}</span><span>Tor ${esc(teamLabel('B'))} →</span></div>`;
+}
+
+// Pfeile vom Ballfeld zu den möglichen Zielzonen (Zeichenfläche 160 × 100 = Seitenverhältnis des Feldes)
+function moveArrows(az, movable, poss){
+  if (!movable.length) return '';
+  const [fx, fy] = zoneCenterH(az);
+  const lines = movable.map(rel => {
+    const tz = toAZone(rel, poss);
+    if (tz === az) return '';
+    const [tx, ty] = zoneCenterH(tz);
+    const x1 = fx * 1.6, y1 = fy, x2 = tx * 1.6, y2 = ty;
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1;
+    const s = 7 / L, e = 9 / L;   // nicht direkt auf dem Ball beginnen und vor dem Zonenschild enden
+    return `<line x1="${(x1 + dx * s).toFixed(1)}" y1="${(y1 + dy * s).toFixed(1)}" x2="${(x2 - dx * e).toFixed(1)}" y2="${(y2 - dy * e).toFixed(1)}" marker-end="url(#mvhead)"/>`;
+  }).join('');
+  return `<svg class="mvarrows" viewBox="0 0 160 100" aria-hidden="true"><defs><marker id="mvhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>${lines}</svg>`;
 }
 
 // ---------- Aktionen als aufleuchtende Icons auf dem Spielfeld ----------
