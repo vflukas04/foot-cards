@@ -1006,9 +1006,11 @@ function setState(next){
 const isPresence = p => !!(p && p.out && p.out.duel && p.out.duel.kind === 'Präsenz');
 function presenceText(du, attId, defId){
   const A = attId ? card(attId).name : 'Angriff', D = defId ? card(defId).name : 'Abwehr';
-  if (du.win === 'att') return du.kind2 ? `Gleich präsent – ${A} ist schneller und kommt vor ${D} an den Ball!` : `${A} kommt vor ${D} an den Ball!`;
+  // Ballführender gewinnt: Der Ball war kurz frei und fast weg
+  if (du.win === 'att') return `Fast geht der Ball verloren, doch ${A} reagiert gedankenschnell und kommt vor ${D} an den Ball!`;
   if (du.win === 'def') return du.kind2 ? `Gleich präsent – ${D} ist schneller und kommt vor ${A} an den Ball!` : `${D} kommt vor ${A} an den Ball!`;
-  return `Fast geht der Ball verloren, doch ${A} reagiert gedankenschnell!`;   // Gleichstand: Ballführender bleibt laut Regel am Ball
+  // Kompletter Gleichstand: Ballführender bleibt laut Regel am Ball
+  return `Auf Schritt und Tritt verfolgt, doch irgendwie bleibt der Ball bei ${A}.`;
 }
 function outText(p){ return isPresence(p) ? presenceText(p.out.duel, p.att && p.att.id, p.def && p.def.id) : p.out.t; }
 // Gewinnt der Angriff das Präsenz-Duell, läuft sein Zug einfach weiter. Damit man trotzdem sieht,
