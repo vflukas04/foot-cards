@@ -251,6 +251,12 @@
         st.pool = st.pool.filter(x => x !== act.id);
         st.pickOrder.shift();
         log(st, `${st.names[s]} wählt ${card(act.id).name}.`, 'info');
+        // Die letzte Karte ist keine echte Wahl: Sie geht automatisch an die Mannschaft, die noch dran wäre
+        if (st.pickOrder.length === 1 && st.pool.length === 1) {
+          const last = st.pickOrder.shift(), id = st.pool.pop();
+          st.teams[last].squad.push(id);
+          log(st, `${st.names[last]} bekommt die letzte Karte: ${card(id).name}.`, 'info');
+        }
         if (!st.pickOrder.length) startSetup(st);
         break;
       }
