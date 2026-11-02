@@ -71,9 +71,13 @@
     st.teams.B.gk = gks[1];
     st.kickoff = Math.random() < 0.5 ? 'A' : 'B';
     // Kartenpool: alle Karten oder eine zufällige Auswahl (gerade Anzahl, mindestens 2 × LINEUP)
-    const all = shuffle(DATA.players.map(p => p.id));
+    // Benutzerdefiniert: nur die angehakten Karten (mindestens 2 × LINEUP, sonst alle)
+    const ids = DATA.players.map(p => p.id);
+    const custom = Array.isArray(opts.poolIds) ? opts.poolIds.filter(id => ids.includes(id)) : null;
+    const all = shuffle(custom && custom.length >= 2 * LINEUP ? custom : ids);
     const want = Math.max(2 * LINEUP, Math.min(all.length, opts.pool || all.length));
     const pool = all.slice(0, want - (want % 2));
+    st.opts = { mode: st.mode, pool: opts.pool || null, poolIds: custom && custom.length >= 2 * LINEUP ? custom : null };
     st.poolSize = pool.length; st.squadSize = pool.length / 2;
     const order = [];
     for (let i = 0; i < st.squadSize; i++) order.push(...(i % 2 === 0 ? ['A', 'B'] : ['B', 'A']));
