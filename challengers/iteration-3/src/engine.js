@@ -49,13 +49,16 @@
     return { squad: [], lineup: [], bench: [], subOut: [], subIn: [], name: '', gk: null, pile: [], discard: [], exhausted: [], yellow: {}, out: [], tok: { R: false, G: false, B: false } };
   }
   function emptyStats() { return { turns: 0, shots: 0, onTarget: 0, won: 0, lost: 0, passes: 0, yellow: 0, out: 0, duels: 0, xg: 0 }; }
-  const SQUAD = 13, LINEUP = 10, MAX_SUBS = 3;
+  // Standard: alle 26 Karten → 13 pro Team (10 im Spiel + 3 Bank). Mit kleinerem Pool entsprechend weniger Bank.
+  const SQUAD = 13, LINEUP = 10, MAX_SUBS = 3, MARKET = 5;
+  const squadOf = st => st.squadSize || SQUAD;
+  const benchOf = st => Math.max(0, squadOf(st) - LINEUP);
   function setOut(st, k, text, extra) { if (st.cur) st.cur.out = Object.assign({ k, t: text }, st.cur.duel && st.cur.duel.kind !== 'Präsenz' ? { duel: st.cur.duel } : {}, extra || {}); }
 
   function newGame(opts) {
     opts = opts || {};
     const st = {
-      v: 2, seq: 0, phase: 'draft', mode: opts.mode || 'random',
+      v: 2, seq: 0, phase: 'draft', mode: opts.mode || 'random', squadSize: SQUAD, poolSize: 0, deck: [],
       names: opts.names || { A: 'Heim', B: 'Gast' },
       teams: { A: emptyTeam(), B: emptyTeam() },
       pool: [], pickOrder: [],
@@ -67,16 +70,25 @@
     st.teams.A.gk = gks[0];
     st.teams.B.gk = gks[1];
     st.kickoff = Math.random() < 0.5 ? 'A' : 'B';
+    // Kartenpool: alle Karten oder eine zufällige Auswahl (gerade Anzahl, mindestens 2 × LINEUP)
+    const all = shuffle(DATA.players.map(p => p.id));
+    const want = Math.max(2 * LINEUP, Math.min(all.length, opts.pool || all.length));
+    const pool = all.slice(0, want - (want % 2));
+    st.poolSize = pool.length; st.squadSize = pool.length / 2;
+    const order = [];
+    for (let i = 0; i < st.squadSize; i++) order.push(...(i % 2 === 0 ? ['A', 'B'] : ['B', 'A']));
     if (st.mode === 'draft') {
-      st.pool = DATA.players.map(p => p.id);
-      const order = [];
-      for (let i = 0; i < SQUAD; i++) order.push(...(i % 2 === 0 ? ['A', 'B'] : ['B', 'A']));
-      st.pickOrder = order;
-      log(st, `Draft beginnt. ${st.names.A} wählt zuerst.`);
+      // Kompletter Draft: alle Karten des Pools liegen offen
+      st.pool = pool; st.pickOrder = order;
+      log(st, `Draft beginnt (${st.poolSize} Karten). ${st.names.A} wählt zuerst.`);
+    } else if (st.mode === 'market') {
+      // Offener Markt: 5 Karten liegen offen, für jede gewählte wird eine vom verdeckten Stapel aufgedeckt
+      st.pool = pool.slice(0, MARKET); st.deck = pool.slice(MARKET); st.pickOrder = order;
+      log(st, `Offener Markt beginnt (${st.poolSize} Karten, ${MARKET} offen). ${st.names.A} wählt zuerst.`);
     } else {
-      const ids = shuffle(DATA.players.map(p => p.id));
-      st.teams.A.squad = ids.slice(0, SQUAD);
-      st.teams.B.squad = ids.slice(SQUAD, 2 * SQUAD);
+      st.mode = 'random';
+      st.teams.A.squad = pool.slice(0, st.squadSize);
+      st.teams.B.squad = pool.slice(st.squadSize);
       startSetup(st);
     }
     return st;
@@ -229,7 +241,7 @@
     if (!legal(st, s).some(a => a.type === act.type)) return false;
     if (act.type === 'team') {
       const b = act.bench;
-      return Array.isArray(b) && b.length === SQUAD - LINEUP && new Set(b).size === b.length && b.every(id => t.squad.includes(id)) && typeof (act.name || '') === 'string';
+      return Array.isArray(b) && b.length === benchOf(st) && new Set(b).size === b.length && b.every(id => t.squad.includes(id)) && typeof (act.name || '') === 'string';
     }
     if (act.type === 'ready') {
       const subs = act.subs || [];
@@ -251,8 +263,10 @@
         st.pool = st.pool.filter(x => x !== act.id);
         st.pickOrder.shift();
         log(st, `${st.names[s]} wählt ${card(act.id).name}.`, 'info');
+        // Offener Markt: Lücke vom verdeckten Stapel auffüllen
+        if (st.deck && st.deck.length) { const nx = st.deck.shift(); st.pool.push(nx); st.lastReveal = nx; } else st.lastReveal = null;
         // Die letzte Karte ist keine echte Wahl: Sie geht automatisch an die Mannschaft, die noch dran wäre
-        if (st.pickOrder.length === 1 && st.pool.length === 1) {
+        if (st.pickOrder.length === 1 && st.pool.length === 1 && !(st.deck && st.deck.length)) {
           const last = st.pickOrder.shift(), id = st.pool.pop();
           st.teams[last].squad.push(id);
           log(st, `${st.names[last]} bekommt die letzte Karte: ${card(id).name}.`, 'info');
@@ -713,7 +727,7 @@
     const power = id => { const c = card(id); return c.tempo + c.praesenz + c.assist + c.kopf + c.schuss; };
     if (ph === 'setup') {
       const t = st.teams[s];
-      const bench = t.squad.slice().sort((x, y) => power(x) - power(y)).slice(0, SQUAD - LINEUP);
+      const bench = t.squad.slice().sort((x, y) => power(x) - power(y)).slice(0, benchOf(st));
       return { type: 'team', name: 'Bot-Elf', bench };
     }
     if (ph === 'half') {
@@ -773,6 +787,6 @@
     return pick(acts);
   }
 
-  const api = { ZONES, MIRROR, LATERAL, QUER, FORWARD, BACKWARD, DIAG, ZONE_NAME, CORNERS, SQUAD, LINEUP, MAX_SUBS, setData, card, other, newGame, legal, apply, actor, zoneRow, canPay, botAct, DEF_BEATS, duelText, grades };
+  const api = { ZONES, MIRROR, LATERAL, QUER, FORWARD, BACKWARD, DIAG, ZONE_NAME, CORNERS, SQUAD, LINEUP, MAX_SUBS, MARKET, squadOf, benchOf, setData, card, other, newGame, legal, apply, actor, zoneRow, canPay, botAct, DEF_BEATS, duelText, grades };
   if (typeof module !== 'undefined') module.exports = api; else root.FC = api;
 })(typeof window !== 'undefined' ? window : globalThis);
