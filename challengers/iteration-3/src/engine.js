@@ -1,4 +1,4 @@
-// Foot Cards – Regel-Engine Version 3 (wie Version 2; neu: Passabfangen schlägt „--“, aber keine grünen Pässe; Schuss blocken schlägt „--“; Gewinner des Präsenz-Duells spielt den Zug)
+// Foot Cards – Regel-Engine Version 3 (wie Version 2; neu: Kader 10 + 3, Halbzeit mit bis zu 3 Wechseln und frischem Deck; Passabfangen schlägt „--“, aber keine grünen Pässe; Schuss blocken schlägt „--“; Gewinner des Präsenz-Duells spielt den Zug)
 (function (root) {
   'use strict';
 
@@ -45,9 +45,11 @@
     return a;
   }
   function emptyTeam() {
-    return { squad: [], gk: null, pile: [], discard: [], exhausted: [], yellow: {}, out: [], tok: { R: false, G: false, B: false } };
+    // squad: alle 13 Spieler · lineup: die 10 im Spiel · bench: Ersatzbank · subOut/subIn: Wechsel in der Halbzeit
+    return { squad: [], lineup: [], bench: [], subOut: [], subIn: [], name: '', gk: null, pile: [], discard: [], exhausted: [], yellow: {}, out: [], tok: { R: false, G: false, B: false } };
   }
-  function emptyStats() { return { turns: 0, shots: 0, onTarget: 0, won: 0, lost: 0, passes: 0, yellow: 0, out: 0, duels: 0 }; }
+  function emptyStats() { return { turns: 0, shots: 0, onTarget: 0, won: 0, lost: 0, passes: 0, yellow: 0, out: 0, duels: 0, xg: 0 }; }
+  const SQUAD = 13, LINEUP = 10, MAX_SUBS = 3;
   function setOut(st, k, text, extra) { if (st.cur) st.cur.out = Object.assign({ k, t: text }, st.cur.duel && st.cur.duel.kind !== 'Präsenz' ? { duel: st.cur.duel } : {}, extra || {}); }
 
   function newGame(opts) {
@@ -59,7 +61,7 @@
       pool: [], pickOrder: [],
       poss: 'A', ball: 'ZM', minute: 0, half: 1, kickoff: 'A', goals: { A: 0, B: 0 },
       cur: null, flank: false, lastShot: null, log: [], result: null, turn: 0, prev: null, scorers: [],
-      holder: null, stats: { A: emptyStats(), B: emptyStats() }, track: [],
+      holder: null, stats: { A: emptyStats(), B: emptyStats() }, track: [], ps: {}, ready: { A: false, B: false }, halfStats: null,
     };
     const gks = shuffle(DATA.gks.map(g => g.id));
     st.teams.A.gk = gks[0];
@@ -68,14 +70,14 @@
     if (st.mode === 'draft') {
       st.pool = DATA.players.map(p => p.id);
       const order = [];
-      for (let i = 0; i < 10; i++) order.push(...(i % 2 === 0 ? ['A', 'B'] : ['B', 'A']));
+      for (let i = 0; i < SQUAD; i++) order.push(...(i % 2 === 0 ? ['A', 'B'] : ['B', 'A']));
       st.pickOrder = order;
       log(st, `Draft beginnt. ${st.names.A} wählt zuerst.`);
     } else {
       const ids = shuffle(DATA.players.map(p => p.id));
-      st.teams.A.squad = ids.slice(0, 10);
-      st.teams.B.squad = ids.slice(10, 20);
-      startMatch(st);
+      st.teams.A.squad = ids.slice(0, SQUAD);
+      st.teams.B.squad = ids.slice(SQUAD, 2 * SQUAD);
+      startSetup(st);
     }
     return st;
   }
@@ -83,8 +85,13 @@
     st.log.push({ m: st.minute, t: text, k: kind || '' });
     if (st.log.length > 400) st.log.splice(0, st.log.length - 400);
   }
+  // Nach dem Draft: Jede Mannschaft gibt sich einen Namen und wählt 3 Ersatzspieler
+  function startSetup(st) {
+    st.phase = 'setup'; st.ready = { A: false, B: false };
+    log(st, 'Kader komplett. Beide Mannschaften wählen Namen und Ersatzbank.', 'info');
+  }
   function startMatch(st) {
-    for (const s of ['A', 'B']) { const t = st.teams[s]; t.pile = shuffle(t.squad); t.discard = []; }
+    for (const s of ['A', 'B']) { const t = st.teams[s]; t.pile = shuffle(t.lineup); t.discard = []; }
     st.poss = st.kickoff; st.ball = 'ZM'; st.minute = 0; st.half = 1;
     log(st, `Anpfiff. ${st.names[st.poss]} hat Anstoß.`, 'whistle');
     beginTurn(st);
@@ -125,6 +132,7 @@
       const r = duel(id, did, 'praesenz', 'tempo');
       st.cur.duel = r; st.stats[r.win === 'def' ? defS : att].duels++;
       log(st, `Präsenz-Duell: ${duelText(r)}.`, 'duel');
+      if (r.win === 'att') { ratePt(st, id, .5); ratePt(st, did, -.5); } else if (r.win === 'def') { ratePt(st, did, .5); ratePt(st, id, -.5); }
       if (r.win === 'def') {
         // Version 3: Der Ball war frei. Gewinnt die Abwehr, wird sie zum Angreifer und spielt den Zug
         // mit ihrer gerade gezogenen Karte; der Verlierer verteidigt mit seiner. Beide Karten liegen offen.
@@ -150,6 +158,7 @@
   function actor(st) {
     switch (st.phase) {
       case 'draft': return st.pickOrder[0];
+      case 'setup': case 'half': return !st.ready.A ? 'A' : !st.ready.B ? 'B' : null;
       case 'def': case 'def_pick2': case 'gk': return other(st.poss);
       case 'att': case 'move': case 'dist': case 'shot': return st.poss;
       default: return null;
@@ -168,6 +177,8 @@
     return out;
   }
   function legal(st, s) {
+    // Mannschaft und Halbzeit: beide Seiten handeln unabhängig voneinander, jede einmal
+    if (st.phase === 'setup' || st.phase === 'half') return st.ready[s] ? [] : [{ type: st.phase === 'setup' ? 'team' : 'ready' }];
     if (actor(st) !== s) return [];
     const acts = [];
     const ph = st.phase;
@@ -205,8 +216,26 @@
       !!a.boost === !!b.boost && JSON.stringify(a.add || null) === JSON.stringify(b.add || null);
   }
 
+  // Freie Eingaben (Name, Ersatzbank, Wechsel) werden einzeln geprüft
+  function validFree(st, s, act) {
+    const t = st.teams[s];
+    if (!legal(st, s).some(a => a.type === act.type)) return false;
+    if (act.type === 'team') {
+      const b = act.bench;
+      return Array.isArray(b) && b.length === SQUAD - LINEUP && new Set(b).size === b.length && b.every(id => t.squad.includes(id)) && typeof (act.name || '') === 'string';
+    }
+    if (act.type === 'ready') {
+      const subs = act.subs || [];
+      if (!Array.isArray(subs) || subs.length > MAX_SUBS) return false;
+      const outs = subs.map(x => x[0]), ins = subs.map(x => x[1]);
+      return new Set(outs).size === outs.length && new Set(ins).size === ins.length &&
+        outs.every(id => t.lineup.includes(id) && !t.out.includes(id)) && ins.every(id => t.bench.includes(id));
+    }
+    return false;
+  }
   function apply(st0, s, act) {
-    if (!legal(st0, s).some(a => sameAct(a, act))) throw new Error('Unzulässiger Zug: ' + JSON.stringify(act));
+    const free = act && (act.type === 'team' || act.type === 'ready');
+    if (free ? !validFree(st0, s, act) : !legal(st0, s).some(a => sameAct(a, act))) throw new Error('Unzulässiger Zug: ' + JSON.stringify(act));
     const st = structuredClone(st0);
     st.seq++;
     switch (act.type) {
@@ -215,7 +244,31 @@
         st.pool = st.pool.filter(x => x !== act.id);
         st.pickOrder.shift();
         log(st, `${st.names[s]} wählt ${card(act.id).name}.`, 'info');
-        if (!st.pickOrder.length) startMatch(st);
+        if (!st.pickOrder.length) startSetup(st);
+        break;
+      }
+      case 'team': {
+        const t = st.teams[s];
+        t.name = String(act.name || '').trim().slice(0, 24) || (s === 'A' ? 'Heim' : 'Gast');
+        st.names[s] = t.name;
+        t.bench = act.bench.slice();
+        t.lineup = t.squad.filter(id => !t.bench.includes(id));
+        st.ready[s] = true;
+        log(st, `${t.name} steht. Auf der Bank: ${t.bench.map(id => card(id).name).join(', ')}.`, 'info');
+        if (st.ready.A && st.ready.B) startMatch(st);
+        break;
+      }
+      case 'ready': {
+        const t = st.teams[s];
+        for (const [o, i] of act.subs || []) {
+          t.lineup = t.lineup.map(x => x === o ? i : x);
+          t.bench = t.bench.filter(x => x !== i);
+          t.subOut.push(o); t.subIn.push(i);
+          t.exhausted = t.exhausted.filter(x => x !== i);
+          log(st, `Wechsel bei ${t.name || st.names[s]}: ${card(i).name} kommt für ${card(o).name}.`, 'info');
+        }
+        st.ready[s] = true;
+        if (st.ready.A && st.ready.B) startSecondHalf(st);
         break;
       }
       case 'blue2': {
@@ -471,6 +524,8 @@
       st.lastShot = sh; st.poss = defS; st.ball = 'ZD'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.holder = null;
       return endTurn(st, true);
     }
+    sh.xg = 2 / 3 * Math.max(0, Math.min(1, (sh.fields[aim] - 1) / 6));
+    st.stats[attS].xg = (st.stats[attS].xg || 0) + sh.xg;
     const need = sh.fields[aim];
     const roll = rnd(6) + 1;
     sh.roll = roll; sh.need = need;
@@ -519,6 +574,55 @@
     endTurn(st, true);
   }
 
+  // ---------- Bewertung: Punkte je Spieler, daraus die Schulnote ----------
+  function psOf(st, id){ return st.ps[id] || (st.ps[id] = { n: 0, p: 0 }); }
+  function ratePt(st, id, v){ if (id) psOf(st, id).p += v; }
+  function rateTurn(st, c){
+    const a = c.att, d = c.def, out = c.out || { k: 'keep' }, k = out.k;
+    const aId = a && a.id, dId = d && d.id;
+    if (aId) psOf(st, aId).n++;
+    if (dId && !c.volley) psOf(st, dId).n++;
+    const aa = a ? (a.eff || a.action || '--') : '--', da = d ? (d.action || '--') : '--';
+    const active = x => x && !/^--/.test(x) && x !== 'Präsenz-Duell';
+    const sh = c.shotDone ? c.shot : null;
+    if (sh) {
+      psOf(st, sh.gk).n++;
+      if (sh.outcome === 'tor') { ratePt(st, sh.shooter, 3); ratePt(st, sh.assistId, 1.5); ratePt(st, sh.gk, -1); }
+      else if (sh.outcome === 'parade') { ratePt(st, sh.shooter, -.5); ratePt(st, sh.gk, 1.5); }
+      else { ratePt(st, sh.shooter, -.5); ratePt(st, sh.gk, .5); }
+      return;
+    }
+    if (k === 'ok') { ratePt(st, aId, 1); if (active(da) && da !== 'Gelb') ratePt(st, dId, -.5); }
+    else if (k === 'keep') { if (aa === 'Ball sichern') ratePt(st, aId, .5); }
+    else if (k === 'change') {
+      if (aa === 'Ballverlust' || aa === 'Fehlpass') ratePt(st, aId, -1.5);
+      else { ratePt(st, aId, -1); ratePt(st, dId, 1.5); }
+    }
+    else if (k === 'yellow') { ratePt(st, dId, -1); ratePt(st, aId, .5); }
+    else if (k === 'red') { ratePt(st, dId, -2.5); ratePt(st, aId, .5); }
+  }
+  // Schulnote 1 (sehr gut) bis 6 (ungenügend), auf halbe Noten gerundet; ohne Einsatz: null
+  function gradeOf(o){
+    if (!o || !o.n) return null;
+    // Pro Einsatz wird ein kleiner Grundertrag erwartet; wer darüber liegt, wird besser als 3,5, wer darunter liegt, schlechter
+    const g = 3.5 - 1.1 * (o.p - .3 * o.n) / Math.sqrt(o.n);
+    return Math.max(1, Math.min(6, Math.round(g * 2) / 2));
+  }
+  function grades(st, s, ps){
+    const t = st.teams[s], src = ps || st.ps, res = {};
+    for (const id of [...t.squad, t.gk]) res[id] = gradeOf(src[id]);
+    return res;
+  }
+  // Zweite Halbzeit: frisch gemischtes Deck aus den 10 Spielern im Spiel (ohne Gelb-Rot), Ablage leer
+  function startSecondHalf(st) {
+    for (const s of ['A', 'B']) {
+      const t = st.teams[s];
+      t.pile = shuffle(t.lineup.filter(id => !t.out.includes(id)));
+      t.discard = [];
+    }
+    log(st, `Anpfiff zweite Halbzeit. ${st.names[st.poss]} hat Anstoß.`, 'whistle');
+    beginTurn(st);
+  }
   function snapSide(x) {
     if (!x) return null;
     return { id: x.id, action: x.action, eff: x.eff, green: x.green, pay: x.pay, gotTok: x.gotTok || [], zone: x.zone, sentOff: !!x.sentOff, usedBlue2: !!x.usedBlue2, fresh: !!x.fresh };
@@ -533,7 +637,7 @@
       st.prev = {
         turn: c.turn, minute: c.minute, possStart: c.possStart, ballStart: c.ballStart, possEnd: st.poss, ballEnd: st.ball,
         def: snapSide(c.def), att: snapSide(c.att), out: c.out || { k: 'keep', t: 'Ball bleibt' },
-        shot: c.shotDone ? c.shot : null, whistle: null, flank: st.flank, header: !!c.header,
+        shot: c.shotDone ? c.shot : null, whistle: null, flank: st.flank, header: !!c.header, half: st.half,
       };
       st.track = st.track || [];
       const sh = c.shotDone && c.shot ? c.shot : null;
@@ -543,6 +647,7 @@
         ai: c.att ? c.att.id : null, di: c.def ? c.def.id : null, aa: c.att ? (c.att.eff || c.att.action) : null, da: c.def ? c.def.action : null,
         hd: !!c.header, vo: !!c.volley, pr: !!c.presence, th: c.through ? c.through.to : null, th2: st.through ? st.through.to : null, fl: !!st.flank,
       });
+      rateTurn(st, c);
       for (const role of ['att', 'def']) {
         const side = c[role];
         if (!side || !side.id || side.sentOff) continue;
@@ -556,7 +661,10 @@
       log(st, `Halbzeitpfiff (${st.minute}. Minute). ${st.goals.A}:${st.goals.B}`, 'whistle');
       if (st.prev) st.prev.whistle = 'Halbzeit';
       st.half = 2; st.minute = 45; st.poss = other(st.kickoff); st.ball = 'ZM'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.holder = null;
-      log(st, `Anpfiff zweite Halbzeit. ${st.names[st.poss]} hat Anstoß.`, 'whistle');
+      // Halbzeitpause: Statistik festhalten, beide können wechseln und melden sich dann bereit
+      st.phase = 'half'; st.cur = null; st.ready = { A: false, B: false };
+      st.halfStats = structuredClone(st.stats); st.halfPs = structuredClone(st.ps);
+      return;
     } else if (st.half === 2 && st.minute >= 90 + total && turnover) {
       st.phase = 'over'; st.cur = null;
       const r = st.goals.A === st.goals.B ? 'Unentschieden' : `Sieg ${st.names[st.goals.A > st.goals.B ? 'A' : 'B']}`;
@@ -588,6 +696,20 @@
     const ph = st.phase;
     const pick = arr => arr[rnd(arr.length)];
     if (ph === 'draft') return pick(acts);
+    const power = id => { const c = card(id); return c.tempo + c.praesenz + c.assist + c.kopf + c.schuss; };
+    if (ph === 'setup') {
+      const t = st.teams[s];
+      const bench = t.squad.slice().sort((x, y) => power(x) - power(y)).slice(0, SQUAD - LINEUP);
+      return { type: 'team', name: 'Bot-Elf', bench };
+    }
+    if (ph === 'half') {
+      const t = st.teams[s], g = grades(st, s);
+      const outs = t.lineup.filter(id => !t.out.includes(id) && g[id] != null && g[id] >= 4).sort((x, y) => g[y] - g[x]);
+      const ins = t.bench.slice().sort((x, y) => power(y) - power(x));
+      const subs = [];
+      for (let i = 0; i < Math.min(MAX_SUBS, outs.length, ins.length); i++) subs.push([outs[i], ins[i]]);
+      return { type: 'ready', subs };
+    }
     if (ph === 'att' || ph === 'def') {
       const side = st.cur[ph];
       if (acts.some(a => a.type === 'green')) return { type: 'green' };
@@ -637,6 +759,6 @@
     return pick(acts);
   }
 
-  const api = { ZONES, MIRROR, LATERAL, QUER, FORWARD, BACKWARD, DIAG, ZONE_NAME, CORNERS, setData, card, other, newGame, legal, apply, actor, zoneRow, canPay, botAct, DEF_BEATS, duelText };
+  const api = { ZONES, MIRROR, LATERAL, QUER, FORWARD, BACKWARD, DIAG, ZONE_NAME, CORNERS, SQUAD, LINEUP, MAX_SUBS, setData, card, other, newGame, legal, apply, actor, zoneRow, canPay, botAct, DEF_BEATS, duelText, grades };
   if (typeof module !== 'undefined') module.exports = api; else root.FC = api;
 })(typeof window !== 'undefined' ? window : globalThis);
