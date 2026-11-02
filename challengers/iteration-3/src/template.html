@@ -68,6 +68,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .slot{display:flex;flex-direction:column;gap:6px;min-width:0}
 .pcard{background:var(--surface);border:1.5px solid var(--fg);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;position:relative}
 .pcard.exh{opacity:.75}
+.pcard.exh .pname{opacity:.45;font-style:italic}
+.bub i.tired{font-style:normal;font-size:12px;font-weight:600;opacity:.8;border:1px solid currentColor;border-radius:999px;padding:0 6px;margin-left:2px}
+.bub.isTired b{opacity:.6}
+.tokb.tgain{animation:tgain .7s cubic-bezier(.2,1.5,.4,1) both;box-shadow:0 0 0 4px #ffd84d,0 0 18px #ffd84d}
+.tokb.tspend{animation:tspend 1.2s ease-out both}
+@keyframes tgain{0%{transform:scale(.2);opacity:0}60%{transform:scale(1.35)}100%{transform:scale(1)}}
+@keyframes tspend{0%{opacity:1;transform:scale(1.25);box-shadow:0 0 0 4px var(--red)}40%{opacity:1;transform:scale(1.1) translateY(-6px);box-shadow:0 0 0 4px var(--red)}100%{opacity:.18;transform:none;box-shadow:none}}
+.tokfx{font-family:var(--font-d);font-weight:700;font-size:14px;padding:1px 8px;border-radius:999px;animation:tokfx 1.6s ease-out both;white-space:nowrap}
+.tokfx.g{background:#ffd84d;color:#111}.tokfx.s{background:var(--red);color:#fff}
+@keyframes tokfx{0%{opacity:0;transform:translateY(6px)}15%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
 .pcard .head{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .pcard .pname{font-family:var(--font-d);font-weight:700;font-size:17px;line-height:1.1}
 .shirt{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:26px;padding:0 5px;border-radius:5px 5px 7px 7px;color:#fff;font-family:var(--font-d);font-weight:800;font-size:15px;clip-path:polygon(18% 0,82% 0,100% 22%,86% 36%,86% 100%,14% 100%,14% 36%,0 22%)}
@@ -759,12 +769,12 @@ function bubblesHtml(st, az){
     } else if (p.att && p.att.id) {
       let [v, ic] = verb(ATT_VERB, p.att.eff || p.att.action, 'att');
       if (p.shot) v += ` nach ${FC.CORNERS[p.shot.aim]}`;
-      h += bub(`rb-${p.turn}-a`, as, `<b>${esc(card(p.att.id).name)}</b> ${esc(v)}`, ic, above, 'act');
+      h += bub(`rb-${p.turn}-a`, as, `<b>${esc(card(p.att.id).name)}</b> ${esc(v)}${p.att.tired ? ' <i class="tired">erschöpft</i>' : ''}`, ic, above, 'act' + (p.att.tired ? ' isTired' : ''));
     }
     if (rp.step >= 1) {
       if (p.shot) h += bub(`rb-${p.turn}-k`, ds, `<b>${esc(card(p.shot.gk).name)}</b> springt nach ${FC.CORNERS[p.shot.gkN]}`, 'glove', below, 'act');
       else if (pres && p.def && p.def.id) h += bub(`rb-${p.turn}-d`, ds, `<b>${esc(card(p.def.id).name)}</b> · Präsenz ${pres.d}${pres.kind2 ? ` · Tempo ${pres.d2}` : ''}`, 'shield', below, 'act');
-      else if (p.def && p.def.id) { const [v, ic] = verb(DEF_VERB, p.def.action, 'def'); h += bub(`rb-${p.turn}-d`, ds, `<b>${esc(card(p.def.id).name)}</b> ${esc(v)}`, ic, below, 'act'); }
+      else if (p.def && p.def.id) { const [v, ic] = verb(DEF_VERB, p.def.action, 'def'); h += bub(`rb-${p.turn}-d`, ds, `<b>${esc(card(p.def.id).name)}</b> ${esc(v)}${p.def.tired ? ' <i class="tired">erschöpft</i>' : ''}`, ic, below, 'act' + (p.def.tired ? ' isTired' : '')); }
     }
     if (rp.step >= 2) {
       const k = p.out.k;
@@ -780,7 +790,7 @@ function bubblesHtml(st, az){
   const cur = st.cur;
   if (cur && cur.att && cur.att.id && cur.att.action && ['def','def_pick2','dist','gk','shot','move'].includes(st.phase)) {
     const [v, ic] = verb(ATT_VERB, cur.att.action, 'att');
-    h += bub(`lb-${cur.turn}-a`, st.poss, `<b>${esc(card(cur.att.id).name)}</b> ${esc(v)}`, ic, above, 'act');
+    h += bub(`lb-${cur.turn}-a`, st.poss, `<b>${esc(card(cur.att.id).name)}</b> ${esc(v)}${cur.att.tired ? ' <i class="tired">erschöpft</i>' : ''}`, ic, above, 'act' + (cur.att.tired ? ' isTired' : ''));
   }
   return `<div class="fx">${h}</div>`;
 }
@@ -1149,6 +1159,13 @@ const SFX = (() => {
     applause(c, t, len){ const dur = len || 1.8; for (let i = 0; i < 90; i++) { const s = t + Math.random() * dur * .85, fade = 1 - (s - t) / dur; const n = noise(c, .04), f = filt(c, 'bandpass', 1100 + Math.random() * 2400, .9), g = c.createGain(); env(g, s, .002, .05 + .14 * fade, .035); n.connect(f).connect(g).connect(sfxBus); n.start(s); n.stop(s + .05); } },
     cheer(c, t){ P.applause(c, t, 2.6); const n = noise(c, 2.8), f = filt(c, 'bandpass', 650, .7), g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.4, t + .45); g.gain.exponentialRampToValueAtTime(.0001, t + 2.8); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + 2.8); },
     murmur(c, t, len){ const d = len || 2.4; const n = noise(c, d), f = filt(c, 'bandpass', 420, .8), g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.22, t + d * .6); g.gain.exponentialRampToValueAtTime(.0001, t + d); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + d); },
+    // Token bekommen: helles, aufsteigendes Glöckchen
+    tokgain(c, t){ [[1046.5, 0], [1568, .09], [2093, .18]].forEach(([f, d]) => { const o = c.createOscillator(), o2 = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o2.type = 'sine'; o.frequency.value = f; o2.frequency.value = f * 2.01; const g2 = c.createGain(); g2.gain.value = .25; o2.connect(g2).connect(g); o.connect(g); env(g, t + d, .004, .22, .45); g.connect(sfxBus); o.start(t + d); o2.start(t + d); o.stop(t + d + .5); o2.stop(t + d + .5); }); },
+    // Token ausgeben: kurzes, absteigendes „Pfft“ mit leisem Ton nach unten
+    tokspend(c, t){ const n = noise(c, .32), f = filt(c, 'bandpass', 2400, 1.4), g = c.createGain(); f.frequency.setValueAtTime(3200, t); f.frequency.exponentialRampToValueAtTime(500, t + .3); env(g, t, .01, .28, .3); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + .33);
+      const o = c.createOscillator(), go = c.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(880, t); o.frequency.exponentialRampToValueAtTime(330, t + .25); env(go, t, .005, .16, .26); o.connect(go).connect(sfxBus); o.start(t); o.stop(t + .28); },
+    // Erschöpft: kurzes Hecheln, drei Atemzüge
+    pant(c, t){ for (let i = 0; i < 3; i++) { const s = t + i * .26, len = i % 2 ? .16 : .2; const n = noise(c, len + .02), f = filt(c, 'bandpass', i % 2 ? 1500 : 1100, 1.6), lp = filt(c, 'lowpass', 2600), g = c.createGain(); env(g, s, .03, i % 2 ? .5 : .7, len); n.connect(f).connect(lp).connect(g).connect(sfxBus); n.start(s); n.stop(s + len + .02); } },
     ohh(c, t){ const n = noise(c, 1.3), f = filt(c, 'lowpass', 900), g = c.createGain(); f.frequency.setValueAtTime(950, t); f.frequency.exponentialRampToValueAtTime(220, t + 1.2); env(g, t, .3, .35, 1.3); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + 1.3); },
     whistle(c, t, times){ const k = times || 1; for (let i = 0; i < k; i++) { const t0 = t + i * .42, len = (i === k - 1 && k > 1) ? .75 : .28; const o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain(); o.frequency.value = 2900; l.frequency.value = 36; lg.gain.value = 110; l.connect(lg).connect(o.frequency); env(g, t0, .01, .16, len); o.connect(g).connect(sfxBus); o.start(t0); l.start(t0); o.stop(t0 + len); l.stop(t0 + len); } },
   };
@@ -1160,7 +1177,8 @@ const SFX = (() => {
     vol: getVol,
     setVol(k, v){ try { localStorage.setItem('fc-vol-' + k, JSON.stringify(v)); } catch(e){} applyVol(); },
     unlock(){ if (on()) ac(true); },
-    play(name, delayMs, arg){ if (!on()) return; const c = ac(false); if (!c || !P[name]) return; try { P[name](c, c.currentTime + .02 + (delayMs || 0) / 1000, arg); } catch(e){ console.error(e); } },
+    // window.__sfxlog: protokolliert Geräusche nur in Tests
+    play(name, delayMs, arg){ if (window.__sfxlog) window.__sfxlog.push([name, Math.round(delayMs || 0)]); if (!on()) return; const c = ac(false); if (!c || !P[name]) return; try { P[name](c, c.currentTime + .02 + (delayMs || 0) / 1000, arg); } catch(e){ console.error(e); } },
   };
 })();
 ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { SFX.unlock(); if (!TRACK.playing()) syncMusic(); }, { capture: true }));
@@ -1221,10 +1239,27 @@ function setState(next){
     app.swapTimer = setTimeout(() => { app.swap = null; SFX.play('whistle', 0, 1); render(); if (app.mode === 'bot') runBot(); }, reduceMotion() ? 0 : 1900);
     render(); return;
   }
+  // Token ausgegeben oder bekommen? Klang und kurze Anzeige an der Tokenleiste, auch beim Gegner.
+  // Löst der neue Stand einen Zug auf, gehören die Änderungen zur Abwehr: dann erst beim Aufdecken der Abwehr.
+  if (old && next && old.teams && next.teams && !['draft','setup'].includes(next.phase)) {
+    const resolving = next.prev && old.phase !== 'draft' && (!old.prev || old.prev.turn !== next.prev.turn);
+    tokenFx(old, next, resolving ? BEAT * SPEEDS[speed()] : 0);
+  }
   // Stapel neu gemischt? Dann vor dem nächsten Ziehen das Mischen zeigen
   if (old && next && old.phase !== 'draft' && next.phase !== 'draft') for (const s of ['A','B']) if (next.teams[s].pile.length > old.teams[s].pile.length) app.shuffle[s] = true;
   if (old && next && next.prev && old.phase !== 'draft' && (!old.prev || old.prev.turn !== next.prev.turn)) startReplay(next.prev);
   else if (!presenceMoment(next)) render();
+}
+const TOKNAME = { R: 'roter', G: 'grüner', B: 'blauer' };
+function tokenFx(old, next, delay){
+  for (const s of ['A','B']) for (const k of ['R','G','B']) {
+    const a = old.teams[s].tok[k], b = next.teams[s].tok[k];
+    if (a === b) continue;
+    const type = b ? 'gain' : 'spend', at = Date.now() + delay;
+    (app.tokFx = app.tokFx || {})[s + k] = { type, at };
+    SFX.play(b ? 'tokgain' : 'tokspend', delay);
+    if (delay) setTimeout(() => { if (!app.replay || Date.now() - at < 1200) render(); }, delay + 20);
+  }
 }
 // Präsenz-Duell: Wer kommt zuerst an den freien (gelben) Ball?
 const isPresence = p => !!(p && p.out && p.out.duel && p.out.duel.kind === 'Präsenz');
@@ -1278,6 +1313,8 @@ function startReplay(prev){
   SFX.play(outcomeSound(prev), t2 * m);
   if (prev.whistle) SFX.play('whistle', (t2 + 1000) * m, prev.whistle === 'Abpfiff' ? 3 : 2);
   if (prev.shot) { SFX.play('kick', (t2 - 150) * m); if (dice) SFX.play('murmur', tDice * m, 1.8); }
+  if (prev.att && prev.att.tired) SFX.play('pant', 150 * m);
+  if (prev.def && prev.def.tired) SFX.play('pant', (t1 + 150) * m);
   if (!reduceMotion() && !prev.moment) { const pl = plansFor(app.st); if (pl.length) scPlay('game', '#gscene', gameMode(), [pl[pl.length - 1]], { delay: Math.max(0, t2 - (prev.shot ? 900 : 700)) * m, labels: gameLabels(app.st) }); }
   at(t1, () => { app.replay.step = 1; render(); });
   if (dice) at(tDice, () => { app.replay.dice = 1; app.replay.step = 1; render(); });
@@ -1603,7 +1640,7 @@ function tokenRow(st, s, D, dec){
   const mine = D && !D.forced && D.seat === s;
   const NAME = { R: 'roter', G: 'grüner', B: 'blauer' };
   let key = dec ? dec.n + 1 : 1;
-  const hints = [];
+  const hints = [], fxText = [];
   const tk = k => {
     const has = t.tok[k];
     let attrs = '', cls = '', title = NAME[k] + ' Token' + (has ? '' : ' (nicht vorhanden)');
@@ -1613,10 +1650,12 @@ function tokenRow(st, s, D, dec){
       else if (k === 'G' && D.acts.some(x => x.type === 'green')) { attrs = `data-tokact="green" data-key="${key++}"`; cls = ' use'; title += ': Spieler wieder frisch machen'; hints.push('Grün: Spieler auffrischen'); }
       else if (k === 'R' && D.phase === 'dist' && D.acts.some(x => x.boost)) { attrs = 'data-tokact="boost"'; cls = ' use' + (app.dist && app.dist.boost ? ' sel' : ''); title += ': +1 Schusspunkt'; hints.push(app.dist && app.dist.boost ? 'Rot: +1 eingesetzt' : 'Rot: +1 Schusspunkt'); }
     }
-    return attrs ? `<button type="button" class="tokb ${k} on${cls}" ${attrs} title="${title}" aria-label="${title}"></button>` : `<span class="tokb ${k}${has?' on':''}" title="${title}"></span>`;
+    const fx = app.tokFx && app.tokFx[s + k], age = fx ? Date.now() - fx.at : 1e9;
+    if (fx && age >= -50 && age < 1600) { cls += fx.type === 'gain' ? ' tgain' : ' tspend'; fxText.push(`<span class="tokfx ${fx.type === 'gain' ? 'g' : 's'}">${fx.type === 'gain' ? '+' : '−'} ${TOKNAME[k]} Token</span>`); }
+    return attrs ? `<button type="button" class="tokb ${k} on${cls}" ${attrs} title="${title}" aria-label="${title}"></button>` : `<span class="tokb ${k}${has?' on':''}${cls}" title="${title}"></span>`;
   };
   const html = tk('R') + tk('G') + tk('B');
-  return `<div class="tokrow"><span class="label">Token</span>${html}${hints.length ? `<span class="tokhint">${hints.join(' · ')}</span>` : ''}</div>`;
+  return `<div class="tokrow"><span class="label">Token</span>${html}${fxText.join('')}${hints.length ? `<span class="tokhint">${hints.join(' · ')}</span>` : ''}</div>`;
 }
 // Tor in der Mitte: Punkte verteilen, Keeper-Ecke oder Schussecke direkt anklicken
 // ---------- Torchance: Frontansicht des Tors (Bildershow, nur der Schuss selbst ist bewegt) ----------
