@@ -378,6 +378,19 @@ table.stats td:first-child{text-align:left;color:var(--muted)}
 @keyframes swap-l{50%{transform:translate(calc(-100% - 7px),26px) scale(.94)}100%{transform:translateX(calc(-200% - 28px))}}
 @keyframes fadeq{30%,70%{opacity:.15}}
 .hcol.c{gap:10px;align-items:stretch;text-align:center}
+.subwrap{display:flex;flex-direction:column;align-items:center;gap:12px;margin:22px auto 8px;max-width:520px;text-align:center}
+.subboard{width:100%;background:#0d0f12;border:3px solid #111;border-radius:12px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:sbin .5s cubic-bezier(.2,.8,.2,1) both}
+.sb-team{font-family:var(--font-d);font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#fff;padding:4px 10px;border-radius:6px;margin-bottom:8px;display:inline-block}
+.sb-team.ta{background:var(--lila);color:#fff}.sb-team.tb{background:#fff;color:#111}
+.sb-row{display:grid;grid-template-columns:34px 74px 1fr auto;align-items:center;gap:10px;padding:8px 10px;margin-top:6px;border-radius:8px;background:#16191e;text-align:left;opacity:0}
+.sb-row.out{animation:sbrow .45s ease-out .35s forwards}.sb-row.in{animation:sbrow .45s ease-out 1.3s forwards}
+.sb-arrow{font-size:24px;line-height:1}.sb-row.out .sb-arrow,.sb-row.out .sb-nr{color:#ff3b30}.sb-row.in .sb-arrow,.sb-row.in .sb-nr{color:#34e05a}
+.sb-nr{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:800;font-size:42px;line-height:1;text-shadow:0 0 10px currentColor;text-align:center}
+.sb-name{color:#fff;font-weight:700;font-size:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-lab{color:#9aa3ad;font-size:12px;text-transform:uppercase;letter-spacing:.1em}
+.sb-foot{font-size:13px;display:flex;flex-wrap:wrap;gap:4px 10px;justify-content:center}.sb-done{white-space:nowrap}
+@keyframes sbin{from{transform:translateY(-14px) scale(.96);opacity:0}}@keyframes sbrow{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.subboard,.sb-row{animation:none;opacity:1}}
 .h-title{font-family:var(--font-d);font-weight:800;font-size:34px;text-transform:uppercase;letter-spacing:.08em}
 .h-score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
 .h-score b{font-family:var(--font-d);font-size:58px;line-height:1;font-variant-numeric:tabular-nums}
@@ -1212,6 +1225,7 @@ const SFX = (() => {
       const o = c.createOscillator(), go = c.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(880, t); o.frequency.exponentialRampToValueAtTime(330, t + .25); env(go, t, .005, .16, .26); o.connect(go).connect(sfxBus); o.start(t); o.stop(t + .28); },
     // Erschöpft: kurzes Hecheln, drei Atemzüge
     pant(c, t){ for (let i = 0; i < 3; i++) { const s = t + i * .26, len = i % 2 ? .16 : .2; const n = noise(c, len + .02), f = filt(c, 'bandpass', i % 2 ? 1500 : 1100, 1.6), lp = filt(c, 'lowpass', 2600), g = c.createGain(); env(g, s, .03, i % 2 ? .5 : .7, len); n.connect(f).connect(lp).connect(g).connect(sfxBus); n.start(s); n.stop(s + len + .02); } },
+    board(c, t){ [[988, 0], [1319, .16]].forEach(([f, d]) => { const o = c.createOscillator(), g = c.createGain(); o.type = 'square'; o.frequency.value = f; const lp = filt(c, 'lowpass', 2400); env(g, t + d, .006, .09, .22); o.connect(lp).connect(g).connect(sfxBus); o.start(t + d); o.stop(t + d + .25); }); },
     ohh(c, t){ const n = noise(c, 1.3), f = filt(c, 'lowpass', 900), g = c.createGain(); f.frequency.setValueAtTime(950, t); f.frequency.exponentialRampToValueAtTime(220, t + 1.2); env(g, t, .3, .35, 1.3); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + 1.3); },
     whistle(c, t, times){ const k = times || 1; for (let i = 0; i < k; i++) { const t0 = t + i * .42, len = (i === k - 1 && k > 1) ? .75 : .28; const o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain(); o.frequency.value = 2900; l.frequency.value = 36; lg.gain.value = 110; l.connect(lg).connect(o.frequency); env(g, t0, .01, .16, len); o.connect(g).connect(sfxBus); o.start(t0); l.start(t0); o.stop(t0 + len); l.stop(t0 + len); } },
   };
@@ -1282,7 +1296,7 @@ function setState(next){
   if (old && old.phase === 'half' && next.phase !== 'half' && next.phase !== 'over') {
     clearTimeout(app.swapTimer);
     app.swap = { st: next };
-    app.swapTimer = setTimeout(() => { app.swap = null; SFX.play('whistle', 0, 1); render(); if (app.mode === 'bot') runBot(); }, reduceMotion() ? 0 : 1900);
+    app.swapTimer = setTimeout(() => startSubShow(next), reduceMotion() ? 0 : 1900);
     render(); return;
   }
   const fly = draftFx(old, next);
@@ -1297,6 +1311,35 @@ function setState(next){
   if (old && next && old.phase !== 'draft' && next.phase !== 'draft') for (const s of ['A','B']) if (next.teams[s].pile.length > old.teams[s].pile.length) app.shuffle[s] = true;
   if (old && next && next.prev && old.phase !== 'draft' && (!old.prev || old.prev.turn !== next.prev.turn)) startReplay(next.prev);
   else if (!presenceMoment(next)) render();
+}
+// Nach dem Seitenwechsel: Wechseltafel zeigt jeden Wechsel einzeln (raus rot, rein grün), dann Anpfiff
+function subList(st){ const r = []; for (const s of ['A','B']) { const t = st.teams[s]; (t.subOut || []).forEach((o, i) => r.push({ s, out: o, inn: t.subIn[i] })); } return r; }
+function kickoff2(){ clearTimeout(app.swapTimer); app.swap = null; try { speechSynthesis.cancel(); } catch(e){} SFX.play('whistle', 0, 1); render(); if (app.mode === 'bot') runBot(); }
+function startSubShow(st){
+  const list = subList(st);
+  if (!list.length || reduceMotion()) return kickoff2();
+  app.swap = { st, subs: list, i: 0 };
+  const step = () => {
+    const sw = app.swap; if (!sw || !sw.subs) return;
+    const x = sw.subs[sw.i];
+    SFX.play('board'); render();
+    const o = card(x.out), n = card(x.inn);
+    say(`Wechsel bei ${teamLabel(x.s)}. Für die Nummer ${o.nr}, ${o.name}, kommt mit der Nummer ${n.nr}: ${n.name}!`);
+    app.swapTimer = setTimeout(() => { if (!app.swap || !app.swap.subs) return; if (++app.swap.i >= app.swap.subs.length) return kickoff2(); step(); }, 3400 * SPEEDS[speed()]);
+  };
+  step();
+}
+function subsHtml(sw){
+  const x = sw.subs[sw.i], o = card(x.out), n = card(x.inn), t = x.s === 'A' ? 'ta' : 'tb';
+  const done = sw.subs.slice(0, sw.i).map(y => `<span class="sb-done"><b>${esc(teamLabel(y.s))}</b> ${esc(card(y.out).name)} → ${esc(card(y.inn).name)}</span>`).join('');
+  return `<div class="subwrap"><div class="h-title">Wechsel</div>
+    <div class="subboard" data-k="${sw.i}">
+      <div class="sb-team ${t}">${esc(teamLabel(x.s))}</div>
+      <div class="sb-row out"><span class="sb-arrow" aria-hidden="true">▼</span><span class="sb-nr">${o.nr}</span><span class="sb-name">${esc(o.name)}</span><span class="sb-lab">raus</span></div>
+      <div class="sb-row in"><span class="sb-arrow" aria-hidden="true">▲</span><span class="sb-nr">${n.nr}</span><span class="sb-name">${esc(n.name)}</span><span class="sb-lab">rein</span></div>
+    </div>
+    <div class="sb-foot muted">Wechsel ${sw.i + 1} von ${sw.subs.length}${done ? ' · ' : ''}${done}</div>
+    <button class="btn" id="subSkip">Weiter zum Anpfiff</button></div>`;
 }
 const TOKNAME = { R: 'roter', G: 'grüner', B: 'blauer' };
 function tokenFx(old, next, delay){
@@ -1475,6 +1518,7 @@ function render(){
     const n = $('#teamName'); if (n && fid != null) { n.focus(); try { n.setSelectionRange(fid, fid); } catch(e){} }
     return;
   }
+  if (app.swap && app.swap.subs) { v.innerHTML = boardHtml(st) + subsHtml(app.swap) + logHtml(st); const k = $('#subSkip'); if (k) k.onclick = kickoff2; return; }
   if (app.swap || (st.phase === 'half' && !app.replay)) {
     v.innerHTML = boardHtml(st) + halfHtml(app.swap ? app.swap.st : st, !!app.swap) + logHtml(st); bindGame(); bindHalf(); return;
   }
@@ -2222,11 +2266,11 @@ function draftFx(old, next){
   };
 }
 // Stadionsprecher: eingebaute Sprachausgabe des Browsers (deutsche Stimme, wenn vorhanden)
-function announce(id){
+function announce(id){ const p = card(id); say(`Mit der Nummer ${p.nr}: ${p.name}!`); }
+function say(text){
   if (!SFX.on() || !('speechSynthesis' in window)) return;
   try {
-    const p = card(id);
-    const u = new SpeechSynthesisUtterance(`Mit der Nummer ${p.nr}: ${p.name}!`);
+    const u = new SpeechSynthesisUtterance(text);
     const v = speechSynthesis.getVoices().filter(x => /^de/i.test(x.lang));
     u.voice = v.find(x => /male|mann|google|markus|yannick|stefan/i.test(x.name)) || v[0] || null;
     u.lang = 'de-DE'; u.rate = .95; u.pitch = .9;
