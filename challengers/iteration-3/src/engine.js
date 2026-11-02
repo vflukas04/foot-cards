@@ -150,10 +150,17 @@
       log(st, `${st.names[att]} bleibt am Ball und sieht die Karte der Abwehr.`, 'info');
     }
   }
+  // Token gehören zu einer Aktion: ato/dto = Token je Option (z. B. ["", "BGR"] = nur die Option hinter „/“).
+  // Ältere Karten ohne ato/dto: Token der Zeile gehen an die einzige Option bzw. an die Option hinter „/“.
+  function optTok(list, per, rowTok, i){
+    if (Array.isArray(per)) return per[i] || '';
+    if (!rowTok) return '';
+    return i === list.length - 1 ? rowTok : '';
+  }
   function zoneRow(id, zone, role) {
     const z = card(id).z[zone];
-    if (role === 'def') return { opts: z.d.map(a => ({ a, g: 0 })), tok: z.dt };
-    return { opts: z.a.map(([a, g]) => ({ a, g })), tok: z.at };
+    if (role === 'def') return { opts: z.d.map((a, i) => ({ a, g: 0, tok: optTok(z.d, z.dto, z.dt, i) })), tok: z.dt };
+    return { opts: z.a.map(([a, g], i) => ({ a, g, tok: optTok(z.a, z.ato, z.at, i) })), tok: z.at };
   }
   function actor(st) {
     switch (st.phase) {
@@ -325,7 +332,7 @@
           if (act.pay === 'token') { t.tok[role === 'def' ? 'B' : 'R'] = false; if (role === 'att') side.usedRed = true; }
           if (side.action === '-- und erschöpft' && !t.exhausted.includes(side.id)) t.exhausted.push(side.id);
           if (side.action === '-- und Regeneriert') t.exhausted = t.exhausted.filter(x => x !== side.id);
-          for (const k of row.tok) { if (!t.tok[k]) { t.tok[k] = true; side.gotTok.push(k); } }
+          for (const k of row.opts[act.opt].tok) { if (!t.tok[k]) { t.tok[k] = true; side.gotTok.push(k); } }   // nur die Token der gewählten Aktion
           const how = act.pay === 'exhaust' ? ' (erschöpft)' : act.pay === 'token' ? ' (Token)' : '';
           log(st, `${role === 'def' ? 'Abwehr' : 'Angriff'} ${st.names[s]}: ${card(side.id).name} – ${side.action}${side.green ? ' (grün)' : ''}${how}.`, role);
         }

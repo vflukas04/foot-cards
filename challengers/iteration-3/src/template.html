@@ -547,7 +547,7 @@ button.gv-ar:hover{background:var(--att);color:#fff}
       <li>Querpass seitlich, aber nicht ins ZO. Dribbling vorwärts, seitlich oder auf der Stelle, Steilpass direkt vorwärts, Rückpass direkt rückwärts, Diagonalball auf den anderen Flügel nach vorn, Flanke und Vorlage nach ZO.</li>
       <li>Nach einer gelungenen Flanke folgt sofort ein Kopfballduell: Beide decken auf, verglichen werden nur die Kopfballwerte (bei Gleichstand die Präsenz). Die Aktionen auf den Karten werden nicht ausgeführt. Gewinnt der Angreifer, folgt der Kopfball aufs Tor mit seinem Kopfballwert plus Assist, sonst klärt die Abwehr und bekommt den Ball.</li>
       <li>Torschuss: Punkte = Schusswert (Mitte) bzw. Kopfballwert, plus Assist des Spielers, der vorher am Ball war, plus 1 mit rotem Token, minus 1 bei Fernschuss. Der Schütze verteilt die Punkte offen auf die drei Keeperfelder. Dann wählen beide gleichzeitig eine Ecke. Gleiche Ecke: gehalten. Sonst würfelt der Schütze und muss echt unter den Feldwert kommen. Fehlschuss oder Parade: Abstoß (ZD).</li>
-      <li>Token: Ein farbiges O bei der gewählten Aktion bringt diesen Token (max. je einer). Blau: zweiten Verteidiger ziehen. Grün: erschöpften Spieler beim Aufdecken entschöpfen. Rot: Option hinter „/“ bezahlen oder +1 beim Schuss. „Regeneriert“ entschöpft die Karte, „und erschöpft“ erschöpft sie.</li>
+      <li>Token: Ein farbiges O bei der gewählten Aktion bringt diesen Token (max. je einer). <b>Version 3:</b> Die Token gehören zu einer einzelnen Aktion, vor oder hinter dem „/“, und nur diese Aktion bringt sie (z. B. Köhler ZO: nur „Gelb“ bringt die drei Token). Blau: zweiten Verteidiger ziehen. Grün: erschöpften Spieler beim Aufdecken entschöpfen. Rot: Option hinter „/“ bezahlen oder +1 beim Schuss. „Regeneriert“ entschöpft die Karte, „und erschöpft“ erschöpft sie.</li>
       <li>Zeit: Jeder Spielzug ist eine Minute. Halbzeit beim ersten Ballbesitzwechsel ab Minute 45, spätestens Minute 50. Ende beim ersten Ballbesitzwechsel ab Minute 90 plus eine Minute je Tor.</li>
       <li><b>Halbzeit (neu in Version 3):</b> Jede Mannschaft darf bis zu 3 Spieler auswechseln. Wer Gelb-Rot gesehen hat, kann nicht ersetzt werden. Danach wird jedes Deck aus den 10 Spielern im Spiel frisch gemischt, die Ablage ist leer, Einwechselspieler sind frisch. Erschöpfung, Gelbe Karten und Token bleiben. Die Seiten werden gewechselt.</li>
       <li><b>Noten und xG:</b> Jeder Spieler bekommt eine Schulnote von 1 (sehr gut) bis 6 (ungenügend) nach seinen erfolgreichen und missglückten Aktionen, gewonnenen und verlorenen Duellen, Toren und Vorlagen, Keeper nach Paraden und Gegentoren. xG (erwartete Tore) ist die Summe der Torchancen aller Schüsse nach Punkteverteilung und Zielwahl, wenn der Keeper zufällig springt.</li>
@@ -613,8 +613,9 @@ function optHtml(o, green, cls){
   return `<span class="${bad?'bad':green?'g':cls}">${esc(o)}</span>`;
 }
 function rowHtml(z, role){
-  if (role==='att') return `<span class="ra">${z.a.map(([a,g])=>optHtml(a,g,'ra')).join(' / ')}</span>${dots(z.at)}`;
-  return `<span class="rd">${z.d.map(a=>optHtml(a,0,'rd')).join(' / ')}</span>${dots(z.dt)}`;
+  const tk = (list, per, row, i) => Array.isArray(per) ? (per[i] || '') : (row && i === list.length - 1 ? row : '');
+  if (role==='att') return `<span class="ra">${z.a.map(([a,g],i)=>optHtml(a,g,'ra')+dots(tk(z.a,z.ato,z.at,i))).join(' / ')}</span>`;
+  return `<span class="rd">${z.d.map((a,i)=>optHtml(a,0,'rd')+dots(tk(z.d,z.dto,z.dt,i))).join(' / ')}</span>`;
 }
 function cardHtml(id, o){
   o = o || {};
@@ -1556,12 +1557,13 @@ function buildDecide(st, role, side, seat, D){
     const tk = acts.some(x => x.type === 'choose' && x.opt === i && x.pay === 'token');
     const can = i === 0 || ex || tk;
     let hint = `<b>${esc(o.a)}</b>${o.g ? ' (grün)' : ''} · ${i === 0 ? 'kostenlos' : can ? 'kostet: ' + [ex ? 'Spieler erschöpfen' : '', tk ? tokName + ' Token' : ''].filter(Boolean).join(' oder ') : 'geht nicht: Spieler schon erschöpft und kein ' + tokName + ' Token'}`;
+    if (o.tok) hint += ' · bringt Token ' + o.tok.split('').map(k => ({ R: 'rot', G: 'grün', B: 'blau' })[k]).join(', ');
     if (role === 'att') hint += ' · ' + stopHint(o.a, o.g, defOpen).replace(/<[^>]+>/g, '');
     else if (FC.DEF_BEATS(o.a, st.cur.att.action, st.cur.att.green)) hint += ' · <b>stoppt den Angriff</b>';
     return { o, i, ex, tk, can, hint };
   });
   const cls = role === 'def' ? 'rd' : 'ra';
-  const html = `<span class="${cls}">${opts.map(x => `<button type="button" class="opt ${x.i===0?'free':'paid'}${sel===x.i?' sel':''}${x.o.g?' g':''}${(x.o.a==='Fehlpass'||x.o.a==='Ballverlust')?' bad':''}" data-opt="${x.i}" data-seat="${seat}" data-key="${x.i+1}" data-hint="${esc(x.hint)}"${x.can?'':' disabled'}>${esc(x.o.a)}</button>`).join(' / ')}</span>${dots(row.tok)}`;
+  const html = `<span class="${cls}">${opts.map(x => `<button type="button" class="opt ${x.i===0?'free':'paid'}${sel===x.i?' sel':''}${x.o.g?' g':''}${(x.o.a==='Fehlpass'||x.o.a==='Ballverlust')?' bad':''}" data-opt="${x.i}" data-seat="${seat}" data-key="${x.i+1}" data-hint="${esc(x.hint)}"${x.can?'':' disabled'}>${esc(x.o.a)}</button>${dots(x.o.tok)}`).join(' / ')}</span>`;
   const sx = sel != null ? opts[sel] : null;
   let def;
   if (sx) def = `<b>${esc(sx.o.a)}</b> gewählt. Jetzt bezahlen: ${[sx.ex ? 'aufs <b>Trikot</b> klicken (Spieler erschöpft)' : '', sx.tk ? `den <b>${tokName} Token</b> über der Karte anklicken` : ''].filter(Boolean).join(' oder ')}. Nochmal auf die Option klicken bricht ab.`;
