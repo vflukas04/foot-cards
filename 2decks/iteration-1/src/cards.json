@@ -1,0 +1,498 @@
+{
+ "players": [
+  {
+   "team": "L",
+   "name": "Bashkim Ajdini",
+   "short": "Ajdini",
+   "pos": "RV",
+   "area": "A",
+   "T": 4,
+   "Z": 3,
+   "S": 2,
+   "act": "Flanke",
+   "pas": "Sprint"
+  },
+  {
+   "team": "L",
+   "name": "Maurice Trapp",
+   "short": "Trapp",
+   "pos": "IV",
+   "area": "A",
+   "T": 2,
+   "Z": 5,
+   "S": 2,
+   "act": "Steilpass",
+   "pas": "Tackling"
+  },
+  {
+   "team": "L",
+   "name": "Joost van Aken",
+   "short": "van Aken",
+   "pos": "IV",
+   "area": "A",
+   "T": 2,
+   "Z": 4,
+   "S": 2,
+   "act": "Diagonalball",
+   "pas": "Schuss blocken"
+  },
+  {
+   "team": "L",
+   "name": "Kevin Wolze",
+   "short": "Wolze",
+   "pos": "LV",
+   "area": "A",
+   "T": 3,
+   "Z": 3,
+   "S": 3,
+   "act": "Flanke",
+   "pas": "Passabfangen"
+  },
+  {
+   "team": "L",
+   "name": "Ulrich Taffertshofer",
+   "short": "Taffertshofer",
+   "pos": "DM",
+   "area": "M",
+   "T": 2,
+   "Z": 4,
+   "S": 3,
+   "act": "Steilpass",
+   "pas": "Passabfangen"
+  },
+  {
+   "team": "L",
+   "name": "Moritz Heyer",
+   "short": "Heyer",
+   "pos": "ZM",
+   "area": "M",
+   "T": 4,
+   "Z": 4,
+   "S": 3,
+   "act": "Dribbling",
+   "pas": "Pressing"
+  },
+  {
+   "team": "L",
+   "name": "David Blacha",
+   "short": "Blacha",
+   "pos": "ZM",
+   "area": "M",
+   "T": 3,
+   "Z": 3,
+   "S": 3,
+   "act": "Querpass",
+   "pas": "Tackling"
+  },
+  {
+   "team": "L",
+   "name": "Anas Ouahim",
+   "short": "Ouahim",
+   "pos": "OM",
+   "area": "S",
+   "T": 4,
+   "Z": 2,
+   "S": 4,
+   "act": "Übersteiger",
+   "pas": "Sprint"
+  },
+  {
+   "team": "L",
+   "name": "Marcos Álvarez",
+   "short": "Álvarez",
+   "pos": "ST",
+   "area": "S",
+   "T": 3,
+   "Z": 3,
+   "S": 5,
+   "act": "Schuss",
+   "pas": "Querpass"
+  },
+  {
+   "team": "L",
+   "name": "Marc Heider",
+   "short": "Heider",
+   "pos": "ST",
+   "area": "S",
+   "T": 3,
+   "Z": 4,
+   "S": 4,
+   "act": "Schuss",
+   "pas": "Pressing"
+  },
+  {
+   "team": "L",
+   "name": "Etienne Amenyido",
+   "short": "Amenyido",
+   "pos": "LA",
+   "area": "S",
+   "T": 5,
+   "Z": 2,
+   "S": 3,
+   "act": "Dribbling",
+   "pas": "Sprint"
+  },
+  {
+   "team": "B",
+   "name": "Maxwell Gyamfi",
+   "short": "Gyamfi",
+   "pos": "RV",
+   "area": "A",
+   "T": 5,
+   "Z": 3,
+   "S": 1,
+   "act": "Flanke",
+   "pas": "Sprint"
+  },
+  {
+   "team": "B",
+   "name": "Timo Beermann",
+   "short": "Beermann",
+   "pos": "IV",
+   "area": "A",
+   "T": 2,
+   "Z": 5,
+   "S": 2,
+   "act": "Diagonalball",
+   "pas": "Schuss blocken"
+  },
+  {
+   "team": "B",
+   "name": "Niklas Wiemann",
+   "short": "Wiemann",
+   "pos": "IV",
+   "area": "A",
+   "T": 3,
+   "Z": 4,
+   "S": 2,
+   "act": "Steilpass",
+   "pas": "Tackling"
+  },
+  {
+   "team": "B",
+   "name": "Florian Kleinhansl",
+   "short": "Kleinhansl",
+   "pos": "LV",
+   "area": "A",
+   "T": 3,
+   "Z": 3,
+   "S": 2,
+   "act": "Flanke",
+   "pas": "Passabfangen"
+  },
+  {
+   "team": "B",
+   "name": "Robert Tesche",
+   "short": "Tesche",
+   "pos": "DM",
+   "area": "M",
+   "T": 2,
+   "Z": 5,
+   "S": 3,
+   "act": "Steilpass",
+   "pas": "Tackling"
+  },
+  {
+   "team": "B",
+   "name": "Bryan Henning",
+   "short": "Henning",
+   "pos": "ZM",
+   "area": "M",
+   "T": 3,
+   "Z": 3,
+   "S": 3,
+   "act": "Querpass",
+   "pas": "Passabfangen"
+  },
+  {
+   "team": "B",
+   "name": "Lukas Kunze",
+   "short": "Kunze",
+   "pos": "ZM",
+   "area": "M",
+   "T": 3,
+   "Z": 4,
+   "S": 3,
+   "act": "Dribbling",
+   "pas": "Pressing"
+  },
+  {
+   "team": "B",
+   "name": "Lars Kehl",
+   "short": "Kehl",
+   "pos": "OM",
+   "area": "S",
+   "T": 3,
+   "Z": 2,
+   "S": 4,
+   "act": "Übersteiger",
+   "pas": "Querpass"
+  },
+  {
+   "team": "B",
+   "name": "Ba-Muaka Simakala",
+   "short": "Simakala",
+   "pos": "LA",
+   "area": "S",
+   "T": 5,
+   "Z": 2,
+   "S": 5,
+   "act": "Dribbling",
+   "pas": "Sprint"
+  },
+  {
+   "team": "B",
+   "name": "Erik Engelhardt",
+   "short": "Engelhardt",
+   "pos": "ST",
+   "area": "S",
+   "T": 3,
+   "Z": 4,
+   "S": 4,
+   "act": "Schuss",
+   "pas": "Pressing"
+  },
+  {
+   "team": "B",
+   "name": "Kai Pröger",
+   "short": "Pröger",
+   "pos": "RA",
+   "area": "S",
+   "T": 4,
+   "Z": 3,
+   "S": 4,
+   "act": "Schuss",
+   "pas": "Sprint"
+  }
+ ],
+ "actions": [
+  [
+   "Querpass",
+   "aktiv"
+  ],
+  [
+   "Querpass",
+   "passiv"
+  ],
+  [
+   "Steilpass",
+   "aktiv"
+  ],
+  [
+   "Steilpass",
+   "passiv"
+  ],
+  [
+   "Diagonalball",
+   "aktiv"
+  ],
+  [
+   "Flanke",
+   "sturm"
+  ],
+  [
+   "Flanke",
+   "aktiv"
+  ],
+  [
+   "Dribbling",
+   "aktiv"
+  ],
+  [
+   "Dribbling",
+   "passiv"
+  ],
+  [
+   "Übersteiger",
+   "-"
+  ],
+  [
+   "Sprint",
+   "passiv"
+  ],
+  [
+   "Schuss",
+   "sturm"
+  ],
+  [
+   "Schuss",
+   "aktiv"
+  ],
+  [
+   "Tackling",
+   "passiv"
+  ],
+  [
+   "Tackling",
+   "aktiv"
+  ],
+  [
+   "Passabfangen",
+   "aktiv"
+  ],
+  [
+   "Passabfangen",
+   "passiv"
+  ],
+  [
+   "Schuss blocken",
+   "passiv"
+  ],
+  [
+   "Pressing",
+   "aktiv"
+  ],
+  [
+   "Taktik",
+   "-"
+  ],
+  [
+   "Querpass",
+   "sturm"
+  ],
+  [
+   "Dribbling",
+   "sturm"
+  ],
+  [
+   "Steilpass",
+   "aktiv"
+  ],
+  [
+   "Passabfangen",
+   "passiv"
+  ],
+  [
+   "Tackling",
+   "aktiv"
+  ],
+  [
+   "Rückpass",
+   "aktiv"
+  ],
+  [
+   "Rückpass",
+   "passiv"
+  ],
+  [
+   "Rückpass",
+   "-"
+  ],
+  [
+   "Ball sichern A",
+   "-"
+  ],
+  [
+   "Ball sichern B",
+   "-"
+  ]
+ ],
+ "info": {
+  "Querpass": [
+   "seitlich",
+   "Ball 1 Feld seitlich",
+   "Passabfangen",
+   "Z"
+  ],
+  "Steilpass": [
+   "vorn",
+   "Ball 1 oder 2 Felder nach vorn",
+   "Passabfangen",
+   "T"
+  ],
+  "Diagonalball": [
+   "diagonal vorn",
+   "Ball 1 Feld diagonal nach vorn (über die Vorderkante)",
+   "Passabfangen",
+   "T"
+  ],
+  "Flanke": [
+   "vorn oder seitlich",
+   "Ball 2–3 Felder in den Strafraum; kommt sie an: sofort Kopfball",
+   "Passabfangen, Schuss blocken",
+   "S"
+  ],
+  "Dribbling": [
+   "vorn",
+   "Ballführer 1 Feld nach vorn",
+   "Tackling",
+   "Z"
+  ],
+  "Übersteiger": [
+   "beliebige Kante",
+   "wirkt als Dribbling nach vorn",
+   "Tackling",
+   "T"
+  ],
+  "Sprint": [
+   "vorn",
+   "Spieler ohne Ball 1 Feld vor (Tempo 4+: bis 2)",
+   "–",
+   "T"
+  ],
+  "Schuss": [
+   "beliebige Kante",
+   "Torschuss vom Feld des Ballführers",
+   "Schuss blocken",
+   "S"
+  ],
+  "Tackling": [
+   "gemeinsame Kante",
+   "gegen den Ballführer; als Falle gegen Dribbling/Übersteiger",
+   "schlägt Dribbling, Übersteiger",
+   "Z"
+  ],
+  "Passabfangen": [
+   "–",
+   "Falle gegen Pässe und Flanken",
+   "schlägt Quer-, Steil-, Rückpass, Diagonalball, Flanke",
+   "T"
+  ],
+  "Schuss blocken": [
+   "–",
+   "Falle gegen Schuss und Kopfball",
+   "schlägt Schuss, Kopfball",
+   "Z"
+  ],
+  "Pressing": [
+   "–",
+   "eigenen Spieler 1 Feld Richtung Ball bewegen",
+   "–",
+   "T"
+  ],
+  "Taktik": [
+   "–",
+   "2 Aktionen ziehen, 1 ablegen",
+   "–",
+   "*"
+  ],
+  "Rückpass": [
+   "zurück",
+   "Ball 1 Feld nach hinten",
+   "Passabfangen",
+   "Z"
+  ],
+  "Ball sichern A": [
+   "beliebige Kante",
+   "alle Karten an den Kanten des Ballführer-Felds ablegen, auch eigene",
+   "–",
+   "*"
+  ],
+  "Ball sichern B": [
+   "beliebige Kante",
+   "alle gegnerischen Karten an den Kanten des Ballführer-Felds ablegen",
+   "–",
+   "*"
+  ]
+ },
+ "keepers": {
+  "B": {
+   "name": "Sauter",
+   "H": 3
+  },
+  "L": {
+   "name": "Kühn",
+   "H": 3
+  }
+ }
+}
