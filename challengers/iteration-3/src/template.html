@@ -291,6 +291,51 @@ table.stats td:first-child{text-align:left;color:var(--muted)}
 .roletag.a{color:var(--att)}.roletag.d{color:var(--def)}
 .side .stack{margin:10px 10px 0 0}
 .shufnote{font-size:13px}
+/* Spielmodus */
+.settings{grid-column:1/-1}
+.setgrid{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end}
+.setgrid label,.setgrid>div{display:flex;flex-direction:column;gap:4px}
+.pe{width:min(560px,100%)}
+.pe-list{display:flex;flex-direction:column;gap:3px;max-height:60vh;overflow:auto}
+.pe-row{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:7px;border:1px solid var(--line);opacity:.55;cursor:pointer}
+.pe-row.on{opacity:1;border-color:var(--fg)}
+.pe-row b{font-family:var(--font-d);font-size:16px;flex:1}
+.pe-row span{font-size:12.5px}
+/* Draft */
+.draft{display:grid;grid-template-columns:200px minmax(0,1fr) 200px;gap:14px;align-items:start;margin-top:16px}
+@media (max-width:980px){.draft{grid-template-columns:1fr 1fr}.draft .dcenter{grid-column:1/-1;order:-1}}
+.dlist{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:6px;position:sticky;top:10px}
+.dlist.turn{box-shadow:0 0 0 3px var(--hl),0 0 20px color-mix(in srgb,var(--hl) 60%,transparent)}
+.dlist ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;min-height:40px}
+.dlist li{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;padding:2px 4px;border-radius:6px}
+.dlist li .shirt{min-width:26px;height:22px;font-size:13px}
+.dlist li.arrive{animation:arrive 1s ease-out .55s both}
+@keyframes arrive{0%{background:var(--hl)}100%{background:transparent}}
+.dturn{font-family:var(--font-d);font-weight:700;font-size:15px;text-align:center;background:var(--hl);color:#111;border-radius:6px;padding:3px}
+.dcenter{gap:10px}
+.dcard.reveal .pcard{animation:flipin .7s cubic-bezier(.2,.7,.2,1) .25s both}
+.mstack{display:flex;align-items:center;gap:12px;font-size:13px}
+.mstack .stack{margin-top:8px}
+.flycard{position:fixed;z-index:50;pointer-events:none;transition:transform .7s cubic-bezier(.5,0,.3,1),opacity .7s ease-in;transform-origin:0 0}
+.flycard .pcard{box-shadow:0 10px 24px rgba(0,0,0,.3)}
+/* Aufstellung */
+.lwrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px;align-items:start}
+@media (max-width:980px){.lwrap{grid-template-columns:1fr}}
+.lpitch{aspect-ratio:16/10}
+.lside{position:absolute;bottom:6px;font-size:12px;font-weight:600;color:var(--pitch-dark);opacity:.8}
+.lside.l{left:10px}.lside.r{right:10px}
+.lpos{position:absolute;transform:translate(-50%,-50%);z-index:3}
+.lpos.fly{animation:lfly .6s cubic-bezier(.2,.8,.2,1) calc(var(--i) * .07s) both}
+@keyframes lfly{0%{transform:translate(-50%,-50%) translateX(-120px) scale(.6);opacity:0}100%{transform:translate(-50%,-50%);opacity:1}}
+.ltok{display:flex;align-items:center;gap:6px;background:var(--surface);border:2px solid var(--fg);border-radius:9px;padding:3px 8px 3px 4px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.25);white-space:nowrap}
+.ltok:hover,.ltok:focus-visible{outline:3px solid var(--hl)}
+.ltok .ln{display:flex;flex-direction:column;line-height:1.05}
+.ltok .ln b{font-family:var(--font-d);font-size:14.5px}
+.ltok .ln small{font-size:10.5px;color:var(--muted)}
+.ltok.bench{border-style:dashed;background:var(--surface2)}
+.lbench{display:flex;flex-wrap:wrap;align-items:center;gap:8px;border:1.5px dashed var(--line);border-radius:var(--r);padding:8px 10px;background:var(--surface2)}
+.lprev{min-height:120px}
+.lprev .cgrid{font-size:11px}
 .build{font-family:var(--font-b);font-size:11.5px;margin-left:8px;opacity:.7}
 .vwarn{border-left:4px solid var(--red)!important;background:color-mix(in srgb,var(--red) 10%,var(--surface))!important}
 /* Anzeigetafel: Heim lila, Gast weiß */
@@ -561,6 +606,7 @@ button.gv-ar:hover{background:var(--att);color:#fff}
       <li>Torschuss: Punkte = Schusswert (Mitte) bzw. Kopfballwert, plus Assist des Spielers, der vorher am Ball war, plus 1 mit rotem Token, minus 1 bei Fernschuss. Der Schütze verteilt die Punkte offen auf die drei Keeperfelder. Dann wählen beide gleichzeitig eine Ecke. Gleiche Ecke: gehalten. Sonst würfelt der Schütze und muss echt unter den Feldwert kommen. Fehlschuss oder Parade: Abstoß (ZD).</li>
       <li>Token: Ein farbiges O bei der gewählten Aktion bringt diesen Token (max. je einer). <b>Version 3:</b> Die Token gehören zu einer einzelnen Aktion, vor oder hinter dem „/“, und nur diese Aktion bringt sie (z. B. Köhler ZO: nur „Gelb“ bringt die drei Token). Blau: zweiten Verteidiger ziehen. Grün: erschöpften Spieler beim Aufdecken entschöpfen. Rot: Option hinter „/“ bezahlen oder +1 beim Schuss. „Regeneriert“ entschöpft die Karte, „und erschöpft“ erschöpft sie.</li>
       <li>Zeit: Jeder Spielzug ist eine Minute. Halbzeit beim ersten Ballbesitzwechsel ab Minute 45, spätestens Minute 50. Ende beim ersten Ballbesitzwechsel ab Minute 90 plus eine Minute je Tor.</li>
+      <li><b>Spielmodus (neu in Version 3):</b> Kader zufällig, kompletter Draft (alle Karten offen) oder offener Markt (5 Karten offen, für jede gewählte wird eine vom verdeckten Stapel aufgedeckt). Kartenpool: alle Karten, eine zufällige Auswahl (20, 22 oder 24) oder selbst abgehakt. Pro Mannschaft die Hälfte des Pools: 10 im Spiel, der Rest auf der Bank. Die letzte Karte geht automatisch weg.</li>
       <li><b>Halbzeit (neu in Version 3):</b> Jede Mannschaft darf bis zu 3 Spieler auswechseln. Wer Gelb-Rot gesehen hat, kann nicht ersetzt werden. Danach wird jedes Deck aus den 10 Spielern im Spiel frisch gemischt, die Ablage ist leer, Einwechselspieler sind frisch. Erschöpfung, Gelbe Karten und Token bleiben. Die Seiten werden gewechselt.</li>
       <li><b>Noten und xG:</b> Jeder Spieler bekommt eine Schulnote von 1 (sehr gut) bis 6 (ungenügend) nach seinen erfolgreichen und missglückten Aktionen, gewonnenen und verlorenen Duellen, Toren und Vorlagen, Keeper nach Paraden und Gegentoren. xG (erwartete Tore) ist die Summe der Torchancen aller Schüsse nach Punkteverteilung und Zielwahl, wenn der Keeper zufällig springt.</li>
       <li><b>Annahmen, bitte prüfen:</b> Fernschuss (nicht aus ZO) kostet 1 Punkt. Diagonalball geht aus LD nach RO, aus RD nach LO, aus der Mitte auf einen der beiden Flügel vorn. Gleichstand im Tempo-Duell nach Präsenz: Ball bleibt beim Angreifer, ohne Bewegung. Ein O in Cyan oder Lila gilt als blauer Token. Kopfballduell auch nach Präsenz gleich: Die Abwehr klärt. Im Kopfballduell gibt es keine Token und keine Token-Aktionen.</li>
@@ -1239,6 +1285,8 @@ function setState(next){
     app.swapTimer = setTimeout(() => { app.swap = null; SFX.play('whistle', 0, 1); render(); if (app.mode === 'bot') runBot(); }, reduceMotion() ? 0 : 1900);
     render(); return;
   }
+  const fly = draftFx(old, next);
+  if (fly && (next.phase === 'draft' || next.phase === 'setup')) { render(); fly(); return; }
   // Token ausgegeben oder bekommen? Klang und kurze Anzeige an der Tokenleiste, auch beim Gegner.
   // Löst der neue Stand einen Zug auf, gehören die Änderungen zur Abwehr: dann erst beim Aufdecken der Abwehr.
   if (old && next && old.teams && next.teams && !['draft','setup'].includes(next.phase)) {
@@ -1919,47 +1967,95 @@ function musicNote(){
   return `<div class="musicnote"><span class="muted">Musik: „Say My Name“ von Holodr3ams, über Pixabay (Pixabay Content License). Lautstärke oben mit „Musik“, ausschalten mit „Ton“.</span></div>`;
 }
 // ---------- Nach dem Draft: Flug über den Kader, Name und Ersatzbank ----------
+// Lieblingsposition aus den Karten: Wo hat der Spieler seine guten Aktionen? (x: hinten → vorn, y: links → rechts aus Heimsicht)
+const ATT_V = { 'Schuss': 1.2, 'Kopfball': 1, 'Vorlage': 1, 'Flanke': 1, 'Dribbling': 1, 'Sprint': 1, 'Steilpass': .9, 'Diagonalball': .8, 'Querpass': .5, 'Rückpass': .3, 'Ball sichern': .7 };
+const DEF_V = { 'Tackling': 1, 'Passabfangen': 1, 'Ballgewinn': 1.2, 'Block': 1, 'Schuss blocken': 1, 'Kopfball blocken': 1, 'Gelb': .6 };
+const ZDEPTH = { LD: 0, ZD: 0, RD: 0, ZM: 1, LO: 2, ZO: 2, RO: 2 }, ZSIDE = { LO: -1, LD: -1, ZO: 0, ZM: 0, ZD: 0, RO: 1, RD: 1 };
+const POS_CACHE = {};
+function posOf(id){
+  if (POS_CACHE[id]) return POS_CACHE[id];
+  const p = card(id); let wx = 0, w = 0, wy = 0;
+  for (const z of FC.ZONES) {
+    const r = p.z[z];
+    const a = r.a.reduce((s, [x], i) => s + (ATT_V[x] || 0) * (i ? .7 : 1), 0);
+    const d = r.d.reduce((s, x, i) => s + (DEF_V[x] || 0) * (i ? .7 : 1), 0);
+    const v = ZDEPTH[z] === 2 ? a + .3 * d : ZDEPTH[z] === 0 ? d + .4 * a : a + d;
+    wx += ZDEPTH[z] * v; wy += ZSIDE[z] * v; w += v;
+  }
+  w = w || 1;
+  return (POS_CACHE[id] = { x: 13 + (wx / w) / 2 * 72, y: 50 + (wy / w) * 40 });
+}
+// Überlappende Spieler etwas auseinanderschieben (Feld 16:10, Plättchen ca. 15 % × 11 %)
+function spread(items){
+  const W = 15, H = 11;
+  for (let it = 0; it < 60; it++) {
+    let moved = false;
+    for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
+      const a = items[i], b = items[j], dx = b.x - a.x, dy = b.y - a.y;
+      const ox = W - Math.abs(dx), oy = H - Math.abs(dy);
+      if (ox > 0 && oy > 0) {
+        moved = true;
+        if (ox / W < oy / H) { const s = (dx >= 0 ? 1 : -1) * ox / 2; a.x -= s; b.x += s; }
+        else { const s = (dy >= 0 ? 1 : -1) * oy / 2; a.y -= s; b.y += s; }
+      }
+    }
+    items.forEach(o => { o.x = Math.max(9, Math.min(91, o.x)); o.y = Math.max(8, Math.min(92, o.y)); });
+    if (!moved) break;
+  }
+  return items;
+}
+// Innerhalb der eigenen Mannschaft auseinanderziehen: defensivster Spieler hinten, offensivster vorn, Seiten nach außen
+function formation(ids){
+  const pts = ids.map(id => Object.assign({ id }, posOf(id)));
+  if (!pts.length) return pts;
+  const xs = pts.map(o => o.x), x0 = Math.min(...xs), x1 = Math.max(...xs);
+  const dev = Math.max(6, ...pts.map(o => Math.abs(o.y - 50)));
+  pts.forEach(o => { o.x = x1 - x0 < 1 ? 50 : 16 + (o.x - x0) / (x1 - x0) * 68; o.y = 50 + (o.y - 50) / dev * 34; });
+  return pts;
+}
 function setupSeat(st){ return app.mode === 'local' ? FC.actor(st) : app.me; }
 function powerOf(id){ const c = card(id); return c.tempo + c.praesenz + c.assist + c.kopf + c.schuss; }
+function lineupToken(id, bench, extra){
+  const p = card(id);
+  return `<div class="ltok${bench ? ' bench' : ''}${extra || ''}" data-bench="${id}" data-prev="${id}" role="button" tabindex="0" title="${bench ? 'zurück aufs Feld' : 'auf die Ersatzbank'}">${shirt(p)}<span class="ln"><b>${esc(p.name)}</b><small>T${p.tempo} · P${p.praesenz} · K${p.kopf} · S${p.schuss}</small></span></div>`;
+}
 function setupHtml(st){
   const s = setupSeat(st);
   if (!s) return '<div class="empty">Gleich geht es los …</div>';
-  const t = st.teams[s], o = FC.other(s);
+  const t = st.teams[s], o = FC.other(s), nBench = FC.benchOf(st);
   if (st.ready[s]) {
-    return `<div class="panel setup"><h2 class="setup-h">${esc(t.name)} steht.</h2><div class="notice wait"><span class="thinking"></span>${esc(playerLabel(o))} stellt noch ${o==='A'?'die Heimmannschaft':'die Gastmannschaft'} auf …</div>
-      <div class="sgrid">${t.lineup.map((id,i)=>scard(id, false, i, 'done')).join('')}${t.bench.map((id,i)=>scard(id, true, i+10, 'done')).join('')}</div></div>`;
+    return `<div class="panel setup"><h2 class="setup-h">${esc(t.name)} steht.</h2><div class="notice wait"><span class="thinking"></span>${esc(playerLabel(o))} stellt noch ${o==='A'?'die Heimmannschaft':'die Gastmannschaft'} auf …</div></div>`;
   }
   const key = s + ':' + t.squad.join();
-  if (!app.setup || app.setup.key !== key) app.setup = { key, seat: s, bench: t.squad.slice(-(FC.SQUAD - FC.LINEUP)), name: '' };
+  if (!app.setup || app.setup.key !== key) app.setup = { key, seat: s, bench: nBench ? t.squad.slice(-nBench) : [], name: '' };
   const S = app.setup, fly = !app.revealed.has('fly-' + key); app.revealed.add('fly-' + key);
-  const nBench = FC.SQUAD - FC.LINEUP, ok = S.bench.length === nBench;
-  const who = app.mode === 'local' ? `<span class="label">${esc(playerLabel(s))} ist dran</span>` : '';
-  const sorted = t.squad.slice();
-  return `<div class="panel setup${fly?' flyin':''}">${who}<h2 class="setup-h">Dein Kader</h2>
-    <div class="muted">Die 13 Spieler deiner Mannschaft. Wähle 3 für die Ersatzbank: Antippen schiebt einen Spieler auf die Bank oder zurück. In der Halbzeit kannst du bis zu 3-mal wechseln.</div>
-    <div class="sgrid">${sorted.map((id,i)=>scard(id, S.bench.includes(id), i, fly ? 'fly' : '')).join('')}</div>
+  const ok = S.bench.length === nBench;
+  const who = app.mode === 'local' ? `<span class="label">${esc(playerLabel(s))} ist dran · ${esc(playerLabel(o))} schaut bitte weg</span>` : '';
+  const onPitch = spread(formation(t.squad.filter(id => !S.bench.includes(id))));
+  const tokens = onPitch.map((x, i) => `<div class="lpos${fly ? ' fly' : ''}" style="left:${x.x}%;top:${x.y}%;--i:${i}">${lineupToken(x.id, false)}</div>`).join('');
+  const benchHtml = nBench ? `<div class="lbench"><span class="label">Ersatzbank ${S.bench.length}/${nBench}</span>${S.bench.map(id => lineupToken(id, true)).join('') || '<span class="muted">Spieler auf dem Feld antippen, um ihn auf die Bank zu setzen.</span>'}</div>` : `<div class="lbench"><span class="muted">In diesem Modus gibt es keine Ersatzbank: Alle ${t.squad.length} Spieler spielen.</span></div>`;
+  return `<div class="panel setup">${who}<h2 class="setup-h">Deine Aufstellung</h2>
+    <div class="muted">So stehen deine Spieler auf ihren Lieblingspositionen, abgeleitet aus ihren Karten. ${nBench ? `Antippen setzt einen Spieler auf die Bank oder holt ihn zurück. ${nBench} ${nBench === 1 ? 'muss' : 'müssen'} auf die Bank.` : ''} Fahr mit der Maus über einen Spieler, um seine Karte zu sehen. Die Aufstellung des Gegners siehst du nicht.</div>
+    <div class="lwrap"><div class="rpitch lpitch"><div class="mk hline"></div><div class="mk hcircle"></div><div class="mk hbox l"></div><div class="mk hbox r"></div><div class="mk hsix l"></div><div class="mk hsix r"></div><div class="rgoal l"></div><div class="rgoal r"></div>
+      <div class="lside l">eigenes Tor</div><div class="lside r">Angriff →</div>${tokens}</div>
+      <div class="lprev" id="lprev"><div class="muted">Spieler antippen oder mit der Maus darüberfahren, um die Karte zu sehen.</div></div></div>
+    ${benchHtml}
     <div class="setup-foot"><label class="setup-name"><span class="label">Name deiner Mannschaft</span>
       <input type="text" id="teamName" maxlength="24" placeholder="${s==='A'?'z. B. FC Lila 04':'z. B. SV Weiß-Blau'}" value="${esc(S.name)}" autocomplete="off"></label>
-      <div class="setup-sum"><b>${FC.SQUAD - S.bench.length}</b> in der Startelf · <b>${S.bench.length}</b> auf der Bank</div>
+      <div class="setup-sum"><b>${t.squad.length - S.bench.length}</b> auf dem Feld · <b>${S.bench.length}</b> auf der Bank</div>
       <button class="btn primary" id="setupOk" data-enter ${ok?'':'disabled'}>Mannschaft bestätigen</button></div>
     ${ok?'':`<div class="muted">Bitte genau ${nBench} Spieler auf die Bank setzen.</div>`}</div>`;
 }
-function scard(id, bench, i, mode){
-  const p = card(id);
-  const tag = bench ? 'Ersatzbank' : 'Startelf';
-  const attrs = mode === 'done' ? '' : `data-bench="${id}" role="button" tabindex="0" title="${bench?'zurück in die Startelf':'auf die Ersatzbank'}"`;
-  return `<div class="scard${bench?' bench':''}${mode==='fly'?' fly':''}" style="--i:${i}" ${attrs}>
-    <div class="scard-top">${shirt(p)}<b>${esc(p.name)}</b></div>
-    <div class="scard-at"><span>Tempo <b>${p.tempo}</b></span><span>Präsenz <b>${p.praesenz}</b></span><span>Assist <b>${p.assist}</b></span><span>Kopfball <b>${p.kopf}</b></span><span>Schuss <b>${p.schuss}</b></span></div>
-    <div class="scard-tag">${tag}</div></div>`;
-}
 function bindSetup(){
   const S = app.setup;
+  const pv = $('#lprev');
+  document.querySelectorAll('[data-prev]').forEach(el => { el.onmouseenter = el.onfocus = () => { if (pv) pv.innerHTML = cardHtml(el.dataset.prev, {}); }; });
   document.querySelectorAll('[data-bench]').forEach(el => {
     const f = () => {
       const id = el.dataset.bench, i = S.bench.indexOf(id);
       if (i >= 0) S.bench.splice(i, 1);
-      else if (S.bench.length < FC.SQUAD - FC.LINEUP) S.bench.push(id);
+      else if (S.bench.length < FC.benchOf(app.st)) S.bench.push(id);
+      else if (!FC.benchOf(app.st)) return;
       else { S.bench.shift(); S.bench.push(id); }   // Bank voll: der zuerst Gesetzte rückt wieder auf
       render();
     };
@@ -2003,6 +2099,7 @@ function kaderCol(st, s, opts){
   if (sub) {
     if (sub.mine) {
       const pairs = sub.pairs.map((x, i) => `<button type="button" class="kpair" data-unsub="${i}" title="Wechsel zurücknehmen">⇄ <b>${esc(card(x[1]).name)}</b> kommt für ${esc(card(x[0]).name)} <span class="muted">×</span></button>`).join('');
+      if (!t.bench.length && !sub.pairs.length) h += `<div class="ksub"><div class="muted">Keine Ersatzspieler in diesem Modus, also keine Wechsel.</div><button class="btn primary" id="halfReady" data-enter>Bereit für die 2. Halbzeit</button></div>`; else
       h += `<div class="ksub"><div class="muted">${sub.out ? `Wer kommt für <b>${esc(card(sub.out).name)}</b>? Spieler auf der Bank antippen.` : sub.pairs.length >= FC.MAX_SUBS ? 'Alle 3 Wechsel vergeben.' : `Bis zu ${FC.MAX_SUBS} Wechsel: erst den Spieler antippen, der raus soll, dann den von der Bank.`}</div>${pairs}
         <button class="btn primary" id="halfReady" data-enter>Bereit für die 2. Halbzeit${sub.pairs.length ? ` (${sub.pairs.length} ${sub.pairs.length === 1 ? 'Wechsel' : 'Wechsel'})` : ''}</button></div>`;
     } else h += `<div class="ksub muted">${sub.ready ? '✓ bereit' : sub.waiting || '<span class="thinking"></span>überlegt noch …'}</div>`;
@@ -2055,15 +2152,69 @@ function bindHalf(){
 function draftHtml(st){
   const a = FC.actor(st);
   const mine = canAct(st);
-  const pool = st.pool.map(id=>cardHtml(id,{cls: mine?'pickable':'', attrs: mine?`role="button" tabindex="0" data-pick="${id}"`:''})).join('');
-  const cnt = s => st.teams[s].squad.length;
-  return `<div class="panel" style="margin-top:16px"><h2 style="font-size:24px">Draft</h2>
-   <div class="notice${mine?'':' wait'}">${mine?`<b>${esc(teamLabel(a))}</b>: Wähle einen Spieler.`:`${esc(teamLabel(a))} wählt …`} (${esc(teamLabel('A'))} ${cnt('A')}/${FC.SQUAD}, ${esc(teamLabel('B'))} ${cnt('B')}/${FC.SQUAD} · am Ende 10 im Spiel, 3 auf der Bank)</div>
-   ${musicNote()}
-   <div class="row">${['A','B'].map(s=>`<span class="label">${esc(teamLabel(s))}:</span> ${st.teams[s].squad.map(id=>shirt(card(id))).join(' ')}`).join(' &nbsp; ')}</div>
-   <div class="pool">${pool}</div></div>`;
+  const sq = FC.squadOf(st), bench = FC.benchOf(st), market = st.mode === 'market';
+  const reveal = market && st.lastReveal && !app.revealed.has('rv-' + st.seq) ? st.lastReveal : null;
+  if (reveal) app.revealed.add('rv-' + st.seq);
+  const pool = st.pool.map(id => `<div class="dcard${id === reveal ? ' reveal' : ''}" data-cid="${id}">${cardHtml(id, { cls: mine ? 'pickable' : '', attrs: mine ? `role="button" tabindex="0" data-pick="${id}"` : '' })}</div>`).join('');
+  const list = s => {
+    const t = st.teams[s];
+    return `<div class="dlist d${s}${a === s ? ' turn' : ''}"><div class="khead t${s === 'A' ? 'a' : 'b'}"><b>${esc(teamLabel(s))}</b><span>${t.squad.length}/${sq}</span></div>
+      <ol>${t.squad.map(id => { const p = card(id); return `<li data-cid="${id}">${shirt(p)}<span>${esc(p.name)}</span></li>`; }).join('')}</ol>
+      ${a === s ? `<div class="dturn">${mine ? 'Du bist dran' : 'wählt …'}</div>` : ''}</div>`;
+  };
+  const who = mine ? `<b>${app.mode === 'local' ? esc(teamLabel(a)) + ' ist dran' : 'Du bist dran'}</b>: Wähle einen Spieler.` : `<span class="thinking"></span>${esc(teamLabel(a))} wählt …`;
+  const stack = market ? `<div class="mstack"><div class="stack">${'<i></i>'.repeat(Math.min(4, (st.deck || []).length))}<b>${(st.deck || []).length}</b></div><span class="muted">verdeckt im Stapel · für jede gewählte Karte wird eine neue aufgedeckt</span></div>` : '';
+  return `<div class="draft">${list('A')}
+    <div class="panel dcenter"><h2 style="font-size:24px">${market ? 'Offener Markt' : 'Draft'}</h2>
+      <div class="notice${mine ? '' : ' wait'}">${who}</div>
+      <div class="muted" style="font-size:13px">${st.poolSize} Karten im Pool · ${sq} pro Mannschaft: 10 im Spiel${bench ? `, ${bench} auf der Bank` : ', keine Bank'} · die letzte Karte geht automatisch weg</div>
+      ${musicNote()}${stack}
+      <div class="pool">${pool}</div></div>
+    ${list('B')}</div>`;
 }
-
+// Gewählte Karte fliegt in die Leiste der Mannschaft; Stadionsprecher sagt den Spieler an
+function draftFx(old, next){
+  if (!old || old.phase !== 'draft') return null;
+  const picks = [];
+  for (const s of ['A', 'B']) for (const id of next.teams[s].squad) if (!old.teams[s].squad.includes(id)) picks.push({ s, id });
+  if (!picks.length) return null;
+  picks.forEach((x, i) => { setTimeout(() => announce(x.id), i * 2600); });
+  SFX.play('flip');
+  const from = {};
+  for (const x of picks) { const el = document.querySelector(`.pool [data-cid="${x.id}"]`); if (el) from[x.id] = el.getBoundingClientRect(); }
+  return () => {
+    if (reduceMotion()) return;
+    for (const x of picks) {
+      const r0 = from[x.id], li = document.querySelector(`.dlist [data-cid="${x.id}"]`);
+      if (!r0 || !li) continue;
+      const r1 = li.getBoundingClientRect();
+      const fly = document.createElement('div');
+      fly.className = 'flycard'; fly.innerHTML = cardHtml(x.id, {});
+      Object.assign(fly.style, { left: r0.left + 'px', top: r0.top + 'px', width: r0.width + 'px' });
+      document.body.appendChild(fly);
+      li.classList.add('arrive');
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const sc = Math.max(.12, r1.height / r0.height);
+        fly.style.transform = `translate(${r1.left - r0.left}px, ${r1.top - r0.top}px) scale(${sc})`;
+        fly.style.opacity = '.25';
+      }));
+      setTimeout(() => fly.remove(), 800);
+    }
+  };
+}
+// Stadionsprecher: eingebaute Sprachausgabe des Browsers (deutsche Stimme, wenn vorhanden)
+function announce(id){
+  if (!SFX.on() || !('speechSynthesis' in window)) return;
+  try {
+    const p = card(id);
+    const u = new SpeechSynthesisUtterance(`Mit der Nummer ${p.nr}: ${p.name}!`);
+    const v = speechSynthesis.getVoices().filter(x => /^de/i.test(x.lang));
+    u.voice = v.find(x => /male|mann|google|markus|yannick|stefan/i.test(x.name)) || v[0] || null;
+    u.lang = 'de-DE'; u.rate = .95; u.pitch = .9;
+    u.volume = Math.max(0, Math.min(1, SFX.vol('sfx') / 100));
+    speechSynthesis.speak(u);
+  } catch(e) { console.error(e); }
+}
 function bindGame(){
   document.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>act(JSON.parse(b.dataset.act)));
   document.querySelectorAll('[data-move]').forEach(b=>{ const f=()=>act({type:'move', zone:b.dataset.move}); b.onclick=f; b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();f();}}; });
@@ -2168,7 +2319,7 @@ function startLocal(mode, opts){
   if (app.botTimer) { clearTimeout(app.botTimer); app.botTimer = null; }
   app.mode = mode; app.lastOpts = opts;
   app.me = mode==='bot' ? 'A' : null;
-  app.st = FC.newGame({ mode: opts.draft ? 'draft' : 'random', names: {A:'Heim', B:'Gast'} });
+  app.st = FC.newGame(opts || gameOpts());
   render();
   if (mode==='bot') runBot();
 }
@@ -2188,10 +2339,10 @@ async function resolveNames(uids){
   if (!app.user || !app.user.profiles) return;
   try { const ps = await app.user.profiles(uids.filter(Boolean)); for (const id in ps) if (ps[id] && ps[id].name) app.names[id] = ps[id].name; } catch(e){}
 }
-async function createOnline(draft){
+async function createOnline(){
   if (!app.db || !app.uid) return;
   const code = newCode();
-  const state = FC.newGame({ mode: draft?'draft':'random', names:{A:'Heim',B:'Gast'} });
+  const state = FC.newGame(gameOpts());
   const ref = app.db.doc('games/'+code);
   try {
     await ref.set({ code, created: Date.now(), updated: Date.now(), seats:{A:app.uid, B:null}, uids:[app.uid], status:'lobby', state });
@@ -2253,18 +2404,17 @@ function p2pSetState(next){
   p2pSend({ t:'state', st: next, names: app.p2pNames, build: BUILD });
 }
 function p2pRestart(){
-  const draft = app.st && app.st.mode === 'draft';
-  p2pSetState(FC.newGame({ mode: draft?'draft':'random', names:{A:'Heim',B:'Gast'} }));
+  p2pSetState(FC.newGame(Object.assign({ names:{A:'Heim',B:'Gast'} }, (app.st && app.st.opts) || gameOpts())));
 }
 function p2pAvailable(){ return typeof window.Peer === 'function'; }
-function p2pHost(draft, resume){
+function p2pHost(resume){
   if (!p2pAvailable()) { app.lobbyMsg = 'Die Verbindungsbibliothek konnte nicht geladen werden. Bist du online?'; render(); return; }
   p2pClose();
   const saved = resume ? LS.get('fc3-host-game') : null;
   app.mode = 'p2p'; app.isHost = true; app.me = 'A';
   app.code = saved ? saved.code : newCode6();
   app.p2pNames = saved ? saved.names : { A: myName(), B: '' };
-  app.st = saved ? saved.st : FC.newGame({ mode: draft?'draft':'random', names:{A:'Heim',B:'Gast'} });
+  app.st = saved ? saved.st : FC.newGame(gameOpts());
   LS.set('fc3-host-game', { code: app.code, st: app.st, names: app.p2pNames, t: Date.now() });
   app.p2pStatus = 'Verbinde mit dem Vermittlungsserver …';
   render();
@@ -2354,18 +2504,16 @@ function lobbyHtml(){
   const p2pPanel = `<div class="panel mode"><h2>Online gegeneinander</h2>
       <div class="muted">Jeder spielt an seinem eigenen Gerät mit dieser Datei. Einer legt ein Spiel an, der andere gibt den Code ein. Beide brauchen Internet.</div>
       <div class="row"><input type="text" id="p2pName" maxlength="24" placeholder="Dein Name" aria-label="Dein Name" value="${esc(LS.get('fc-name')||'')}"></div>
-      <div class="row"><select id="onDraft" aria-label="Kader"><option value="0">Kader zufällig</option><option value="1">Kader per Draft</option></select>
-      <button class="btn primary" id="p2pCreate">Spiel anlegen</button></div>
+      <div class="row"><button class="btn primary" id="p2pCreate">Spiel anlegen</button><span class="muted" style="font-size:13px">mit dem Spielmodus oben</span></div>
       <div class="row"><input type="text" class="code" id="p2pCode" maxlength="5" placeholder="CODE" aria-label="Spielcode" value="${esc(LS.get('fc3-last-join')||'')}"><button class="btn" id="p2pJoin">Beitreten</button></div>
       ${saved && saved.st && saved.st.phase!=='over' ? `<button class="btn" id="p2pResume"><b>Eigenes Spiel ${esc(saved.code)} fortsetzen</b><small>${saved.st.goals.A}:${saved.st.goals.B} · ${saved.st.phase==='draft'?'Draft':saved.st.minute+'. Minute'}</small></button>`:''}
       ${app.lobbyMsg?`<div class="notice" style="border-left:4px solid var(--red)">${esc(app.lobbyMsg)}</div>`:''}
     </div>`;
-  if (P2P_BUILD) return `<div class="modes" style="margin-top:4px">${p2pPanel}${localPanels()}</div>`;
-  return `<div class="modes" style="margin-top:4px">
+  if (P2P_BUILD) return `<div class="modes" style="margin-top:4px">${settingsHtml()}${p2pPanel}${localPanels()}</div>${app.poolEdit ? poolEditorHtml() : ''}`;
+  return `<div class="modes" style="margin-top:4px">${settingsHtml()}
     <div class="panel mode"><h2>Online gegeneinander</h2>
       ${online ? `<div class="muted">Jeder spielt an seinem eigenen Gerät. Einer legt ein Spiel an, der andere tritt mit dem Code bei.</div>
-        <div class="row"><select id="onDraft" aria-label="Kader"><option value="0">Kader zufällig</option><option value="1">Kader per Draft</option></select>
-        <button class="btn primary" id="create">Spiel anlegen</button></div>
+        <div class="row"><button class="btn primary" id="create">Spiel anlegen</button></div>
         <div class="row"><input type="text" class="code" id="code" maxlength="4" placeholder="CODE" aria-label="Spielcode"><button class="btn" id="join">Beitreten</button></div>
         ${games.length?`<div class="label">Deine laufenden Spiele</div><div class="gamelist">${games.map(g=>`<button class="btn" data-open="${g.code}"><span><b>${g.code}</b> · ${g.state.goals.A}:${g.state.goals.B} · ${g.state.phase==='draft'?'Draft':g.state.minute+'. Min.'}</span><span class="muted">${g.seats.B?'läuft':'wartet auf Gegner'}</span></button>`).join('')}</div>`:''}`
       : `<div class="notice">Online-Spiel geht hier gerade nicht. Dafür musst du bei Claude angemeldet sein und die Seite muss für euch beide mit Bearbeitungsrechten geteilt sein.</div>`}
@@ -2373,11 +2521,70 @@ function lobbyHtml(){
     </div>${localPanels()}
   </div>`;
 }
+// ---------- Spieleinstellungen: Modus und Kartenpool (gilt für „anlegen“, „an einem Gerät“ und „gegen den Bot“) ----------
+const ALL_IDS = CARD_DATA.players.map(p => p.id);
+function settings(){
+  const s = Object.assign({ mode: 'draft', pool: 'all', count: 22, custom: ALL_IDS.slice() }, LS.get('fc3-settings') || {});
+  s.custom = (s.custom || []).filter(id => ALL_IDS.includes(id));
+  return s;
+}
+function saveSettings(s){ LS.set('fc3-settings', s); }
+function poolCount(s){ return s.pool === 'random' ? s.count : s.pool === 'custom' ? s.custom.length - (s.custom.length % 2) : ALL_IDS.length; }
+function settingsOk(s){ return poolCount(s) >= 2 * FC.LINEUP; }
+function gameOpts(){
+  const s = settings();
+  return { mode: s.mode, pool: s.pool === 'all' ? null : poolCount(s), poolIds: s.pool === 'custom' ? s.custom.slice() : null, names: { A: 'Heim', B: 'Gast' } };
+}
+function settingsHtml(){
+  const s = settings(), n = poolCount(s), per = n / 2, bench = Math.max(0, per - FC.LINEUP);
+  const opt = (v, cur, label) => `<option value="${v}"${v === cur ? ' selected' : ''}>${label}</option>`;
+  const evenOpts = []; for (let k = 2 * FC.LINEUP; k < ALL_IDS.length; k += 2) evenOpts.push(k);
+  const info = settingsOk(s)
+    ? `${n} Karten → ${per} pro Mannschaft: 10 im Spiel${bench ? `, ${bench} auf der Bank (Wechsel in der Halbzeit)` : ', keine Bank (keine Wechsel)'}.${s.pool === 'custom' && s.custom.length % 2 ? ' Eine angehakte Karte bleibt zufällig draußen (ungerade Anzahl).' : ''}`
+    : `Zu wenige Karten: Es braucht mindestens ${2 * FC.LINEUP} (10 pro Mannschaft). Bitte mehr Karten anhaken.`;
+  return `<div class="panel mode settings"><h2>Spielmodus</h2>
+    <div class="setgrid">
+      <label><span class="label">Kader</span><select id="setMode">${opt('draft', s.mode, 'Kompletter Draft (alle Karten offen)')}${opt('market', s.mode, 'Offener Markt (5 Karten offen, Nachschub vom Stapel)')}${opt('random', s.mode, 'Zufällig verteilt (kein Draft)')}</select></label>
+      <label><span class="label">Kartenpool</span><select id="setPool">${opt('all', s.pool, `Alle ${ALL_IDS.length} Karten`)}${opt('random', s.pool, 'Zufällige Auswahl')}${opt('custom', s.pool, 'Benutzerdefiniert (selbst abhaken)')}</select></label>
+      ${s.pool === 'random' ? `<label><span class="label">Anzahl</span><select id="setCount">${evenOpts.map(k => opt(String(k), String(s.count), `${k} Karten`)).join('')}</select></label>` : ''}
+      ${s.pool === 'custom' ? `<div><span class="label">Karten</span><button class="btn" id="setCustom">Karten auswählen (${s.custom.length} angehakt)</button></div>` : ''}
+    </div>
+    <div class="${settingsOk(s) ? 'muted' : 'notice vwarn'}" style="font-size:13.5px">${info} Online legt der Gastgeber die Einstellung fest.</div>
+  </div>`;
+}
+function poolEditorHtml(){
+  const s = settings(), on = new Set(s.custom);
+  const rows = CARD_DATA.players.slice().sort((a, b) => a.nr - b.nr).map(p => `<label class="pe-row${on.has(p.id) ? ' on' : ''}"><input type="checkbox" data-pe="${p.id}"${on.has(p.id) ? ' checked' : ''}>${shirt(p)}<b>${esc(p.name)}</b><span class="muted">T${p.tempo} · P${p.praesenz} · A${p.assist} · K${p.kopf} · S${p.schuss}</span></label>`).join('');
+  return `<div class="modal" id="peModal" role="dialog" aria-label="Karten auswählen"><div class="modalin pe">
+    <div class="row" style="justify-content:space-between"><h3 style="font-size:22px">Kartenpool auswählen</h3><b id="peCount">${s.custom.length} angehakt</b></div>
+    <div class="row"><button class="btn small" id="peAll">Alle</button><button class="btn small" id="peNone">Keine</button><span class="muted" style="font-size:13px">Mindestens ${2 * FC.LINEUP} Karten.</span></div>
+    <div class="pe-list">${rows}</div>
+    <button class="btn primary" id="peDone">Fertig</button></div></div>`;
+}
+function bindSettings(){
+  const s = settings();
+  const set = (k, v) => { const n = settings(); n[k] = v; saveSettings(n); render(); };
+  const m = $('#setMode'); if (m) m.onchange = () => set('mode', m.value);
+  const p = $('#setPool'); if (p) p.onchange = () => set('pool', p.value);
+  const c = $('#setCount'); if (c) c.onchange = () => set('count', +c.value);
+  const cu = $('#setCustom'); if (cu) cu.onclick = () => { app.poolEdit = true; render(); };
+  const close = () => { app.poolEdit = false; render(); };
+  const md = $('#peModal'); if (md) { md.onclick = e => { if (e.target === md) close(); }; md.onkeydown = e => { if (e.key === 'Escape') close(); }; }
+  const upd = ids => { const n = settings(); n.custom = ids; saveSettings(n); const el = $('#peCount'); if (el) el.textContent = ids.length + ' angehakt'; };
+  document.querySelectorAll('[data-pe]').forEach(cb => cb.onchange = () => {
+    const ids = [...document.querySelectorAll('[data-pe]:checked')].map(x => x.dataset.pe);
+    cb.closest('.pe-row').classList.toggle('on', cb.checked); upd(ids);
+  });
+  const all = $('#peAll'); if (all) all.onclick = () => { upd(ALL_IDS.slice()); render(); };
+  const none = $('#peNone'); if (none) none.onclick = () => { upd([]); render(); };
+  const done = $('#peDone'); if (done) { done.onclick = close; done.focus(); }
+  const ok = settingsOk(s);
+  ['#p2pCreate', '#local', '#bot', '#create'].forEach(sel => { const b = $(sel); if (b) b.disabled = !ok; });
+}
 function localPanels(){
   return `<div class="panel mode"><h2>Zu zweit an einem Gerät</h2>
       <div class="muted">Ihr gebt das Gerät hin und her. Bei der Torwartwahl schaut der Angreifer weg.</div>
-      <div class="row"><select id="locDraft" aria-label="Kader"><option value="0">Kader zufällig</option><option value="1">Kader per Draft</option></select>
-      <button class="btn primary" id="local">Spiel starten</button></div>
+      <div class="row"><button class="btn primary" id="local">Spiel starten</button></div>
     </div>
     <div class="panel mode"><h2>Gegen den Bot</h2>
       <div class="muted">Zum Regeln-Üben allein. Der Bot spielt einfach und etwas zufällig.</div>
@@ -2385,17 +2592,18 @@ function localPanels(){
     </div>`;
 }
 function bindLobby(){
-  const c = $('#create'); if (c) c.onclick = () => createOnline($('#onDraft').value==='1');
+  bindSettings();
+  const c = $('#create'); if (c) c.onclick = () => createOnline();
   const j = $('#join'); if (j) j.onclick = () => joinOnline($('#code').value);
   const ci = $('#code'); if (ci) ci.onkeydown = e => { if (e.key==='Enter') joinOnline(ci.value); };
   document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openOnline(b.dataset.open));
-  const pc = $('#p2pCreate'); if (pc) pc.onclick = () => { app.lobbyMsg=''; p2pHost($('#onDraft').value==='1', false); };
+  const pc = $('#p2pCreate'); if (pc) pc.onclick = () => { app.lobbyMsg=''; p2pHost(false); };
   const pj = $('#p2pJoin'); if (pj) pj.onclick = () => { app.lobbyMsg=''; p2pJoin($('#p2pCode').value); };
   const pci = $('#p2pCode'); if (pci) pci.onkeydown = e => { if (e.key==='Enter') { app.lobbyMsg=''; p2pJoin(pci.value); } };
-  const pr = $('#p2pResume'); if (pr) pr.onclick = () => { app.lobbyMsg=''; p2pHost(false, true); };
+  const pr = $('#p2pResume'); if (pr) pr.onclick = () => { app.lobbyMsg=''; p2pHost(true); };
   const pn = $('#p2pName'); if (pn) pn.onchange = () => myName();
-  $('#local').onclick = () => startLocal('local', {draft: $('#locDraft').value==='1'});
-  $('#bot').onclick = () => startLocal('bot', {draft:false});
+  $('#local').onclick = () => startLocal('local', gameOpts());
+  $('#bot').onclick = () => startLocal('bot', gameOpts());
 }
 
 // ---------- Start ----------
