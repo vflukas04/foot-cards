@@ -597,7 +597,7 @@ button.gv-ar:hover{background:var(--att);color:#fff}
       <li>Jede Mannschaft hat 13 der 26 Feldspieler (zufällig oder per Draft, Reihenfolge A-B-B-A …, es werden alle Karten verteilt) und einen der beiden Keeper (zufällig). <b>Neu in Version 3:</b> Nach dem Draft gibt sich jede Mannschaft einen Namen und setzt 3 Spieler auf die Ersatzbank, die anderen 10 bilden das Deck.</li>
       <li>Ein Spielzug: Beide ziehen ihre Karte. Der Verteidiger sieht seine Karte sofort und kann schon überlegen. Der Angreifer deckt auf und wählt seine Aktion (orange). Danach deckt der Verteidiger auf, sieht die Angriffsaktion und wählt in der gespiegelten Zone (blau). Die Option hinter „/“ kostet: Spieler erschöpfen oder Token (Angreifer rot, Verteidiger blau).</li>
       <li>Abwehr: Passabfangen schlägt Querpass, Rückpass, Steilpass, Flanke, Vorlage, Diagonalball und <b>neu in Version 3 auch „--“, aber keine grünen Pässe</b>. Tackling schlägt Dribbling und „--“. Block schlägt Schuss und Kopfball, Schuss blocken den Schuss und <b>neu in Version 3 auch „--“</b>. Ballgewinn schlägt alles außer grüne Aktionen. Ball sichern ist nicht zu erobern.</li>
-      <li>Steilpass: Spielt die Abwehr Passabfangen, ist der Ball weg. Sonst folgt im nächsten Zug ein Tempo-Duell: Beide decken ihre nächste Karte auf, es zählt nur deren Tempo (bei Gleichstand die Präsenz), die Aktionen entfallen. Gewinnt der Angreifer, kommt der Ball in der Zone davor an, sonst erobert die Abwehr ihn dort. Sprint: Tempo-Duell der Karten, die gerade gespielt werden, danach wie Dribbling.</li>
+      <li>Steilpass: Spielt die Abwehr Passabfangen (nicht gegen grüne Pässe), ist der Ball weg. Sonst folgt im nächsten Zug sofort ein Tempo-Duell: Beide decken ihre nächste Karte auf, es zählt das Tempo (bei Gleichstand die Präsenz). Gewinnt die Abwehr, erobert sie den Ball in der Zielzone. Gleichstand: Ball bleibt, ohne Bewegung. <b>Neu in Version 3:</b> Gewinnt der Angreifer, kommt der Ball in der Zone davor an, und <b>dieselbe Karte macht sofort ihre Aktion</b> (keine neue Karte). <b>Testregel „Abwehr überlaufen“</b> (im Spielmodus umschaltbar): Die Abwehr kann nur eingreifen, wenn sie bezahlt, Option vor „/“ Erschöpfen oder blauer Token, Option hinter „/“ beides; sonst gelingt die Aktion (eigene Fehler wie Fehlpass ausgenommen). Sprint: Tempo-Duell der Karten, die gerade gespielt werden, danach wie Dribbling.</li>
       <li>„--“ gegen „--“: Der Ball ist frei. Im nächsten Zug decken beide sofort eine neue Karte auf, es zählt deren Präsenz (bei Gleichstand das Tempo, ist auch das gleich, bleibt der Ballführende am Ball). <b>Neu in Version 3:</b> Der Gewinner spielt mit seiner Karte ganz normal den Angriff, auch wenn es vorher die Abwehr war, und sieht dabei schon die Karte des Verlierers. Der Verlierer reagiert mit seiner Abwehraktion. Erst danach ist der Zug vorbei. Für Halbzeit und Abpfiff zählt ein Ballbesitzwechsel, wenn der Ball am Ende des Zuges bei der anderen Mannschaft ist als vor dem Duell.</li>
       <li>Vorlage: Kommt sie an, schießt im nächsten Zug die nächste Karte des Angreifers direkt (Schusswert plus Assist des Vorlagengebers). Die Abwehr deckt dabei keine Karte auf.</li>
       <li>Gelbe Karte: Foul, der Angreifer bleibt am Ball, seine Aktion wird nicht ausgeführt. Zweite Gelbe: Der Spieler ist raus. „Gelb OOO“ bringt alle drei Token. Fehlpass: Ball sofort weg.</li>
@@ -692,7 +692,7 @@ function cardHtml(id, o){
     return `<div class="cc ${zn}${hl}${dc?' decide decide-'+(o.decide.role==='att'?'a':'d'):''}"><div>${ar}</div><div>${dr}</div></div>`;
   }).join('');
   return `<div class="pcard${exh?' exh':''}${o.cls?' '+o.cls:''}" ${o.attrs||''}>
-    <div class="head"><div><div class="pname">${esc(p.name)}</div><div class="muted" style="font-size:12px">${yel?yel+'× Gelb':''}${exh?(yel?' · ':'')+'erschöpft':''}</div></div>${o.shirtPay?`<button type="button" class="shirtpay" data-pay="exhaust" title="Bezahlen: Spieler erschöpfen (Trikot drehen)" aria-label="Bezahlen: Spieler erschöpfen">${shirt(p, exh)}</button>`:shirt(p, exh)}</div>
+    <div class="head"><div><div class="pname">${esc(p.name)}</div><div class="muted" style="font-size:12px">${yel?yel+'× Gelb':''}${exh?(yel?' · ':'')+'erschöpft':''}</div></div>${o.shirtPay?`<button type="button" class="shirtpay" data-pay="${o.shirtPay === 'both' ? 'both' : 'exhaust'}" title="Bezahlen: Spieler erschöpfen (Trikot drehen)" aria-label="Bezahlen: Spieler erschöpfen">${shirt(p, exh)}</button>`:shirt(p, exh)}</div>
     <div class="attrs"><span title="Tempo">Tempo <b>${p.tempo}</b></span><span title="Präsenz">Präsenz <b>${p.praesenz}</b></span><span title="Assist">Assist <b>${p.assist}</b></span><span title="Kopfball">Kopfball <b>${p.kopf}</b></span><span class="sw" title="Schusswert">Schuss <b>${p.schuss}</b></span></div>
     <div class="cgrid">${cells}</div></div>`;
 }
@@ -729,7 +729,7 @@ function ballTeam(st){
     const poss = rp.step >= 2 ? p.possEnd : p.possStart;
     return poss === 'A' ? 'a' : 'b';
   }
-  if (st.cur && st.cur.through && ['att','def'].includes(st.phase)) return 'n';
+  if (st.cur && st.cur.through && !st.cur.chase && ['att','def'].includes(st.phase)) return 'n';
   return st.poss === 'A' ? 'a' : 'b';
 }
 function pitchHtml(st){
@@ -788,7 +788,7 @@ const DEF_VERB = {
   'Tackling':['grätscht','tackle'], 'Ballgewinn':['geht auf den Ball','star'], 'Passabfangen':['lauert auf den Pass','catch'],
   'Block':['blockt','shield'], 'Schuss blocken':['wirft sich in den Schuss','shield'], 'Kopfball blocken':['blockt den Kopfball','shield'],
   'Gelb':['foult','card'], 'Gelbe Karte':['foult','card'], 'Hinterherlaufen':['läuft hinterher','sprint'], 'Kopfballduell':['steigt hoch','head'],
-  'Präsenz-Duell':['hält dagegen','shield'],
+  'Präsenz-Duell':['hält dagegen','shield'], 'keine Abwehr':['ist überlaufen','none'],
 };
 function verb(map, action, role){
   if (!action || /^--/.test(action)) return ['–', 'none'];
@@ -827,7 +827,7 @@ function bubblesHtml(st, az){
       const seat = k === 'change' || k === 'save' || k === 'miss' ? p.possEnd : p.possStart;
       const ic = { goal:'star', change:'star', save:'glove', miss:'lost', yellow:'card', red:'card', ok:'ok', keep:'none' }[k] || 'ok';
       const pseat = pres ? (pres.win === 'def' ? ds : as) : seat;
-      h += pres ? bub(`rb-${p.turn}-o`, pseat, esc(outText(p)), 'star', [50, 50], 'out long o-ok')
+      h += pres || p.moment ? bub(`rb-${p.turn}-o`, pseat, esc(outText(p)), 'star', [50, 50], 'out long o-ok')
                 : bub(`rb-${p.turn}-o`, seat, esc(p.out.t), ic, [50, 50], 'out o-' + k);
     }
     return `<div class="fx">${h}</div>`;
@@ -1326,10 +1326,17 @@ function outText(p){ return isPresence(p) ? presenceText(p.out.duel, p.att && p.
 // wer gewonnen hat, spielen wir vorher einen eigenen kurzen Moment ab (wie eine Auflösung).
 function presenceMoment(st){
   const c = st && st.cur;
-  if (!c || !c.presence || !c.duel || st.phase !== 'att' || app.replay) return false;
+  if (!c || !c.duel || !(c.presence || c.chase) || st.phase !== 'att' || app.replay) return false;
   const key = 'pm-' + c.turn;
   if (app.revealed.has(key)) return false;
   app.revealed.add(key);
+  if (c.chase) {
+    const A = card(c.att.id).name, D = c.def && c.def.id ? card(c.def.id).name : 'die Abwehr';
+    startReplay({ turn: c.turn, minute: c.minute, possStart: st.poss, possEnd: st.poss, ballStart: c.ballStart, ballEnd: st.ball,
+      att: { id: c.att.id, action: 'Steilpass-Lauf' }, def: c.def ? { id: c.def.id, action: 'Hinterherlaufen' } : null,
+      out: { k: 'ok', t: `${A} ist schneller als ${D} – der Steilpass kommt an!`, duel: c.duel }, shot: null, whistle: null, moment: true, half: st.half });
+    return true;
+  }
   startReplay({ turn: c.turn, minute: c.minute, possStart: st.poss, possEnd: st.poss, ballStart: st.ball, ballEnd: st.ball,
     att: { id: c.att.id, action: 'Präsenz-Duell' }, def: { id: c.def.id, action: 'Präsenz-Duell' },
     out: { k: 'presence', t: 'Präsenz-Duell gewonnen', duel: c.duel }, shot: null, whistle: null, moment: true, half: st.half });
@@ -1437,7 +1444,7 @@ function slotHtml(st, role, src, seat, turn, opts){
   if (opts.hideFace) body = cardBack('');
   else if (dealing) { app.revealed.add(key); body = `<div class="deal" style="--dd:${dd}s"><div class="dealback">${cardBack('')}</div><div class="dealfront">${cardHtml(c.id, co)}</div></div>`; }
   else body = revealCard(key, cardHtml(c.id, co));
-  const foot = dec ? `<div class="hintline" id="hint-${seat}" data-def="${esc(dec.def)}">${dec.def}</div>` : (actionLine(c, role) || '');
+  const foot = dec ? `<div class="hintline" id="hint-${seat}" data-def="${esc(dec.def)}">${dec.def}</div>${dec.nodef ? `<button class="btn" data-act='{"type":"nodef"}' data-key="9">Nicht verteidigen<small>kostet nichts, der Angriff gelingt</small></button>` : ''}` : (actionLine(c, role) || '');
   return `<div class="slot">${head}${body}${opts.hideFace?'':foot}</div>`;
 }
 function stepsHtml(active){
@@ -1517,19 +1524,22 @@ function scheduleAuto(st){
   if (autoTimer && autoSt === st) return;
   clearTimeout(autoTimer);
   autoSt = st;
-  const special = st.cur && (st.cur.header || st.cur.through || st.cur.volley || st.cur.presence);
+  const sp = st.cur && (special(st.cur) || st.cur.presence);
   autoTimer = setTimeout(() => {
     autoTimer = null;
     if (app.st !== autoSt) return;
     const f2 = forcedAct(app.st);
     if (f2) act(f2);
-  }, (special ? 2300 : 1700) * SPEEDS[speed()]);
+  }, (sp ? 2300 : 1700) * SPEEDS[speed()]);
 }
+// Sondersituation, in der die Karten nur verglichen werden (nach gewonnenem Tempo-Duell spielt man wieder normal)
+const special = c => !!(c && (c.header || (c.through && !c.chase) || c.volley));
+const chasePay = st => !!(st.cur && st.cur.chase && (!st.opts || st.opts.chaseRule !== 'free'));
 function choiceLabel(st, ph, x){
   const c = st.cur, side = c[ph];
   if (!side.id) return { a: 'Keine Karte mehr', g: 0 };
   if (c.volley) return { a: 'Direktschuss', g: 0 };
-  if (c.through) return { a: ph==='att' ? 'Dem Steilpass hinterherlaufen' : 'Hinterherlaufen', g: 0 };
+  if (c.through && !c.chase) return { a: ph==='att' ? 'Dem Steilpass hinterherlaufen' : 'Hinterherlaufen', g: 0 };
   if (c.header) return { a: ph==='att' ? 'Kopfball' : 'Zum Kopfball hochspringen', g: 0 };
   return FC.zoneRow(side.id, side.zone, ph).opts[x.opt];
 }
@@ -1591,6 +1601,11 @@ function situationHtml(st){
     const vs = `<div class="sit-vs"><div class="sit-s a"><small>Schütze · ${esc(sh?sh.name:'keine Karte')}</small><b>${pts==null?'–':pts}</b><span class="tb">Schuss ${sh?sh.schuss:'–'}${as?` + Assist ${as.assist} (${esc(as.name)})`:''}</span></div><div class="sit-x">→</div><div class="sit-s d"><small>Keeper · ${esc(gk.name)}</small><b>${gk.fields.join('·')}</b><span class="tb">Felder links · Mitte · rechts</span></div></div>`;
     return sitHtml('Direktschuss', 'nach Vorlage', vs, 'Die nächste Karte schießt direkt. Die Abwehr deckt keine Karte auf.', 'Kommt eine Vorlage an, schießt im nächsten Zug die nächste Karte des Angreifers direkt aufs Tor: Schusswert plus Assist des Vorlagengebers. Danach werden die Punkte wie bei jedem Torschuss auf die Keeperfelder verteilt.');
   }
+  if (c.through && c.chase && c.duel) {
+    return sitHtml('Steilpass kommt an', `Tempo-Duell gewonnen · Zone ${st.ball}`, vsHtml(c.duel, a&&a.id, d&&d.id, attS, defS),
+      chasePay(st) ? 'Der Angreifer macht jetzt seine Aktion. Die Abwehr ist überlaufen und kann nur gegen Kosten eingreifen.' : 'Der Angreifer macht jetzt seine Aktion, danach wählt die Abwehr ganz normal.',
+      'Gewinnt der Ballführende das Tempo-Duell nach einem Steilpass, kommt der Ball an und dieselbe Karte macht sofort ihre Aktion, es wird keine neue Karte gezogen. Testregel „Abwehr überlaufen“: Die Abwehr kann nur eingreifen, wenn sie bezahlt (Option vor „/“: Erschöpfen oder blauer Token, Option hinter „/“: beides). Im Spielmodus lässt sich stattdessen „Abwehr normal“ einstellen.');
+  }
   if (c.through) {
     return sitHtml('Tempo-Duell', `nach Steilpass in ${c.through.to}`, vsHtml(preview('Tempo','Präsenz'), a&&a.id, d&&d.id, attS, defS),
       'Nur das Tempo zählt, bei Gleichstand die Präsenz.',
@@ -1645,43 +1660,47 @@ function buildDecide(st, role, side, seat, D){
   const opts = row.opts.map((o, i) => {
     const ex = acts.some(x => x.type === 'choose' && x.opt === i && x.pay === 'exhaust');
     const tk = acts.some(x => x.type === 'choose' && x.opt === i && x.pay === 'token');
-    const can = i === 0 || ex || tk;
-    let hint = `<b>${esc(o.a)}</b>${o.g ? ' (grün)' : ''} · ${i === 0 ? 'kostenlos' : can ? 'kostet: ' + [ex ? 'Spieler erschöpfen' : '', tk ? tokName + ' Token' : ''].filter(Boolean).join(' oder ') : 'geht nicht: Spieler schon erschöpft und kein ' + tokName + ' Token'}`;
+    const bo = acts.some(x => x.type === 'choose' && x.opt === i && x.pay === 'both');
+    const free = acts.some(x => x.type === 'choose' && x.opt === i && !x.pay);
+    const can = free || ex || tk || bo;
+    let hint = `<b>${esc(o.a)}</b>${o.g ? ' (grün)' : ''} · ${free ? 'kostenlos' : bo ? 'kostet: Spieler erschöpfen <b>und</b> blauen Token' : can ? 'kostet: ' + [ex ? 'Spieler erschöpfen' : '', tk ? tokName + ' Token' : ''].filter(Boolean).join(' oder ') : chasePay(st) ? (i ? 'geht nicht: braucht Erschöpfen und blauen Token' : 'geht nicht: Spieler schon erschöpft und kein blauer Token') : 'geht nicht: Spieler schon erschöpft und kein ' + tokName + ' Token'}`;
     if (o.tok) hint += ' · bringt Token ' + o.tok.split('').map(k => ({ R: 'rot', G: 'grün', B: 'blau' })[k]).join(', ');
     if (role === 'att') hint += ' · ' + stopHint(o.a, o.g, defOpen).replace(/<[^>]+>/g, '');
     else if (FC.DEF_BEATS(o.a, st.cur.att.action, st.cur.att.green)) hint += ' · <b>stoppt den Angriff</b>';
-    return { o, i, ex, tk, can, hint };
+    return { o, i, ex, tk, bo, free, can, hint };
   });
   const cls = role === 'def' ? 'rd' : 'ra';
-  const html = `<span class="${cls}">${opts.map(x => `<button type="button" class="opt ${x.i===0?'free':'paid'}${sel===x.i?' sel':''}${x.o.g?' g':''}${(x.o.a==='Fehlpass'||x.o.a==='Ballverlust')?' bad':''}" data-opt="${x.i}" data-seat="${seat}" data-key="${x.i+1}" data-hint="${esc(x.hint)}"${x.can?'':' disabled'}>${esc(x.o.a)}</button>${dots(x.o.tok)}`).join(' / ')}</span>`;
+  const html = `<span class="${cls}">${opts.map(x => `<button type="button" class="opt ${x.free?'free':'paid'}${sel===x.i?' sel':''}${x.o.g?' g':''}${(x.o.a==='Fehlpass'||x.o.a==='Ballverlust')?' bad':''}" data-opt="${x.i}"${x.free ? ' data-free="1"' : ''} data-seat="${seat}" data-key="${x.i+1}" data-hint="${esc(x.hint)}"${x.can?'':' disabled'}>${esc(x.o.a)}</button>${dots(x.o.tok)}`).join(' / ')}</span>`;
   const sx = sel != null ? opts[sel] : null;
   let def;
-  if (sx) def = `<b>${esc(sx.o.a)}</b> gewählt. Jetzt bezahlen: ${[sx.ex ? 'aufs <b>Trikot</b> klicken (Spieler erschöpft)' : '', sx.tk ? `den <b>${tokName} Token</b> über der Karte anklicken` : ''].filter(Boolean).join(' oder ')}. Nochmal auf die Option klicken bricht ab.`;
+  if (sx && sx.bo) def = `<b>${esc(sx.o.a)}</b> gewählt. Jetzt bezahlen: aufs <b>Trikot</b> oder den <b>blauen Token</b> klicken, bezahlt wird beides (Spieler erschöpft und blauer Token). Nochmal auf die Option klicken bricht ab.`;
+  else if (sx) def = `<b>${esc(sx.o.a)}</b> gewählt. Jetzt bezahlen: ${[sx.ex ? 'aufs <b>Trikot</b> klicken (Spieler erschöpft)' : '', sx.tk ? `den <b>${tokName} Token</b> über der Karte anklicken` : ''].filter(Boolean).join(' oder ')}. Nochmal auf die Option klicken bricht ab.`;
+  else if (role === 'def' && chasePay(st)) def = `<b>Überlaufen!</b> Der Angriff spielt <b class="ra">${esc(st.cur.att.action)}</b>${st.cur.att.green?' (grün)':''}. Eingreifen kostet: Option vor „/“ Erschöpfen <b>oder</b> blauer Token, Option hinter „/“ <b>beides</b>. Oder unten „Nicht verteidigen“.`;
   else {
     def = role === 'def' ? `Der Angriff spielt <b class="ra">${esc(st.cur.att.action)}</b>${st.cur.att.green?' (grün)':''}. ` : (defOpen ? 'Du siehst die Abwehrkarte schon. ' : '');
     def += row.opts.length > 1 ? 'Klicke im leuchtenden Feld auf deine Aktion. Die Option hinter „/“ kostet etwas.' : 'Klicke im leuchtenden Feld auf deine Aktion oder setze einen Token ein.';
     def += ' <span class="muted">Maus drüber zeigt Details.</span>';
   }
-  return { html, def, shirtPay: !!(sx && sx.ex), tokPay: !!(sx && sx.tk), n: opts.length };
+  return { html, def, shirtPay: sx && sx.bo ? 'both' : !!(sx && sx.ex), tokPay: !!(sx && (sx.tk || sx.bo)), payBoth: !!(sx && sx.bo), nodef: acts.some(x => x.type === 'nodef'), n: opts.length };
 }
 const TASK = { att:'Wähle deine Angriffsaktion im leuchtenden Feld deiner Karte.', def:'Wähle deine Abwehraktion im leuchtenden Feld deiner Karte.', move:'Wähle eine leuchtende Zone auf dem Spielfeld.', dist:'Verteile die Schusspunkte am Tor in der Mitte.', gk:'Wähle am Tor in der Mitte, wohin dein Keeper springt.', shot:'Wähle am Tor in der Mitte die Ecke für deinen Schuss.', def_pick2:'Klicke die Karte an, die du behältst.' };
 const WAIT = { def:'deckt auf und wählt die Abwehraktion', att:'wählt die Angriffsaktion', move:'wählt, wohin der Ball geht', dist:'verteilt die Schusspunkte', gk:'wählt verdeckt die Ecke für den Keeper', shot:'wählt die Ecke für den Schuss', def_pick2:'wählt einen von zwei Verteidigern' };
 function statusHtml(st, s, D){
   if (app.replay || st.phase === 'over') return '';
   const actor = FC.actor(st);
-  const special = st.cur && (st.cur.header || st.cur.through || st.cur.volley);
+  const isSp = special(st.cur);
   if (s !== actor) {
-    if (app.mode !== 'local' && s === app.me && st.phase === 'att' && st.cur.def && st.cur.def.id && !special) return `<div class="turn">Deine Abwehrkarte liegt bereit. Überleg dir schon deine Antwort.</div>`;
+    if (app.mode !== 'local' && s === app.me && st.phase === 'att' && st.cur.def && st.cur.def.id && !isSp) return `<div class="turn">Deine Abwehrkarte liegt bereit. Überleg dir schon deine Antwort.</div>`;
     return '';
   }
   const who = esc(teamLabel(s));
   if (D && D.seat === s && D.forced) {
     const f = D.forced;
-    const label = f.type === 'choose' ? choiceLabel(st, st.phase, f).a : f.type === 'dist' ? 'Keine Punkte zu verteilen' : 'Weiter';
+    const label = f.type === 'choose' ? choiceLabel(st, st.phase, f).a : f.type === 'nodef' ? 'Nicht verteidigen (keine Kosten bezahlbar)' : f.type === 'dist' ? 'Keine Punkte zu verteilen' : 'Weiter';
     return `<div class="turn auto"><span class="thinking"></span>${app.mode==='local'?`<b>${who}:</b> `:''}Nur eine Möglichkeit: <b>${esc(label)}</b> · geht automatisch weiter</div>`;
   }
   if (D && D.seat === s) return `<div class="turn me"><b>${app.mode === 'local' ? who + ' ist dran' : 'Du bist dran'}</b><span>${TASK[st.phase] || ''}</span></div>`;
-  return `<div class="turn"><span class="thinking"></span>${who} ${special && ['att','def'].includes(st.phase) ? 'deckt auf …' : (WAIT[st.phase] || 'ist dran') + ' …'}</div>`;
+  return `<div class="turn"><span class="thinking"></span>${who} ${isSp && ['att','def'].includes(st.phase) ? 'deckt auf …' : (WAIT[st.phase] || 'ist dran') + ' …'}</div>`;
 }
 function tokenRow(st, s, D, dec){
   const t = st.teams[s];
@@ -1693,7 +1712,7 @@ function tokenRow(st, s, D, dec){
     const has = t.tok[k];
     let attrs = '', cls = '', title = NAME[k] + ' Token' + (has ? '' : ' (nicht vorhanden)');
     if (mine && has) {
-      if (dec && dec.tokPay && ((D.phase === 'att' && k === 'R') || (D.phase === 'def' && k === 'B'))) { attrs = 'data-pay="token"'; cls = ' use'; title += ': damit bezahlen'; hints.push(`${k==='R'?'Rot':'Blau'}: bezahlen`); }
+      if (dec && dec.tokPay && ((D.phase === 'att' && k === 'R') || (D.phase === 'def' && k === 'B'))) { attrs = `data-pay="${dec.payBoth ? 'both' : 'token'}"`; cls = ' use'; title += ': damit bezahlen'; hints.push(`${k==='R'?'Rot':'Blau'}: bezahlen`); }
       else if (k === 'B' && D.acts.some(x => x.type === 'blue2') && !(dec && dec.tokPay)) { attrs = `data-tokact="blue2" data-key="${key++}"`; cls = ' use'; title += ': zweiten Verteidiger ziehen'; hints.push('Blau: zweiter Verteidiger'); }
       else if (k === 'G' && D.acts.some(x => x.type === 'green')) { attrs = `data-tokact="green" data-key="${key++}"`; cls = ' use'; title += ': Spieler wieder frisch machen'; hints.push('Grün: Spieler auffrischen'); }
       else if (k === 'R' && D.phase === 'dist' && D.acts.some(x => x.boost)) { attrs = 'data-tokact="boost"'; cls = ' use' + (app.dist && app.dist.boost ? ' sel' : ''); title += ': +1 Schusspunkt'; hints.push(app.dist && app.dist.boost ? 'Rot: +1 eingesetzt' : 'Rot: +1 Schusspunkt'); }
@@ -1845,9 +1864,9 @@ function sideHtml(st, s, D){
   const shuffling = !rp && app.shuffle[s] && !reduceMotion();
   if (shuffling) { app.shuffle[s] = false; SFX.play('shuffle'); }
   const mine = D && !D.forced && D.seat === s;
-  const special = st.cur && (st.cur.header || st.cur.through || st.cur.volley);
+  const isSp = special(st.cur);
   const side = !rp && st.cur && role ? st.cur[role] : null;
-  const dec = mine && !rp && D.phase === role && side && side.id && !special ? buildDecide(st, role, side, s, D) : null;
+  const dec = mine && !rp && D.phase === role && side && side.id && !isSp ? buildDecide(st, role, side, s, D) : null;
   const head = `<div class="sidehead"><div class="sidename"><span class="tdot t${s==='A'?'a':'b'}"></span><b>${esc(teamLabel(s))}</b>${role?`<span class="roletag ${role==='att'?'a':'d'}">${role==='att'?'im Angriff':'in der Abwehr'}</span>`:''}</div>
     <div class="stack${shuffling?' shuffle':''}" aria-label="Nachziehstapel: ${t.pile.length} Karten" title="${t.pile.length} im Stapel">${'<i></i>'.repeat(4)}<b>${t.pile.length}</b></div></div>
     ${shuffling?'<div class="muted shufnote">Stapel leer – wird neu gemischt …</div>':''}${statusHtml(st, s, D)}${st.phase!=='over'?tokenRow(st, s, D, dec):''}`;
@@ -2231,7 +2250,7 @@ function bindDecide(){
   document.querySelectorAll('[data-opt]').forEach(b => {
     b.onclick = () => {
       const i = +b.dataset.opt, st = app.st;
-      if (i === 0) { app.sel = null; act({ type: 'choose', opt: 0 }); return; }
+      if (b.dataset.free) { app.sel = null; act({ type: 'choose', opt: i }); return; }
       app.sel = app.sel && app.sel.st === st && app.sel.opt === i ? null : { st, opt: i };
       render();
     };
@@ -2533,7 +2552,7 @@ function poolCount(s){ return s.pool === 'random' ? s.count : s.pool === 'custom
 function settingsOk(s){ return poolCount(s) >= 2 * FC.LINEUP; }
 function gameOpts(){
   const s = settings();
-  return { mode: s.mode, pool: s.pool === 'all' ? null : poolCount(s), poolIds: s.pool === 'custom' ? s.custom.slice() : null, names: { A: 'Heim', B: 'Gast' } };
+  return { mode: s.mode, pool: s.pool === 'all' ? null : poolCount(s), poolIds: s.pool === 'custom' ? s.custom.slice() : null, chaseRule: s.chase === 'free' ? 'free' : 'pay', names: { A: 'Heim', B: 'Gast' } };
 }
 function settingsHtml(){
   const s = settings(), n = poolCount(s), per = n / 2, bench = Math.max(0, per - FC.LINEUP);
@@ -2547,6 +2566,7 @@ function settingsHtml(){
       <label><span class="label">Kader</span><select id="setMode">${opt('draft', s.mode, 'Kompletter Draft (alle Karten offen)')}${opt('market', s.mode, 'Offener Markt (5 Karten offen, Nachschub vom Stapel)')}${opt('random', s.mode, 'Zufällig verteilt (kein Draft)')}</select></label>
       <label><span class="label">Kartenpool</span><select id="setPool">${opt('all', s.pool, `Alle ${ALL_IDS.length} Karten`)}${opt('random', s.pool, 'Zufällige Auswahl')}${opt('custom', s.pool, 'Benutzerdefiniert (selbst abhaken)')}</select></label>
       ${s.pool === 'random' ? `<label><span class="label">Anzahl</span><select id="setCount">${evenOpts.map(k => opt(String(k), String(s.count), `${k} Karten`)).join('')}</select></label>` : ''}
+      <label><span class="label">Nach Steilpass, Tempo-Duell verloren (Test)</span><select id="setChase">${opt('pay', s.chase || 'pay', 'Abwehr überlaufen: Eingreifen nur gegen Kosten')}${opt('free', s.chase || 'pay', 'Abwehr normal')}</select></label>
       ${s.pool === 'custom' ? `<div><span class="label">Karten</span><button class="btn" id="setCustom">Karten auswählen (${s.custom.length} angehakt)</button></div>` : ''}
     </div>
     <div class="${settingsOk(s) ? 'muted' : 'notice vwarn'}" style="font-size:13.5px">${info} Online legt der Gastgeber die Einstellung fest.</div>
@@ -2567,6 +2587,7 @@ function bindSettings(){
   const m = $('#setMode'); if (m) m.onchange = () => set('mode', m.value);
   const p = $('#setPool'); if (p) p.onchange = () => set('pool', p.value);
   const c = $('#setCount'); if (c) c.onchange = () => set('count', +c.value);
+  const ch = $('#setChase'); if (ch) ch.onchange = () => set('chase', ch.value);
   const cu = $('#setCustom'); if (cu) cu.onclick = () => { app.poolEdit = true; render(); };
   const close = () => { app.poolEdit = false; render(); };
   const md = $('#peModal'); if (md) { md.onclick = e => { if (e.target === md) close(); }; md.onkeydown = e => { if (e.key === 'Escape') close(); }; }

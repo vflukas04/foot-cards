@@ -77,7 +77,7 @@
     const all = shuffle(custom && custom.length >= 2 * LINEUP ? custom : ids);
     const want = Math.max(2 * LINEUP, Math.min(all.length, opts.pool || all.length));
     const pool = all.slice(0, want - (want % 2));
-    st.opts = { mode: st.mode, pool: opts.pool || null, poolIds: custom && custom.length >= 2 * LINEUP ? custom : null };
+    st.opts = { mode: st.mode, pool: opts.pool || null, poolIds: custom && custom.length >= 2 * LINEUP ? custom : null, chaseRule: opts.chaseRule === 'free' ? 'free' : 'pay' };
     st.poolSize = pool.length; st.squadSize = pool.length / 2;
     const order = [];
     for (let i = 0; i < st.squadSize; i++) order.push(...(i % 2 === 0 ? ['A', 'B'] : ['B', 'A']));
@@ -139,6 +139,25 @@
       const did = draw(st, defS);
       st.cur.def = { id: did, alt: null, opt: null, pay: null, fresh: false, zone: MIRROR[st.ball], open: !!st.cur.presence };
     }
+    // Tempo-Duell nach Steilpass: wird sofort entschieden. Gewinnt der Angreifer, kommt der Ball an und
+    // dieselbe Karte macht ihre Aktion (keine neue Karte). Die Abwehr ist überlaufen (siehe chaseRule).
+    if (st.cur.through) {
+      const c = st.cur, to = c.through.to, defS = other(att), did = c.def && c.def.id;
+      st.through = null;
+      c.att.action = 'Steilpass-Lauf'; if (c.def) c.def.action = 'Hinterherlaufen';
+      if (!id) { st.ball = to; return change(st, 'Steilpass abgelaufen'); }
+      const r = duel(id, did, 'tempo', 'praesenz');
+      c.duel = r; st.stats[r.win === 'def' ? defS : att].duels++;
+      log(st, `Tempo-Duell nach Steilpass: ${duelText(r)}.`, 'duel');
+      if (r.win === 'att') { ratePt(st, id, .5); ratePt(st, did, -.5); } else if (r.win === 'def') { ratePt(st, did, .5); ratePt(st, id, -.5); }
+      if (r.win === 'def') { st.ball = to; return change(st, 'Steilpass abgelaufen', r); }
+      if (r.win === 'tie') { setOut(st, 'keep', 'Gleichstand im Tempo-Duell – Ball bleibt'); return endTurn(st, false); }
+      st.ball = to; st.stats[att].passes++;
+      c.chase = true; c.att.action = null; c.att.zone = to;
+      if (c.def) { c.def.action = null; c.def.zone = MIRROR[to]; c.def.open = true; }
+      log(st, `Steilpass kommt an: ${card(id).name} ist schneller und macht seine Aktion in ${ZONE_NAME[to]}.`, 'ok');
+      return;
+    }
     // Präsenz-Duell: die Abwehrkarte liegt offen, bevor der Angreifer wählt
     if (st.cur.presence) {
       st.presence = false;
@@ -187,6 +206,7 @@
       default: return null;
     }
   }
+  const chaseRule = st => (st.opts && st.opts.chaseRule) || 'pay';
   function canPay(st, s, role, side) {
     const t = st.teams[s];
     return {
@@ -210,7 +230,19 @@
       const side = st.cur[ph];
       const t = st.teams[s];
       if (!side.id) { acts.push({ type: 'choose', opt: 0 }); return acts; }
-      if (st.cur.header || st.cur.through || st.cur.volley) { acts.push({ type: 'choose', opt: 0 }); return acts; }
+      if (st.cur.header || (st.cur.through && !st.cur.chase) || st.cur.volley) { acts.push({ type: 'choose', opt: 0 }); return acts; }
+      // Abwehr nach verlorenem Tempo-Duell (Testregel „überlaufen“): nur gegen Kosten.
+      // Option vor „/“: erschöpfen ODER blauer Token · Option hinter „/“: beides · sonst „nicht verteidigen“
+      if (ph === 'def' && st.cur.chase && chaseRule(st) === 'pay') {
+        acts.push({ type: 'nodef' });
+        const row = zoneRow(side.id, side.zone, ph);
+        const ex = !t.exhausted.includes(side.id) && !side.fresh, tk = t.tok.B;
+        if (ex) acts.push({ type: 'choose', opt: 0, pay: 'exhaust' });
+        if (tk) acts.push({ type: 'choose', opt: 0, pay: 'token' });
+        if (row.opts.length > 1 && ex && tk) acts.push({ type: 'choose', opt: 1, pay: 'both' });
+        if (t.exhausted.includes(side.id) && t.tok.G && !side.fresh) acts.push({ type: 'green' });
+        return acts;
+      }
       if (ph === 'def' && t.tok.B && !side.usedBlue2) acts.push({ type: 'blue2' });
       if (t.exhausted.includes(side.id) && t.tok.G && !side.fresh) acts.push({ type: 'green' });
       const row = zoneRow(side.id, side.zone, ph);
@@ -302,6 +334,13 @@
         if (st.ready.A && st.ready.B) startSecondHalf(st);
         break;
       }
+      case 'nodef': {
+        const side = st.cur.def;
+        side.action = 'keine Abwehr'; side.opt = null; side.pay = null; side.gotTok = []; side.tired = false;
+        log(st, `Abwehr ${st.names[s]}: ${side.id ? card(side.id).name : 'niemand'} ist überlaufen und greift nicht ein.`, 'def');
+        resolve(st);
+        break;
+      }
       case 'blue2': {
         const side = st.cur.def;
         st.teams[s].tok.B = false;
@@ -342,7 +381,7 @@
           side.action = 'Direktschuss'; side.green = false;
           log(st, `Angriff ${st.names[s]}: ${card(side.id).name} schießt direkt nach der Vorlage (Schusswert ${card(side.id).schuss}).`, role);
         }
-        else if (st.cur.through) {
+        else if (st.cur.through && !st.cur.chase) {
           side.action = role === 'att' ? 'Steilpass-Lauf' : 'Hinterherlaufen'; side.green = false;
           log(st, `${role === 'att' ? 'Angriff' : 'Abwehr'} ${st.names[s]}: ${card(side.id).name} läuft (Tempo ${card(side.id).tempo}).`, role);
         }
@@ -353,7 +392,8 @@
           const row = zoneRow(side.id, side.zone, role);
           side.action = row.opts[act.opt].a;
           side.green = !!row.opts[act.opt].g;
-          if (act.pay === 'exhaust') t.exhausted.push(side.id);
+          if (act.pay === 'exhaust' || act.pay === 'both') t.exhausted.push(side.id);
+          if (act.pay === 'both') t.tok.B = false;
           if (act.pay === 'token') { t.tok[role === 'def' ? 'B' : 'R'] = false; if (role === 'att') side.usedRed = true; }
           if (side.action === '-- und erschöpft' && !t.exhausted.includes(side.id)) t.exhausted.push(side.id);
           if (side.action === '-- und Regeneriert') t.exhausted = t.exhausted.filter(x => x !== side.id);
@@ -432,7 +472,7 @@
     const defS = other(st.poss), attS = st.poss;
     st.flank = false; st.through = null; st.presence = false; st.volley = false;
     // Tempo-Duell nach Steilpass: die nächsten beiden Karten laufen, ihre Aktionen entfallen
-    if (st.cur.through) {
+    if (st.cur.through && !st.cur.chase) {
       const to = st.cur.through.to;
       const r = duel(a.id, d.id, 'tempo', 'praesenz');
       st.cur.duel = r; st.stats[r.win === 'def' ? defS : attS].duels++;
@@ -456,6 +496,8 @@
     let da = d.action;
     if (NOTHING(da)) da = '--';
     if (da === 'Gelb') da = 'Gelbe Karte';
+    // Überlaufene Abwehr ohne (bezahlte) Aktion: keine Gegenwehr, auch kein Präsenz-Duell
+    if (st.cur.chase && (da === '--' || da === 'keine Abwehr')) da = null;
     // 1. Ballverlust / Fehlpass
     if (act === 'Ballverlust') return change(st, a.action === 'Fehlpass' ? 'Fehlpass' : 'Ballverlust');
     // 2. Gelbe Karte
@@ -484,7 +526,7 @@
       setOut(st, 'ok', 'Steilpass gespielt – jetzt zählt das Tempo der nächsten Karten');
       return endTurn(st, false);
     }
-    if (act === 'Sprint') {
+    if (act === 'Sprint' && da !== null) {
       const r = duel(a.id, d.id, 'tempo', 'praesenz');
       st.cur.duel = r; st.stats[r.win === 'def' ? defS : attS].duels++;
       log(st, `Tempo-Duell: ${duelText(r)}.`, 'duel');
@@ -514,6 +556,7 @@
       case '--': log(st, 'Ball bleibt in der Zone.', 'ok'); setOut(st, 'keep', 'Ball bleibt in der Zone'); return endTurn(st, false);
       case 'Querpass': return offerMove(st, QUER[z], 'Querpass');
       case 'Dribbling': return offerMove(st, [z, ...(FORWARD[z] ? [FORWARD[z]] : []), ...LATERAL[z]], 'Dribbling');
+      case 'Sprint': return offerMove(st, [z, ...(FORWARD[z] ? [FORWARD[z]] : []), ...LATERAL[z]], 'Sprint');
       case 'Rückpass': return offerMove(st, BACKWARD[z] ? [BACKWARD[z]] : [z], 'Rückpass');
       case 'Diagonalball': return offerMove(st, DIAG[z] || [z], 'Diagonalball');
       case 'Flanke': st.flank = true; st.ball = 'ZO'; st.stats[attS].passes++; log(st, 'Flanke kommt an. Nächster Zug: Kopfball.', 'ok'); setOut(st, 'ok', 'Flanke kommt an – nächster Zug ist ein Kopfball'); return endTurn(st, false);
@@ -753,10 +796,13 @@
         let val;
         if (ph === 'def') val = DEF_BEATS(o.a, st.cur.att.action, st.cur.att.green) ? 6 : 0;
         else val = ({ 'Schuss': 5, 'Kopfball': 4, 'Vorlage': 4, 'Flanke': 3, 'Steilpass': 3, 'Sprint': 3, 'Dribbling': 3, 'Diagonalball': 3, 'Querpass': 2, 'Ball sichern': 2, 'Rückpass': 1, 'Fehlpass': -3, 'Ballverlust': -3 })[o.a] ?? 0;
-        const cost = a.pay === 'exhaust' ? 1.5 : a.pay === 'token' ? 1 : 0;
+        const cost = a.pay === 'exhaust' ? 1.5 : a.pay === 'token' ? 1 : a.pay === 'both' ? 2.5 : 0;
         return val + (o.g ? 1 : 0) - cost + Math.random();
       };
-      return acts.filter(a => a.type === 'choose').sort((x, y) => score(y) - score(x))[0];
+      const best = acts.filter(a => a.type === 'choose').sort((x, y) => score(y) - score(x))[0];
+      // Überlaufen: nur bezahlen, wenn die Aktion den Angriff wirklich stoppt
+      if (acts.some(a => a.type === 'nodef') && (!best || score(best) < 3)) return { type: 'nodef' };
+      return best;
     }
     if (ph === 'def_pick2') {
       const val = id => zoneRow(id, st.cur.def.zone, 'def').opts.some(o => DEF_BEATS(o.a, st.cur.att.action, st.cur.att.green)) ? 1 : 0;
