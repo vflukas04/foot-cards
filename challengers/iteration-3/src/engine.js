@@ -318,6 +318,7 @@
         side.opt = act.opt;
         side.pay = act.pay || null;
         side.gotTok = [];
+        side.tired = !!side.id && t.exhausted.includes(side.id);   // spielt außer Atem (für Geräusch und Anzeige)
         if (!side.id) { side.action = '--'; side.green = false; }
         else if (st.cur.volley) {
           side.action = 'Direktschuss'; side.green = false;
@@ -638,7 +639,7 @@
   }
   function snapSide(x) {
     if (!x) return null;
-    return { id: x.id, action: x.action, eff: x.eff, green: x.green, pay: x.pay, gotTok: x.gotTok || [], zone: x.zone, sentOff: !!x.sentOff, usedBlue2: !!x.usedBlue2, fresh: !!x.fresh };
+    return { id: x.id, action: x.action, eff: x.eff, green: x.green, pay: x.pay, gotTok: x.gotTok || [], zone: x.zone, sentOff: !!x.sentOff, usedBlue2: !!x.usedBlue2, fresh: !!x.fresh, tired: !!x.tired };
   }
   function endTurn(st, changed) {
     const c = st.cur;
