@@ -20,6 +20,10 @@ for src in sorted(root.glob('challengers/*/src')):
     t = t.replace('/*CARDS*/null', (src / 'cards.json').read_text(encoding='utf-8'))
     t = t.replace('/*ENGINE*/', (src / 'engine.js').read_text(encoding='utf-8'))
     t = t.replace('<!--PEERJS-->', PEERJS).replace('/*P2P*/false', 'true')
+    if '/*BUILD*/null' in t:
+        import hashlib, datetime
+        h = hashlib.sha1(b''.join((src / f).read_bytes() for f in ('template.html', 'engine.js', 'cards.json'))).hexdigest()[:6]
+        t = t.replace('/*BUILD*/null', '"' + h + '"')
     # Draft-Musik: aus src/draft-music.mp3 (liegt nicht im Repository, Lizenz erlaubt keine Weitergabe als
     # Einzeldatei). Fehlt die Datei, wird die bereits in index.html eingebettete Musik übernommen.
     music = src / 'draft-music.mp3'

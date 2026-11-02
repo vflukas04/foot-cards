@@ -281,6 +281,8 @@ table.stats td:first-child{text-align:left;color:var(--muted)}
 .roletag.a{color:var(--att)}.roletag.d{color:var(--def)}
 .side .stack{margin:10px 10px 0 0}
 .shufnote{font-size:13px}
+.build{font-family:var(--font-b);font-size:11.5px;margin-left:8px;opacity:.7}
+.vwarn{border-left:4px solid var(--red)!important;background:color-mix(in srgb,var(--red) 10%,var(--surface))!important}
 /* Anzeigetafel: Heim lila, Gast weiß */
 .board .team.tbox{padding:6px 12px;border-radius:8px;box-shadow:0 2px 0 rgba(0,0,0,.35)}
 .board .team.ta{background:var(--lila);color:#fff}
@@ -530,7 +532,7 @@ button.gv-ar:hover{background:var(--att);color:#fff}
 
 <div class="wrap" id="app">
   <div class="top">
-    <div class="brand"><h1>Foot Cards</h1><span>Version 3 · Spielfluss (Vorschlag)</span></div>
+    <div class="brand"><h1>Foot Cards</h1><span>Version 3 · Spielfluss (Vorschlag)<small class="build" id="buildTag"></small></span></div>
     <div class="row" style="gap:14px"><div class="row" id="volCtl" hidden></div><div class="row" id="topActions"></div></div>
   </div>
   <div id="view"><div class="empty">Lädt …</div></div>
@@ -560,6 +562,7 @@ button.gv-ar:hover{background:var(--att);color:#fff}
 <script>
 const P2P_BUILD = /*P2P*/false;
 const CARD_DATA = /*CARDS*/null;
+const BUILD = /*BUILD*/null;   // Versionskennung (build.py); beide Geräte müssen dieselbe haben
 const DRAFT_TRACK = /*MUSIC*/null;   // eingebettete Musikdatei (build.py), sonst null
 </script>
 <script>
@@ -1300,7 +1303,8 @@ function boardHtml(st){
   const clock = st.phase==='over' && !rp ? 'Abpfiff' : st.phase==='draft' ? 'Draft' : st.phase==='setup' ? 'Aufstellung' : (st.phase==='half' && !rp) || app.swap ? 'Halbzeitpause' : `${rp?rp.prev.minute+1:st.minute}. Minute · ${rp&&rp.prev.half?rp.prev.half:st.half}. Halbzeit`;
   const possNow = rp ? (rp.step>=2?rp.prev.possEnd:rp.prev.possStart) : st.poss;
   const pd = s => possNow===s && !['draft','setup'].includes(st.phase) && !((st.phase==='over'||st.phase==='half')&&!rp) && !app.swap ? '<span class="possdot" title="Ballbesitz"></span>' : '';
-  return `<div class="board">
+  const vwarn = app.mode === 'p2p' && app.versionMismatch ? `<div class="notice vwarn" style="margin-top:12px"><b>Ihr spielt unterschiedliche Versionen</b> (du: ${esc(BUILD || '?')}, ${app.isHost ? 'dein Gegner' : 'Gastgeber'}: ${esc(app.versionMismatch)}). Das führt zu Fehlern. Bitte ${app.isHost ? 'deinen Gegner die Seite neu laden lassen' : 'die Seite neu laden'} (Strg+F5 bzw. Cmd+Shift+R) und neu beitreten. Die Version steht oben neben dem Titel.</div>` : '';
+  return vwarn + `<div class="board">
     <div class="team tbox ta"><div class="tname">${pd('A')}${esc(teamLabel('A'))}</div><div class="tsub">${st.teams.A.name&&playerLabel('A')!=='Heim'?esc(playerLabel('A'))+' · ':''}Heim · ${esc(card(st.teams.A.gk).name)} (${card(st.teams.A.gk).fields.join('-')})</div></div>
     <div><div class="score${pulse?' pulse':''}">${g.A}:${g.B}</div><div class="clock">${clock}</div></div>
     <div class="team right tbox tb"><div class="tname">${esc(teamLabel('B'))}${pd('B')}</div><div class="tsub">${st.teams.B.name&&playerLabel('B')!=='Gast'?esc(playerLabel('B'))+' · ':''}Gast · ${esc(card(st.teams.B.gk).name)} (${card(st.teams.B.gk).fields.join('-')})</div></div>
@@ -1358,6 +1362,7 @@ function stepsHtml(active){
 // ---------- Hauptansicht Spiel ----------
 function render(){
   const v = $('#view');
+  const bt = $('#buildTag'); if (bt && BUILD && !bt.textContent) bt.textContent = 'Stand ' + BUILD;
   const top = $('#topActions');
   syncMusic();
   $('#volCtl').hidden = !app.mode;
@@ -2197,6 +2202,7 @@ const LS = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e
 function myName(){ const el = $('#p2pName'); const v = el ? el.value.trim().slice(0,24) : (LS.get('fc-name')||''); if (el) LS.set('fc-name', v); return v; }
 function newCode6(){ const al='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<5;i++) c+=al[Math.floor(Math.random()*al.length)]; return c; }
 function p2pClose(){
+  clearInterval(app.syncTimer); app.versionMismatch = null;
   try { if (app.conn) app.conn.close(); } catch(e){}
   try { if (app.peer) app.peer.destroy(); } catch(e){}
   app.peer = null; app.conn = null; app.connected = false; app.isHost = false; app.p2pStatus = '';
@@ -2205,7 +2211,7 @@ function p2pSend(msg){ if (app.conn && app.conn.open) { try { app.conn.send(msg)
 function p2pSetState(next){
   setState(next);
   LS.set('fc3-host-game', { code: app.code, st: next, names: app.p2pNames, t: Date.now() });
-  p2pSend({ t:'state', st: next, names: app.p2pNames });
+  p2pSend({ t:'state', st: next, names: app.p2pNames, build: BUILD });
 }
 function p2pRestart(){
   const draft = app.st && app.st.mode === 'draft';
@@ -2247,7 +2253,14 @@ function p2pHost(draft, resume){
 }
 function p2pHostData(d){
   if (!d || typeof d !== 'object') return;
-  if (d.t === 'hello') { app.p2pNames.B = String(d.name||'').slice(0,24); p2pSetState(app.st); return; }
+  if (d.t === 'hello') {
+    app.p2pNames.B = String(d.name||'').slice(0,24);
+    app.versionMismatch = d.build !== BUILD ? (d.build || 'älter') : null;
+    p2pSend({ t:'version', build: BUILD });
+    p2pSetState(app.st); return;
+  }
+  // Gast fragt regelmäßig nach: Hat er nicht den aktuellen Stand, bekommt er ihn neu
+  if (d.t === 'sync') { if (!app.st || d.seq !== app.st.seq) p2pSend({ t:'state', st: app.st, names: app.p2pNames, build: BUILD }); return; }
   if (d.t === 'act') {
     const st = app.st;
     const free = d.a && (d.a.type === 'team' || d.a.type === 'ready');   // Aufstellung und Halbzeit laufen gleichzeitig
@@ -2270,11 +2283,20 @@ function p2pJoin(code){
   peer.on('open', () => {
     const c = peer.connect(P2P_PREFIX + code.toLowerCase(), { reliable: true });
     app.conn = c;
-    c.on('open', () => { app.connected = true; app.p2pStatus = ''; c.send({ t:'hello', name: myName() }); render(); });
+    c.on('open', () => {
+      app.connected = true; app.p2pStatus = ''; c.send({ t:'hello', name: myName(), build: BUILD }); render();
+      clearInterval(app.syncTimer);
+      app.syncTimer = setInterval(() => { if (app.conn === c && c.open && !app.busy) { try { c.send({ t:'sync', seq: app.st ? app.st.seq : -1 }); } catch(e){} } }, 3000);
+    });
     c.on('data', d => {
       if (!d || typeof d !== 'object') return;
       if (d.t === 'full') { app.lobbyMsg = 'Dieses Spiel hat schon zwei Spieler.'; leave(); return; }
-      if (d.t === 'state') { app.p2pNames = d.names || app.p2pNames; app.busy = false; if (!app.st || d.st.seq !== app.st.seq) setState(d.st); else render(); }
+      if (d.t === 'version' || (d.t === 'state' && 'build' in d)) { const vm = d.build !== BUILD ? (d.build || 'älter') : null; if (vm !== app.versionMismatch) { app.versionMismatch = vm; render(); } }
+      if (d.t === 'state') {
+        app.p2pNames = d.names || app.p2pNames; app.busy = false;
+        try { if (!app.st || d.st.seq !== app.st.seq) setState(d.st); else render(); }
+        catch(e) { console.error(e); flash('Der neue Spielstand konnte nicht angezeigt werden. Bitte die Seite neu laden (Strg+F5 bzw. Cmd+Shift+R) und erneut beitreten.'); }
+      }
     });
     c.on('close', () => { if (app.conn === c) { app.connected = false; app.p2pStatus = 'Verbindung getrennt.'; render(); } });
   });
