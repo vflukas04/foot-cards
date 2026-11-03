@@ -49,3 +49,17 @@ Kopfbälle gibt es nur noch im Kopfballduell nach einer Flanke. Die Aktionen „
 | Gosens (8) | zentral offensiv, Angriff | Kopfball / Schuss | Vorlage / Schuss |
 | Džeko (10) | zentral offensiv, Angriff | Schuss / Kopfball | Schuss |
 | Sylla (9) | zentral offensiv, Angriff | Schuss / Kopfball | Schuss |
+
+## 03.11.2026: Schalke stärker (für das Vereinsduell mit eigener Kaderwahl)
+
+Im Vereinsduell wählt Heim jetzt seine 13 aus allen VfL-Karten. Damit Schalke trotzdem klar stärker bleibt, sind die Schalke-Aktionen verbessert. Die Werte bleiben gleich.
+
+| Stellschraube | vorher | nachher |
+|---|---|---|
+| „--“ im Angriff (alle 19 Karten) | 42 | 29 |
+| „--“ in der Abwehr | 95 | 80 |
+| grüne Aktionen | 4 | 8 |
+| Ballgewinn | 5 | 10 |
+| Token | 3 | 4 |
+
+Bot gegen Bot, VfL mit den 13 stärksten Karten: Schalke gewinnt 72 % (vorher 53 %), Remis 16 %, VfL 12 %.

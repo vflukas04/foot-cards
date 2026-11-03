@@ -37,6 +37,7 @@
     d.gks.forEach(p => (byId[p.id] = p));
   }
   const card = id => byId[id];
+  const power = id => { const c = byId[id]; return c.tempo + c.praesenz + c.assist + c.kopf + c.schuss; };
   const other = s => (s === 'A' ? 'B' : 'A');
   function rnd(n) { return Math.floor(Math.random() * n); }
   function shuffle(a) {
@@ -74,17 +75,23 @@
       return shuffle(pool.length >= 2 ? pool : DATA.gks.map(g => g.id));
     };
     if (opts.mode === 'club') {
-      // Vereinsduell: Heim spielt mit VfL-Karten, Gast mit Schalke-Karten (feste Kader, kein Draft)
+      // Vereinsduell: Die Scouts kennen den Schalke-Kader (13 zufällige Karten, Startelf und Bank stehen fest).
+      // Danach wählt Heim seine 13 aus allen VfL-Karten (Phase „scout“), dann Name und Bank wie gewohnt.
       const own = c => shuffle(DATA.players.filter(p => clubOf(p.id) === c).map(p => p.id));
-      const va = own('vfl'), sb = own('s04');
+      const va = DATA.players.filter(p => clubOf(p.id) === 'vfl').map(p => p.id), sb = own('s04');
       const n = Math.min(SQUAD, va.length, sb.length);
-      st.mode = 'club'; st.squadSize = n; st.poolSize = 2 * n;
-      st.teams.A.squad = va.slice(0, n); st.teams.B.squad = sb.slice(0, n);
+      st.mode = 'club'; st.squadSize = n; st.poolSize = va.length + n;
+      st.vflPool = va;
+      const B = st.teams.B;
+      B.squad = sb.slice(0, n);
+      B.bench = B.squad.slice().sort((x, y) => power(x) - power(y)).slice(0, Math.max(0, n - LINEUP));
+      B.lineup = B.squad.filter(id => !B.bench.includes(id));
+      B.name = 'FC Schalke 04'; st.names.B = B.name;
       const gv = pickGks(['vfl']), gs = DATA.gks.filter(g => g.club === 's04').map(g => g.id);
-      st.teams.A.gk = gv[0]; st.teams.B.gk = gs.length ? shuffle(gs)[0] : gv[1];
+      st.teams.A.gk = gv[0]; B.gk = gs.length ? shuffle(gs)[0] : gv[1];
       st.opts = { mode: 'club', pool: null, poolIds: null, chaseRule: opts.chaseRule === 'free' ? 'free' : 'pay' };
-      log(st, `Vereinsduell: ${st.names.A} mit VfL-Karten gegen ${st.names.B} mit Schalke-Karten.`);
-      startSetup(st);
+      st.phase = 'scout';
+      log(st, `Vereinsduell: Die Scouts erwarten den FC Schalke 04 mit ${B.lineup.map(id => card(id).name).join(', ')}. Bank: ${B.bench.map(id => card(id).name).join(', ')}.`, 'info');
       return st;
     }
     // Kartenpool: alle Karten oder eine zufällige Auswahl (gerade Anzahl, mindestens 2 × LINEUP); höchstens 13 pro Mannschaft
@@ -221,6 +228,7 @@
   function actor(st) {
     switch (st.phase) {
       case 'draft': return st.pickOrder[0];
+      case 'scout': return 'A';
       case 'setup': case 'half': return !st.ready.A ? 'A' : !st.ready.B ? 'B' : null;
       case 'def': case 'def_pick2': case 'gk': return other(st.poss);
       case 'att': case 'move': case 'dist': case 'shot': return st.poss;
@@ -243,6 +251,7 @@
   function legal(st, s) {
     // Mannschaft und Halbzeit: beide Seiten handeln unabhängig voneinander, jede einmal
     if (st.phase === 'setup' || st.phase === 'half') return st.ready[s] ? [] : [{ type: st.phase === 'setup' ? 'team' : 'ready' }];
+    if (st.phase === 'scout') return s === 'A' ? [{ type: 'squad' }] : [];
     if (actor(st) !== s) return [];
     const acts = [];
     const ph = st.phase;
@@ -300,6 +309,10 @@
       const b = act.bench;
       return Array.isArray(b) && b.length === benchOf(st) && new Set(b).size === b.length && b.every(id => t.squad.includes(id)) && typeof (act.name || '') === 'string';
     }
+    if (act.type === 'squad') {
+      const ids = act.ids;
+      return Array.isArray(ids) && ids.length === squadOf(st) && new Set(ids).size === ids.length && ids.every(id => (st.vflPool || []).includes(id));
+    }
     if (act.type === 'ready') {
       const subs = act.subs || [];
       if (!Array.isArray(subs) || subs.length > MAX_SUBS) return false;
@@ -310,7 +323,7 @@
     return false;
   }
   function apply(st0, s, act) {
-    const free = act && (act.type === 'team' || act.type === 'ready');
+    const free = act && (act.type === 'team' || act.type === 'ready' || act.type === 'squad');
     if (free ? !validFree(st0, s, act) : !legal(st0, s).some(a => sameAct(a, act))) throw new Error('Unzulässiger Zug: ' + JSON.stringify(act));
     const st = structuredClone(st0);
     st.seq++;
@@ -329,6 +342,14 @@
           log(st, `${st.names[last]} bekommt die letzte Karte: ${card(id).name}.`, 'info');
         }
         if (!st.pickOrder.length) startSetup(st);
+        break;
+      }
+      case 'squad': {
+        // Vereinsduell: Heim hat seine 13 gewählt; Schalke steht schon
+        st.teams.A.squad = act.ids.slice();
+        log(st, `${st.names.A} wählt den Kader: ${act.ids.map(id => card(id).name).join(', ')}.`, 'info');
+        startSetup(st);
+        st.ready.B = true;
         break;
       }
       case 'team': {
@@ -790,7 +811,7 @@
     const ph = st.phase;
     const pick = arr => arr[rnd(arr.length)];
     if (ph === 'draft') return pick(acts);
-    const power = id => { const c = card(id); return c.tempo + c.praesenz + c.assist + c.kopf + c.schuss; };
+    if (ph === 'scout') return { type: 'squad', ids: st.vflPool.slice().sort((x, y) => power(y) - power(x)).slice(0, squadOf(st)) };
     if (ph === 'setup') {
       const t = st.teams[s];
       const bench = t.squad.slice().sort((x, y) => power(x) - power(y)).slice(0, benchOf(st));
