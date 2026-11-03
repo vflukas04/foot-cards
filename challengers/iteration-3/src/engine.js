@@ -66,11 +66,28 @@
       cur: null, flank: false, lastShot: null, log: [], result: null, turn: 0, prev: null, scorers: [],
       holder: null, stats: { A: emptyStats(), B: emptyStats() }, track: [], ps: {}, ready: { A: false, B: false }, halfStats: null,
     };
-    const gks = shuffle(DATA.gks.map(g => g.id));
-    st.teams.A.gk = gks[0];
-    st.teams.B.gk = gks[1];
     st.kickoff = Math.random() < 0.5 ? 'A' : 'B';
-    // Kartenpool: alle Karten oder eine zufällige Auswahl (gerade Anzahl, mindestens 2 × LINEUP)
+    // Vereine: Karten ohne „club“ gehören zum VfL Osnabrück
+    const clubOf = id => (byId[id] && byId[id].club) || 'vfl';
+    const pickGks = clubs => {
+      const pool = DATA.gks.filter(g => clubs.includes(g.club || 'vfl')).map(g => g.id);
+      return shuffle(pool.length >= 2 ? pool : DATA.gks.map(g => g.id));
+    };
+    if (opts.mode === 'club') {
+      // Vereinsduell: Heim spielt mit VfL-Karten, Gast mit Schalke-Karten (feste Kader, kein Draft)
+      const own = c => shuffle(DATA.players.filter(p => clubOf(p.id) === c).map(p => p.id));
+      const va = own('vfl'), sb = own('s04');
+      const n = Math.min(SQUAD, va.length, sb.length);
+      st.mode = 'club'; st.squadSize = n; st.poolSize = 2 * n;
+      st.teams.A.squad = va.slice(0, n); st.teams.B.squad = sb.slice(0, n);
+      const gv = pickGks(['vfl']), gs = DATA.gks.filter(g => g.club === 's04').map(g => g.id);
+      st.teams.A.gk = gv[0]; st.teams.B.gk = gs.length ? shuffle(gs)[0] : gv[1];
+      st.opts = { mode: 'club', pool: null, poolIds: null, chaseRule: opts.chaseRule === 'free' ? 'free' : 'pay' };
+      log(st, `Vereinsduell: ${st.names.A} mit VfL-Karten gegen ${st.names.B} mit Schalke-Karten.`);
+      startSetup(st);
+      return st;
+    }
+    // Kartenpool: alle Karten oder eine zufällige Auswahl (gerade Anzahl, mindestens 2 × LINEUP); höchstens 13 pro Mannschaft
     // Benutzerdefiniert: nur die angehakten Karten (mindestens 2 × LINEUP, sonst alle)
     const ids = DATA.players.map(p => p.id);
     const custom = Array.isArray(opts.poolIds) ? opts.poolIds.filter(id => ids.includes(id)) : null;
@@ -78,7 +95,11 @@
     const want = Math.max(2 * LINEUP, Math.min(all.length, opts.pool || all.length));
     const pool = all.slice(0, want - (want % 2));
     st.opts = { mode: st.mode, pool: opts.pool || null, poolIds: custom && custom.length >= 2 * LINEUP ? custom : null, chaseRule: opts.chaseRule === 'free' ? 'free' : 'pay' };
-    st.poolSize = pool.length; st.squadSize = pool.length / 2;
+    st.poolSize = pool.length; st.squadSize = Math.min(SQUAD, pool.length / 2);   // größerer Pool: Karten bleiben übrig
+    // Torhüter: nur von Vereinen, deren Karten im Pool sind
+    const gks = pickGks([...new Set(pool.map(clubOf))]);
+    st.teams.A.gk = gks[0];
+    st.teams.B.gk = gks[1];
     const order = [];
     for (let i = 0; i < st.squadSize; i++) order.push(...(i % 2 === 0 ? ['A', 'B'] : ['B', 'A']));
     if (st.mode === 'draft') {
@@ -92,7 +113,7 @@
     } else {
       st.mode = 'random';
       st.teams.A.squad = pool.slice(0, st.squadSize);
-      st.teams.B.squad = pool.slice(st.squadSize);
+      st.teams.B.squad = pool.slice(st.squadSize, 2 * st.squadSize);
       startSetup(st);
     }
     return st;
@@ -775,7 +796,7 @@
     if (ph === 'setup') {
       const t = st.teams[s];
       const bench = t.squad.slice().sort((x, y) => power(x) - power(y)).slice(0, benchOf(st));
-      return { type: 'team', name: 'Bot-Elf', bench };
+      return { type: 'team', name: st.mode === 'club' ? (s === 'A' ? 'VfL Osnabrück' : 'FC Schalke 04') : 'Bot-Elf', bench };
     }
     if (ph === 'half') {
       const t = st.teams[s], g = grades(st, s);
