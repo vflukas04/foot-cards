@@ -2241,7 +2241,7 @@ function draftFx(old, next){
   const picks = [];
   for (const s of ['A', 'B']) for (const id of next.teams[s].squad) if (!old.teams[s].squad.includes(id)) picks.push({ s, id });
   if (!picks.length) return null;
-  picks.forEach((x, i) => { setTimeout(() => announce(x.id), i * 2600); });
+  picks.forEach((x, i) => { setTimeout(() => announce(x.id, i > 0), i * 1100); });
   SFX.play('flip');
   const from = {};
   for (const x of picks) { const el = document.querySelector(`.pool [data-cid="${x.id}"]`); if (el) from[x.id] = el.getBoundingClientRect(); }
@@ -2266,7 +2266,10 @@ function draftFx(old, next){
   };
 }
 // Stadionsprecher: eingebaute Sprachausgabe des Browsers (deutsche Stimme, wenn vorhanden)
-function announce(id){ const p = card(id); say(`Mit der Nummer ${p.nr}: ${p.name}!`); }
+// Im Draft nur der Nachname, damit die Ansage beim schnellen Draften nicht hinterherhinkt (ältere Ansage wird abgebrochen)
+const CALL_NAME = { 'Hwang Hee-chan': 'Hwang', 'Junior Dina Ebimbe': 'Dina Ebimbe', 'Adi Waku Menga': 'Waku Menga' };
+function callName(p){ return CALL_NAME[p.name] || p.name.trim().split(/\s+/).pop(); }
+function announce(id, queue){ if (!queue) { try { speechSynthesis.cancel(); } catch(e){} } say(callName(card(id))); }
 function say(text){
   if (!SFX.on() || !('speechSynthesis' in window)) return;
   try {
