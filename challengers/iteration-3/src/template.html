@@ -615,7 +615,7 @@ button.gv-ar:hover{background:var(--att);color:#fff}
       <li>Vorlage: Kommt sie an, schießt im nächsten Zug die nächste Karte des Angreifers direkt (Schusswert plus Assist des Vorlagengebers). Die Abwehr deckt dabei keine Karte auf.</li>
       <li>Gelbe Karte: Foul, der Angreifer bleibt am Ball, seine Aktion wird nicht ausgeführt. Zweite Gelbe: Der Spieler ist raus. „Gelb OOO“ bringt alle drei Token. Fehlpass: Ball sofort weg.</li>
       <li>Querpass seitlich, aber nicht ins ZO. Dribbling vorwärts, seitlich oder auf der Stelle, Steilpass direkt vorwärts, Rückpass direkt rückwärts, Diagonalball auf den anderen Flügel nach vorn, Flanke und Vorlage nach ZO.</li>
-      <li>Nach einer gelungenen Flanke folgt sofort ein Kopfballduell: Beide decken auf, verglichen werden nur die Kopfballwerte (bei Gleichstand die Präsenz). Die Aktionen auf den Karten werden nicht ausgeführt. Gewinnt der Angreifer, folgt der Kopfball aufs Tor mit seinem Kopfballwert plus Assist, sonst klärt die Abwehr und bekommt den Ball.</li>
+      <li>Nach einer gelungenen Flanke folgt sofort ein Kopfballduell: Beide decken auf, verglichen werden nur die Kopfballwerte (bei Gleichstand die Präsenz). Die Aktionen auf den Karten werden nicht ausgeführt. <b>Kopfbälle gibt es nur so</b>: Eine eigene Aktion „Kopfball“ oder „Kopfball blocken“ auf der Karte gibt es nicht (Stand 03.11.). Gewinnt der Angreifer, folgt der Kopfball aufs Tor mit seinem Kopfballwert plus Assist, sonst klärt die Abwehr und bekommt den Ball.</li>
       <li>Torschuss: Punkte = Schusswert (Mitte) bzw. Kopfballwert, plus Assist des Spielers, der vorher am Ball war, plus 1 mit rotem Token, minus 1 bei Fernschuss. Der Schütze verteilt die Punkte offen auf die drei Keeperfelder. Dann wählen beide gleichzeitig eine Ecke. Gleiche Ecke: gehalten. Sonst würfelt der Schütze und muss echt unter den Feldwert kommen. Fehlschuss oder Parade: Abstoß (ZD).</li>
       <li>Token: Ein farbiges O bei der gewählten Aktion bringt diesen Token (max. je einer). <b>Version 3:</b> Die Token gehören zu einer einzelnen Aktion, vor oder hinter dem „/“, und nur diese Aktion bringt sie (z. B. Köhler ZO: nur „Gelb“ bringt die drei Token). Blau: zweiten Verteidiger ziehen. Grün: erschöpften Spieler beim Aufdecken entschöpfen. Rot: Option hinter „/“ bezahlen oder +1 beim Schuss. „Regeneriert“ entschöpft die Karte, „und erschöpft“ erschöpft sie.</li>
       <li>Zeit: Jeder Spielzug ist eine Minute. Halbzeit beim ersten Ballbesitzwechsel ab Minute 45, spätestens Minute 50. Ende beim ersten Ballbesitzwechsel ab Minute 90 plus eine Minute je Tor.</li>
@@ -799,7 +799,7 @@ const ATT_VERB = {
 };
 const DEF_VERB = {
   'Tackling':['grätscht','tackle'], 'Ballgewinn':['geht auf den Ball','star'], 'Passabfangen':['lauert auf den Pass','catch'],
-  'Block':['blockt','shield'], 'Schuss blocken':['wirft sich in den Schuss','shield'], 'Kopfball blocken':['blockt den Kopfball','shield'],
+  'Block':['blockt','shield'], 'Schuss blocken':['wirft sich in den Schuss','shield'],
   'Gelb':['foult','card'], 'Gelbe Karte':['foult','card'], 'Hinterherlaufen':['läuft hinterher','sprint'], 'Kopfballduell':['steigt hoch','head'],
   'Präsenz-Duell':['hält dagegen','shield'], 'keine Abwehr':['ist überlaufen','none'],
 };
@@ -1669,7 +1669,7 @@ function situationHtml(st){
 }
 
 // ---------- Hinweise: was stoppt eine Angriffsaktion? ----------
-const DEF_ACTS = ['Passabfangen','Tackling','Block','Schuss blocken','Kopfball blocken','Ballgewinn'];
+const DEF_ACTS = ['Passabfangen','Tackling','Block','Schuss blocken','Ballgewinn'];
 function stopHint(a, green, defOpts){
   if (a === 'Ball sichern') return `<span class="stop ok">sicher: nicht zu erobern</span>`;
   if (a === 'Fehlpass' || a === 'Ballverlust') return `<span class="stop warn">Ball ist sofort weg</span>`;
@@ -2032,7 +2032,7 @@ function musicNote(){
 // ---------- Nach dem Draft: Flug über den Kader, Name und Ersatzbank ----------
 // Lieblingsposition aus den Karten: Wo hat der Spieler seine guten Aktionen? (x: hinten → vorn, y: links → rechts aus Heimsicht)
 const ATT_V = { 'Schuss': 1.2, 'Kopfball': 1, 'Vorlage': 1, 'Flanke': 1, 'Dribbling': 1, 'Sprint': 1, 'Steilpass': .9, 'Diagonalball': .8, 'Querpass': .5, 'Rückpass': .3, 'Ball sichern': .7 };
-const DEF_V = { 'Tackling': 1, 'Passabfangen': 1, 'Ballgewinn': 1.2, 'Block': 1, 'Schuss blocken': 1, 'Kopfball blocken': 1, 'Gelb': .6 };
+const DEF_V = { 'Tackling': 1, 'Passabfangen': 1, 'Ballgewinn': 1.2, 'Block': 1, 'Schuss blocken': 1, 'Gelb': .6 };
 const ZDEPTH = { LD: 0, ZD: 0, RD: 0, ZM: 1, LO: 2, ZO: 2, RO: 2 }, ZSIDE = { LO: -1, LD: -1, ZO: 0, ZM: 0, ZD: 0, RO: 1, RD: 1 };
 const POS_CACHE = {};
 function posOf(id){

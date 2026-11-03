@@ -571,7 +571,6 @@
     if (da === 'Block' && (act === 'Schuss' || act === 'Kopfball')) return change(st, 'Geblockt');
     if (da === 'Schuss blocken' && act === 'Schuss') return change(st, 'Schuss geblockt');
     if (da === 'Schuss blocken' && act === '--') return change(st, 'Ball erobert');
-    if (da === 'Kopfball blocken' && act === 'Kopfball') return change(st, 'Kopfball geblockt');
     // 7. Erfolg
     switch (act) {
       case '--': log(st, 'Ball bleibt in der Zone.', 'ok'); setOut(st, 'keep', 'Ball bleibt in der Zone'); return endTurn(st, false);
@@ -582,7 +581,7 @@
       case 'Diagonalball': return offerMove(st, DIAG[z] || [z], 'Diagonalball');
       case 'Flanke': st.flank = true; st.ball = 'ZO'; st.stats[attS].passes++; log(st, 'Flanke kommt an. Nächster Zug: Kopfball.', 'ok'); setOut(st, 'ok', 'Flanke kommt an – nächster Zug ist ein Kopfball'); return endTurn(st, false);
       case 'Vorlage': st.ball = 'ZO'; st.volley = true; st.stats[attS].passes++; log(st, 'Vorlage. Im nächsten Zug folgt der Direktschuss.', 'ok'); setOut(st, 'ok', 'Vorlage – jetzt folgt der Direktschuss'); return endTurn(st, false);
-      case 'Schuss': case 'Kopfball': return startShot(st, act);
+      case 'Schuss': return startShot(st, act);   // Kopfball gibt es nur im Kopfballduell nach einer Flanke
     }
     log(st, `Unbekannte Aktion „${act}“, Ball bleibt.`, 'info');
     setOut(st, 'keep', 'Ball bleibt');
@@ -783,7 +782,6 @@
     if (da === 'Tackling') return aa === 'Dribbling' || NOTHING(aa);
     if (da === 'Block') return aa === 'Schuss' || aa === 'Kopfball';
     if (da === 'Schuss blocken') return aa === 'Schuss' || NOTHING(aa);
-    if (da === 'Kopfball blocken') return aa === 'Kopfball';
     return false;
   };
   function botAct(st, s) {
