@@ -619,7 +619,7 @@ button.gv-ar:hover{background:var(--att);color:#fff}
       <li>Torschuss: Punkte = Schusswert (Mitte) bzw. Kopfballwert, plus Assist des Spielers, der vorher am Ball war, plus 1 mit rotem Token, minus 1 bei Fernschuss. Der Schütze verteilt die Punkte offen auf die drei Keeperfelder. Dann wählen beide gleichzeitig eine Ecke. Gleiche Ecke: gehalten. Sonst würfelt der Schütze und muss echt unter den Feldwert kommen. Fehlschuss oder Parade: Abstoß (ZD).</li>
       <li>Token: Ein farbiges O bei der gewählten Aktion bringt diesen Token (max. je einer). <b>Version 3:</b> Die Token gehören zu einer einzelnen Aktion, vor oder hinter dem „/“, und nur diese Aktion bringt sie (z. B. Köhler ZO: nur „Gelb“ bringt die drei Token). Blau: zweiten Verteidiger ziehen. Grün: erschöpften Spieler beim Aufdecken entschöpfen. Rot: Option hinter „/“ bezahlen oder +1 beim Schuss. „Regeneriert“ entschöpft die Karte, „und erschöpft“ erschöpft sie.</li>
       <li>Zeit: Jeder Spielzug ist eine Minute. Halbzeit beim ersten Ballbesitzwechsel ab Minute 45, spätestens Minute 50. Ende beim ersten Ballbesitzwechsel ab Minute 90 plus eine Minute je Tor.</li>
-      <li><b>Spielmodus (neu in Version 3):</b> Kader zufällig, kompletter Draft (alle Karten offen) oder offener Markt (5 Karten offen, für jede gewählte wird eine vom verdeckten Stapel aufgedeckt). Kartenpool: alle Karten, eine zufällige Auswahl (20, 22 oder 24) oder selbst abgehakt. Pro Mannschaft die Hälfte des Pools: 10 im Spiel, der Rest auf der Bank. Die letzte Karte geht automatisch weg.</li>
+      <li><b>Spielmodus (neu in Version 3):</b> Kader zufällig, kompletter Draft (alle Karten offen) oder offener Markt (5 Karten offen, für jede gewählte wird eine vom verdeckten Stapel aufgedeckt). Kartenpool getrennt nach Verein: VfL-Karten alle, zufällig oder selbst abgehakt; Schalke-Karten nicht dabei, alle, zufällig oder selbst abgehakt. Pro Mannschaft höchstens 13 Karten: 10 im Spiel, der Rest auf der Bank; bei größerem Pool bleiben Karten übrig. Torhüter kommen nur von Vereinen, deren Karten im Pool sind. <b>Vereinsduell:</b> Heim spielt mit 13 zufälligen VfL-Karten, Gast (gegen den Bot: der Bot) mit 13 zufälligen Schalke-Karten und Loris Karius im Tor.</li>
       <li><b>Halbzeit (neu in Version 3):</b> Jede Mannschaft darf bis zu 3 Spieler auswechseln. Wer Gelb-Rot gesehen hat, kann nicht ersetzt werden. Danach wird jedes Deck aus den 10 Spielern im Spiel frisch gemischt, die Ablage ist leer, Einwechselspieler sind frisch. Erschöpfung, Gelbe Karten und Token bleiben. Die Seiten werden gewechselt.</li>
       <li><b>Noten und xG:</b> Jeder Spieler bekommt eine Schulnote von 1 (sehr gut) bis 6 (ungenügend) nach seinen erfolgreichen und missglückten Aktionen, gewonnenen und verlorenen Duellen, Toren und Vorlagen, Keeper nach Paraden und Gegentoren. xG (erwartete Tore) ist die Summe der Torchancen aller Schüsse nach Punkteverteilung und Zielwahl, wenn der Keeper zufällig springt.</li>
       <li><b>Annahmen, bitte prüfen:</b> Fernschuss (nicht aus ZO) kostet 1 Punkt. Diagonalball geht aus LD nach RO, aus RD nach LO, aus der Mitte auf einen der beiden Flügel vorn. Gleichstand im Tempo-Duell nach Präsenz: Ball bleibt beim Angreifer, ohne Bewegung. Ein O in Cyan oder Lila gilt als blauer Token. Kopfballduell auch nach Präsenz gleich: Die Abwehr klärt. Im Kopfballduell gibt es keine Token und keine Token-Aktionen.</li>
@@ -2090,7 +2090,7 @@ function setupHtml(st){
     return `<div class="panel setup"><h2 class="setup-h">${esc(t.name)} steht.</h2><div class="notice wait"><span class="thinking"></span>${esc(playerLabel(o))} stellt noch ${o==='A'?'die Heimmannschaft':'die Gastmannschaft'} auf …</div></div>`;
   }
   const key = s + ':' + t.squad.join();
-  if (!app.setup || app.setup.key !== key) app.setup = { key, seat: s, bench: nBench ? t.squad.slice(-nBench) : [], name: '' };
+  if (!app.setup || app.setup.key !== key) app.setup = { key, seat: s, bench: nBench ? t.squad.slice(-nBench) : [], name: st.mode === 'club' ? (s === 'A' ? 'VfL Osnabrück' : 'FC Schalke 04') : '' };
   const S = app.setup, fly = !app.revealed.has('fly-' + key); app.revealed.add('fly-' + key);
   const ok = S.bench.length === nBench;
   const who = app.mode === 'local' ? `<span class="label">${esc(playerLabel(s))} ist dran · ${esc(playerLabel(o))} schaut bitte weg</span>` : '';
@@ -2230,7 +2230,7 @@ function draftHtml(st){
   return `<div class="draft">${list('A')}
     <div class="panel dcenter"><h2 style="font-size:24px">${market ? 'Offener Markt' : 'Draft'}</h2>
       <div class="notice${mine ? '' : ' wait'}">${who}</div>
-      <div class="muted" style="font-size:13px">${st.poolSize} Karten im Pool · ${sq} pro Mannschaft: 10 im Spiel${bench ? `, ${bench} auf der Bank` : ', keine Bank'} · die letzte Karte geht automatisch weg</div>
+      <div class="muted" style="font-size:13px">${st.poolSize} Karten im Pool · ${sq} pro Mannschaft: 10 im Spiel${bench ? `, ${bench} auf der Bank` : ', keine Bank'} · ${st.poolSize > 2 * sq ? `${st.poolSize - 2 * sq} Karten bleiben übrig` : 'die letzte Karte geht automatisch weg'}</div>
       ${musicNote()}${stack}
       <div class="pool">${pool}</div></div>
     ${list('B')}</div>`;
@@ -2287,7 +2287,7 @@ function bindGame(){
   const md = $('#modal'); if (md) { md.onclick = e => { if (e.target===md) { app.zoom=null; render(); } }; md.onkeydown = e => { if (e.key==='Escape') { app.zoom=null; render(); } }; }
   const nx = $('#next'); if (nx) nx.onclick = endReplay;
   const rp2 = $('#recapPlay'); if (rp2) { rp2.onclick = startRecap; if (!app.recapAuto && app.st && app.st.phase==='over') { app.recapAuto = app.st.turn; setTimeout(startRecap, 400); } }
-  const ag = $('#again'); if (ag) ag.onclick = () => { if (app.mode==='online') leave(); else if (app.mode==='p2p') { if (app.isHost) p2pRestart(); else flash('Ein neues Spiel startet dein Gegner.'); } else startLocal(app.mode, app.lastOpts); };
+  const ag = $('#again'); if (ag) ag.onclick = () => { if (app.mode==='online') leave(); else if (app.mode==='p2p') { if (app.isHost) p2pRestart(); else flash('Ein neues Spiel startet dein Gegner.'); } else startLocal(app.mode, gameOpts()); };
 }
 
 function bindDecide(){
@@ -2586,61 +2586,94 @@ function lobbyHtml(){
 }
 // ---------- Spieleinstellungen: Modus und Kartenpool (gilt für „anlegen“, „an einem Gerät“ und „gegen den Bot“) ----------
 const ALL_IDS = CARD_DATA.players.map(p => p.id);
+// Vereine: Karten ohne „club“ gehören zum VfL Osnabrück
+const CLUBS = [{ k: 'vfl', name: 'VfL Osnabrück', short: 'VfL' }, { k: 's04', name: 'FC Schalke 04', short: 'Schalke' }];
+const clubOf = p => p.club || 'vfl';
+const CLUB_IDS = Object.fromEntries(CLUBS.map(c => [c.k, CARD_DATA.players.filter(p => clubOf(p) === c.k).map(p => p.id)]));
 function settings(){
-  const s = Object.assign({ mode: 'draft', pool: 'all', count: 22, custom: ALL_IDS.slice() }, LS.get('fc3-settings') || {});
-  s.custom = (s.custom || []).filter(id => ALL_IDS.includes(id));
+  const raw = LS.get('fc3-settings') || {};
+  const s = { mode: raw.mode || 'draft', chase: raw.chase || 'pay', clubs: {} };
+  for (const c of CLUBS) {
+    const ids = CLUB_IDS[c.k];
+    // Ältere Einstellungen (ein gemeinsamer Pool) gelten für den VfL; Schalke ist anfangs nicht dabei
+    const def = c.k === 'vfl' ? { pool: raw.pool || 'all', count: raw.count || 20, custom: raw.custom || ids.slice() } : { pool: 'none', count: 10, custom: ids.slice() };
+    const o = Object.assign(def, (raw.clubs || {})[c.k] || {});
+    if (c.k === 'vfl' && o.pool === 'none') o.pool = 'all';
+    o.custom = (o.custom || []).filter(id => ids.includes(id));
+    o.count = Math.max(1, Math.min(ids.length, +o.count || 1));
+    s.clubs[c.k] = o;
+  }
   return s;
 }
 function saveSettings(s){ LS.set('fc3-settings', s); }
-function poolCount(s){ return s.pool === 'random' ? s.count : s.pool === 'custom' ? s.custom.length - (s.custom.length % 2) : ALL_IDS.length; }
-function settingsOk(s){ return poolCount(s) >= 2 * FC.LINEUP; }
+function clubCount(s, k){ const o = s.clubs[k]; return o.pool === 'none' ? 0 : o.pool === 'all' ? CLUB_IDS[k].length : o.pool === 'random' ? o.count : o.custom.length; }
+function poolCount(s){ const n = CLUBS.reduce((a, c) => a + clubCount(s, c.k), 0); return n - (n % 2); }
+function settingsOk(s){ return s.mode === 'club' || poolCount(s) >= 2 * FC.LINEUP; }
+function shuffled(a){ a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function gameOpts(){
-  const s = settings();
-  return { mode: s.mode, pool: s.pool === 'all' ? null : poolCount(s), poolIds: s.pool === 'custom' ? s.custom.slice() : null, chaseRule: s.chase === 'free' ? 'free' : 'pay', names: { A: 'Heim', B: 'Gast' } };
+  const s = settings(), base = { chaseRule: s.chase === 'free' ? 'free' : 'pay', names: { A: 'Heim', B: 'Gast' } };
+  if (s.mode === 'club') return Object.assign({ mode: 'club' }, base);
+  // Pool je Verein zusammenstellen: alle, zufällige Auswahl oder selbst abgehakt
+  const ids = [];
+  for (const c of CLUBS) {
+    const o = s.clubs[c.k];
+    if (o.pool === 'all') ids.push(...CLUB_IDS[c.k]);
+    else if (o.pool === 'random') ids.push(...shuffled(CLUB_IDS[c.k]).slice(0, o.count));
+    else if (o.pool === 'custom') ids.push(...o.custom);
+  }
+  return Object.assign({ mode: s.mode, pool: null, poolIds: ids }, base);
 }
 function settingsHtml(){
-  const s = settings(), n = poolCount(s), per = n / 2, bench = Math.max(0, per - FC.LINEUP);
+  const s = settings(), n = poolCount(s), per = Math.min(FC.SQUAD, Math.floor(n / 2)), bench = Math.max(0, per - FC.LINEUP), rest = n - 2 * per;
   const opt = (v, cur, label) => `<option value="${v}"${v === cur ? ' selected' : ''}>${label}</option>`;
-  const evenOpts = []; for (let k = 2 * FC.LINEUP; k < ALL_IDS.length; k += 2) evenOpts.push(k);
-  const info = settingsOk(s)
-    ? `${n} Karten → ${per} pro Mannschaft: 10 im Spiel${bench ? `, ${bench} auf der Bank (Wechsel in der Halbzeit)` : ', keine Bank (keine Wechsel)'}.${s.pool === 'custom' && s.custom.length % 2 ? ' Eine angehakte Karte bleibt zufällig draußen (ungerade Anzahl).' : ''}`
-    : `Zu wenige Karten: Es braucht mindestens ${2 * FC.LINEUP} (10 pro Mannschaft). Bitte mehr Karten anhaken.`;
+  const clubRow = c => {
+    const o = s.clubs[c.k], len = CLUB_IDS[c.k].length, counts = [];
+    for (let k = 1; k < len; k++) counts.push(k);
+    return `<label><span class="label">${c.short}-Karten</span><select data-cpool="${c.k}">${c.k !== 'vfl' ? opt('none', o.pool, 'Nicht dabei') : ''}${opt('all', o.pool, `Alle ${len} Karten`)}${opt('random', o.pool, 'Zufällige Auswahl')}${opt('custom', o.pool, 'Benutzerdefiniert (selbst abhaken)')}</select></label>
+      ${o.pool === 'random' ? `<label><span class="label">Anzahl ${c.short}</span><select data-ccount="${c.k}">${counts.map(k => opt(String(k), String(o.count), `${k} Karten`)).join('')}</select></label>` : ''}
+      ${o.pool === 'custom' ? `<div><span class="label">${c.short}-Auswahl</span><button class="btn" data-ccustom="${c.k}">Karten auswählen (${o.custom.length} angehakt)</button></div>` : ''}`;
+  };
+  const club = s.mode === 'club';
+  const info = club
+    ? `Heim spielt mit ${FC.SQUAD} zufälligen VfL-Karten, Gast mit ${FC.SQUAD} zufälligen Schalke-Karten und Loris Karius im Tor. Gegen den Bot spielt der Bot Schalke. Schalke ist deutlich stärker.`
+    : settingsOk(s)
+      ? `${n} Karten im Pool → ${per} pro Mannschaft: 10 im Spiel${bench ? `, ${bench} auf der Bank (Wechsel in der Halbzeit)` : ', keine Bank (keine Wechsel)'}${rest ? `, ${rest} Karten bleiben übrig` : ''}.${CLUBS.reduce((a, c) => a + clubCount(s, c.k), 0) % 2 ? ' Eine Karte bleibt zufällig draußen (ungerade Anzahl).' : ''}`
+      : `Zu wenige Karten: Es braucht mindestens ${2 * FC.LINEUP} (10 pro Mannschaft). Bitte mehr Karten wählen.`;
   return `<div class="panel mode settings"><h2>Spielmodus</h2>
     <div class="setgrid">
-      <label><span class="label">Kader</span><select id="setMode">${opt('draft', s.mode, 'Kompletter Draft (alle Karten offen)')}${opt('market', s.mode, 'Offener Markt (5 Karten offen, Nachschub vom Stapel)')}${opt('random', s.mode, 'Zufällig verteilt (kein Draft)')}</select></label>
-      <label><span class="label">Kartenpool</span><select id="setPool">${opt('all', s.pool, `Alle ${ALL_IDS.length} Karten`)}${opt('random', s.pool, 'Zufällige Auswahl')}${opt('custom', s.pool, 'Benutzerdefiniert (selbst abhaken)')}</select></label>
-      ${s.pool === 'random' ? `<label><span class="label">Anzahl</span><select id="setCount">${evenOpts.map(k => opt(String(k), String(s.count), `${k} Karten`)).join('')}</select></label>` : ''}
+      <label><span class="label">Kader</span><select id="setMode">${opt('draft', s.mode, 'Kompletter Draft (alle Karten offen)')}${opt('market', s.mode, 'Offener Markt (5 Karten offen, Nachschub vom Stapel)')}${opt('random', s.mode, 'Zufällig verteilt (kein Draft)')}${opt('club', s.mode, 'Vereinsduell: VfL gegen Schalke (feste Kader)')}</select></label>
+      ${club ? '' : CLUBS.map(clubRow).join('')}
       <label><span class="label">Nach Steilpass, Tempo-Duell verloren (Test)</span><select id="setChase">${opt('pay', s.chase || 'pay', 'Abwehr überlaufen: Eingreifen nur gegen Kosten')}${opt('free', s.chase || 'pay', 'Abwehr normal')}</select></label>
-      ${s.pool === 'custom' ? `<div><span class="label">Karten</span><button class="btn" id="setCustom">Karten auswählen (${s.custom.length} angehakt)</button></div>` : ''}
     </div>
     <div class="${settingsOk(s) ? 'muted' : 'notice vwarn'}" style="font-size:13.5px">${info} Online legt der Gastgeber die Einstellung fest.</div>
   </div>`;
 }
 function poolEditorHtml(){
-  const s = settings(), on = new Set(s.custom);
-  const rows = CARD_DATA.players.slice().sort((a, b) => a.nr - b.nr).map(p => `<label class="pe-row${on.has(p.id) ? ' on' : ''}"><input type="checkbox" data-pe="${p.id}"${on.has(p.id) ? ' checked' : ''}>${shirt(p)}<b>${esc(p.name)}</b><span class="muted">T${p.tempo} · P${p.praesenz} · A${p.assist} · K${p.kopf} · S${p.schuss}</span></label>`).join('');
+  const s = settings(), k = app.poolEdit, c = CLUBS.find(x => x.k === k) || CLUBS[0], on = new Set(s.clubs[c.k].custom);
+  const rows = CARD_DATA.players.filter(p => clubOf(p) === c.k).sort((a, b) => a.nr - b.nr).map(p => `<label class="pe-row${on.has(p.id) ? ' on' : ''}"><input type="checkbox" data-pe="${p.id}"${on.has(p.id) ? ' checked' : ''}>${shirt(p)}<b>${esc(p.name)}</b><span class="muted">${p.typ ? esc(p.typ) + ' · ' : ''}T${p.tempo} · P${p.praesenz} · A${p.assist} · K${p.kopf} · S${p.schuss}</span></label>`).join('');
   return `<div class="modal" id="peModal" role="dialog" aria-label="Karten auswählen"><div class="modalin pe">
-    <div class="row" style="justify-content:space-between"><h3 style="font-size:22px">Kartenpool auswählen</h3><b id="peCount">${s.custom.length} angehakt</b></div>
-    <div class="row"><button class="btn small" id="peAll">Alle</button><button class="btn small" id="peNone">Keine</button><span class="muted" style="font-size:13px">Mindestens ${2 * FC.LINEUP} Karten.</span></div>
+    <div class="row" style="justify-content:space-between"><h3 style="font-size:22px">${esc(c.name)}: Karten auswählen</h3><b id="peCount">${on.size} angehakt</b></div>
+    <div class="row"><button class="btn small" id="peAll">Alle</button><button class="btn small" id="peNone">Keine</button><span class="muted" style="font-size:13px">Zusammen mit dem anderen Verein mindestens ${2 * FC.LINEUP} Karten.</span></div>
     <div class="pe-list">${rows}</div>
     <button class="btn primary" id="peDone">Fertig</button></div></div>`;
 }
 function bindSettings(){
   const s = settings();
-  const set = (k, v) => { const n = settings(); n[k] = v; saveSettings(n); render(); };
-  const m = $('#setMode'); if (m) m.onchange = () => set('mode', m.value);
-  const p = $('#setPool'); if (p) p.onchange = () => set('pool', p.value);
-  const c = $('#setCount'); if (c) c.onchange = () => set('count', +c.value);
-  const ch = $('#setChase'); if (ch) ch.onchange = () => set('chase', ch.value);
-  const cu = $('#setCustom'); if (cu) cu.onclick = () => { app.poolEdit = true; render(); };
+  const save = f => { const n = settings(); f(n); saveSettings(n); render(); };
+  const m = $('#setMode'); if (m) m.onchange = () => save(n => { n.mode = m.value; });
+  const ch = $('#setChase'); if (ch) ch.onchange = () => save(n => { n.chase = ch.value; });
+  document.querySelectorAll('[data-cpool]').forEach(el => el.onchange = () => save(n => { n.clubs[el.dataset.cpool].pool = el.value; }));
+  document.querySelectorAll('[data-ccount]').forEach(el => el.onchange = () => save(n => { n.clubs[el.dataset.ccount].count = +el.value; }));
+  document.querySelectorAll('[data-ccustom]').forEach(el => el.onclick = () => { app.poolEdit = el.dataset.ccustom; render(); });
   const close = () => { app.poolEdit = false; render(); };
   const md = $('#peModal'); if (md) { md.onclick = e => { if (e.target === md) close(); }; md.onkeydown = e => { if (e.key === 'Escape') close(); }; }
-  const upd = ids => { const n = settings(); n.custom = ids; saveSettings(n); const el = $('#peCount'); if (el) el.textContent = ids.length + ' angehakt'; };
+  const k = app.poolEdit;
+  const upd = ids => { const n = settings(); n.clubs[k].custom = ids; saveSettings(n); const el = $('#peCount'); if (el) el.textContent = ids.length + ' angehakt'; };
   document.querySelectorAll('[data-pe]').forEach(cb => cb.onchange = () => {
     const ids = [...document.querySelectorAll('[data-pe]:checked')].map(x => x.dataset.pe);
     cb.closest('.pe-row').classList.toggle('on', cb.checked); upd(ids);
   });
-  const all = $('#peAll'); if (all) all.onclick = () => { upd(ALL_IDS.slice()); render(); };
+  const all = $('#peAll'); if (all) all.onclick = () => { upd(CLUB_IDS[k].slice()); render(); };
   const none = $('#peNone'); if (none) none.onclick = () => { upd([]); render(); };
   const done = $('#peDone'); if (done) { done.onclick = close; done.focus(); }
   const ok = settingsOk(s);
