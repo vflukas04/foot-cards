@@ -35,3 +35,17 @@ Gilt nur für `challengers/iteration-3/`. Iteration 1/2 und `2decks/` bleiben un
 | Edin Džeko (10) | Altmeister, Strafraumstürmer | T 1 · P 6 · A 4 · K 8 · S 6 |
 | Moussa Sylla (9) | Strafraumstürmer mit Tempo | T 6 · P 4 · A 1 · K 4 · S 6 |
 | Junior Adamu (20) | Konterstürmer mit Pressing | T 7 · P 4 · A 1 · K 2 · S 5 |
+
+## Regel 03.11.2026: keine eigene Kopfball-Aktion
+
+Kopfbälle gibt es nur noch im Kopfballduell nach einer Flanke. Die Aktionen „Kopfball“ und „Kopfball blocken“ sind von den Karten entfernt (betraf nur Schalke):
+
+| Karte | Zone | vorher | nachher |
+|---|---|---|---|
+| Katić (25) | zentral offensiv, Angriff | -- / Kopfball | -- |
+| Katić (25) | links defensiv, Abwehr | Tackling / Kopfball blocken | Tackling / Passabfangen |
+| Katić (25) | rechts defensiv, Abwehr | Kopfball blocken | Passabfangen |
+| T. Becker (5) | zentral offensiv, Angriff | -- / Kopfball | -- |
+| Gosens (8) | zentral offensiv, Angriff | Kopfball / Schuss | Vorlage / Schuss |
+| Džeko (10) | zentral offensiv, Angriff | Schuss / Kopfball | Schuss |
+| Sylla (9) | zentral offensiv, Angriff | Schuss / Kopfball | Schuss |
