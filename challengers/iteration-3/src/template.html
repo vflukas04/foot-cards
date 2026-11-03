@@ -302,6 +302,25 @@ table.stats td:first-child{text-align:left;color:var(--muted)}
 .pe-row b{font-family:var(--font-d);font-size:16px;flex:1}
 .pe-row span{font-size:12.5px}
 /* Draft */
+.scout{margin-top:16px;display:flex;flex-direction:column;gap:14px}
+.sc-report{background:#0d0f12;color:#fff;border:3px solid #111;border-radius:12px;padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.sc-report .sc-tag{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#9fd3ff}
+.sc-report h2{font-size:26px;margin:4px 0 6px;color:#fff}
+.sc-msg{font-size:17px;line-height:1.45;overflow:hidden;white-space:nowrap;border-right:2px solid #9fd3ff;width:0;animation:sctype 2.2s steps(60,end) .3s forwards,sccaret .8s step-end 6}
+.sc-msg.done{width:auto;white-space:normal;border-right:0;animation:none}
+@keyframes sctype{to{width:100%}}@keyframes sccaret{50%{border-color:transparent}}
+.sc-h{font-family:var(--font-d);font-weight:800;text-transform:uppercase;letter-spacing:.08em;font-size:15px;margin:2px 0 -4px}
+.sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.sc-grid .dcard{animation:flipin .6s cubic-bezier(.2,.7,.2,1) both}
+.sc-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line)}
+.sc-count{font-family:var(--font-d);font-weight:800;font-size:22px}
+.sc-pick .dcard{position:relative}.sc-pick .dcard .pcard{cursor:pointer}
+.sc-pick .dcard.sel .pcard{outline:4px solid var(--lila);outline-offset:-2px}
+.sc-pick .dcard.sel::after{content:'✓';position:absolute;top:-8px;left:-8px;width:28px;height:28px;border-radius:50%;background:var(--lila);color:#fff;font-weight:800;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.sc-pick .dcard.full:not(.sel) .pcard{opacity:.45}
+.sc-opp{display:flex;flex-wrap:wrap;gap:6px}.sc-opp span{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:3px 8px 3px 4px;font-size:13px;background:var(--surface)}
+.sc-opp span.bench{opacity:.6}
+@media (prefers-reduced-motion: reduce){.sc-msg{width:auto;white-space:normal;border-right:0;animation:none}.sc-grid .dcard{animation:none}}
 .draft{display:grid;grid-template-columns:200px minmax(0,1fr) 200px;gap:14px;align-items:start;margin-top:16px}
 @media (max-width:980px){.draft{grid-template-columns:1fr 1fr}.draft .dcenter{grid-column:1/-1;order:-1}}
 .dlist{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:6px;position:sticky;top:10px}
@@ -1283,7 +1302,7 @@ const TRACK = (() => {
 // Musik läuft nur im Draft und nur mit eingeschaltetem Ton; mit dem Anpfiff klingt sie aus
 function syncMusic(){
   const st = app.st;
-  if (SFX.on() && app.mode && st && (['draft','setup'].includes(st.phase) || (st.phase === 'half' && !app.replay) || app.swap)) TRACK.start(SFX.ctx(), SFX.musicOut());
+  if (SFX.on() && app.mode && st && (['draft','setup','scout'].includes(st.phase) || (st.phase === 'half' && !app.replay) || app.swap)) TRACK.start(SFX.ctx(), SFX.musicOut());
   else TRACK.stop();
 }
 
@@ -1303,7 +1322,7 @@ function setState(next){
   if (fly && (next.phase === 'draft' || next.phase === 'setup')) { render(); fly(); return; }
   // Token ausgegeben oder bekommen? Klang und kurze Anzeige an der Tokenleiste, auch beim Gegner.
   // Löst der neue Stand einen Zug auf, gehören die Änderungen zur Abwehr: dann erst beim Aufdecken der Abwehr.
-  if (old && next && old.teams && next.teams && !['draft','setup'].includes(next.phase)) {
+  if (old && next && old.teams && next.teams && !['draft','setup','scout'].includes(next.phase)) {
     const resolving = next.prev && old.phase !== 'draft' && (!old.prev || old.prev.turn !== next.prev.turn);
     tokenFx(old, next, resolving ? BEAT * SPEEDS[speed()] : 0);
   }
@@ -1435,9 +1454,9 @@ function boardHtml(st){
   const g = { A: st.goals.A, B: st.goals.B };
   if (rp && rp.prev.out.k === 'goal' && rp.step < 2) g[rp.prev.possStart]--;
   const pulse = rp && rp.prev.out.k === 'goal' && rp.step >= 2;
-  const clock = st.phase==='over' && !rp ? 'Abpfiff' : st.phase==='draft' ? 'Draft' : st.phase==='setup' ? 'Aufstellung' : (st.phase==='half' && !rp) || app.swap ? 'Halbzeitpause' : `${rp?rp.prev.minute+1:st.minute}. Minute · ${rp&&rp.prev.half?rp.prev.half:st.half}. Halbzeit`;
+  const clock = st.phase==='over' && !rp ? 'Abpfiff' : st.phase==='draft' ? 'Draft' : st.phase==='scout' ? 'Scouting' : st.phase==='setup' ? 'Aufstellung' : (st.phase==='half' && !rp) || app.swap ? 'Halbzeitpause' : `${rp?rp.prev.minute+1:st.minute}. Minute · ${rp&&rp.prev.half?rp.prev.half:st.half}. Halbzeit`;
   const possNow = rp ? (rp.step>=2?rp.prev.possEnd:rp.prev.possStart) : st.poss;
-  const pd = s => possNow===s && !['draft','setup'].includes(st.phase) && !((st.phase==='over'||st.phase==='half')&&!rp) && !app.swap ? '<span class="possdot" title="Ballbesitz"></span>' : '';
+  const pd = s => possNow===s && !['draft','setup','scout'].includes(st.phase) && !((st.phase==='over'||st.phase==='half')&&!rp) && !app.swap ? '<span class="possdot" title="Ballbesitz"></span>' : '';
   const vwarn = app.mode === 'p2p' && app.versionMismatch ? `<div class="notice vwarn" style="margin-top:12px"><b>Ihr spielt unterschiedliche Versionen</b> (du: ${esc(BUILD || '?')}, ${app.isHost ? 'dein Gegner' : 'Gastgeber'}: ${esc(app.versionMismatch)}). Das führt zu Fehlern. Bitte ${app.isHost ? 'deinen Gegner die Seite neu laden lassen' : 'die Seite neu laden'} (Strg+F5 bzw. Cmd+Shift+R) und neu beitreten. Die Version steht oben neben dem Titel.</div>` : '';
   return vwarn + `<div class="board">
     <div class="team tbox ta"><div class="tname">${pd('A')}${esc(teamLabel('A'))}</div><div class="tsub">${st.teams.A.name&&playerLabel('A')!=='Heim'?esc(playerLabel('A'))+' · ':''}Heim · ${esc(card(st.teams.A.gk).name)} (${card(st.teams.A.gk).fields.join('-')})</div></div>
@@ -1512,6 +1531,7 @@ function render(){
   const scrollY = window.scrollY;
   app.flipIdx = 0;
   if (st.phase === 'draft') { v.innerHTML = boardHtml(st) + draftHtml(st); bindGame(); return; }
+  if (st.phase === 'scout') { v.innerHTML = boardHtml(st) + scoutHtml(st); bindScout(); window.scrollTo(0, scrollY); return; }
   if (st.phase === 'setup') {
     const ae = document.activeElement, fid = ae && ae.id === 'teamName' ? ae.selectionStart : null;
     v.innerHTML = boardHtml(st) + setupHtml(st); bindGame(); bindSetup();
@@ -1557,7 +1577,7 @@ document.addEventListener('keydown', e => {
 // ---------- Zwangszüge ----------
 // Hat der Spieler, der dran ist, nur eine einzige erlaubte Aktion, wird sie automatisch gewählt.
 function forcedAct(st){
-  if (!st || app.replay || !canAct(st) || st.phase === 'setup' || st.phase === 'half') return null;
+  if (!st || app.replay || !canAct(st) || st.phase === 'setup' || st.phase === 'half' || st.phase === 'scout') return null;
   const acts = FC.legal(st, FC.actor(st));
   return acts.length === 1 ? acts[0] : null;
 }
@@ -1971,7 +1991,7 @@ function deckPanel(st, s, own){
   const drawnHidden = app.replay && st.cur ? ['def','att'].map(r=>st.cur[r]&&st.cur[r].id).filter(id=>id && t.squad.includes(id)) : [];
   const pile = sortP(t.pile.concat(drawnHidden)), disc = sortP(t.discard.filter(id=>!onTable.includes(id)));
   // Was bringt die Karte in der nächsten Situation? (eigener Blick: Rolle im nächsten Zug)
-  const nextRole = ['over','draft','setup','half'].includes(st.phase) ? null : (st.poss===s ? 'att' : 'def');
+  const nextRole = ['over','draft','setup','half','scout'].includes(st.phase) ? null : (st.poss===s ? 'att' : 'def');
   const zoneFor = nextRole ? (nextRole==='att' ? st.ball : FC.MIRROR[st.ball]) : null;
   const mini = (id, where) => {
     const p = card(id), exh = t.exhausted.includes(id), y = t.yellow[id]||0, out = t.out.includes(id);
@@ -2234,6 +2254,55 @@ function draftHtml(st){
       ${musicNote()}${stack}
       <div class="pool">${pool}</div></div>
     ${list('B')}</div>`;
+}
+// ---------- Vereinsduell: Scouting-Bericht, dann eigenen Kader wählen ----------
+function scoutState(st){
+  const key = 'scout-' + st.seq + '-' + st.teams.B.squad.join(',');
+  if (!app.scout || app.scout.key !== key) app.scout = { key, step: 'report', sel: [], seen: false };
+  return app.scout;
+}
+function scoutHtml(st){
+  const S = scoutState(st), B = st.teams.B, mine = canAct(st) && FC.actor(st) === 'A' && (app.mode === 'local' || app.me === 'A');
+  const n = FC.squadOf(st);
+  const typ = id => card(id).typ ? `<small class="muted">${esc(card(id).typ)}</small>` : '';
+  if (S.step === 'report' || !mine) {
+    const fresh = !S.seen; S.seen = true;
+    const cardsOf = (ids, d0) => ids.map((id, i) => `<div class="dcard" data-cid="${id}" style="${fresh ? `animation-delay:${(d0 + i * .18).toFixed(2)}s` : 'animation:none'}">${cardHtml(id)}</div>`).join('');
+    const tail = 2.7 + (B.lineup.length + B.bench.length) * .18;
+    return `<div class="scout">
+      <div class="sc-report"><div class="sc-tag">Scouting-Bericht · vertraulich</div><h2>${esc(B.name)}</h2>
+        <div class="sc-msg${fresh ? '' : ' done'}">Unsere Scouts gehen davon aus, dass Schalke mit diesem Kader antritt.</div></div>
+      <div class="sc-h">Erwartete Startelf (${B.lineup.length}) · Torhüter ${esc(card(B.gk).name)}</div>
+      <div class="sc-grid">${cardsOf(B.lineup, 2.6)}</div>
+      <div class="sc-h">Bank (${B.bench.length})</div>
+      <div class="sc-grid">${cardsOf(B.bench, 2.6 + B.lineup.length * .18)}</div>
+      <div class="row" style="justify-content:center;${fresh ? `opacity:0;animation:pop .4s ease-out ${tail.toFixed(1)}s forwards` : ''}">${mine
+        ? `<button class="btn primary" id="scoutNext">Weiter: eigenen Kader wählen (${n} aus ${st.vflPool.length})</button>`
+        : `<div class="notice wait"><span class="thinking"></span>${esc(teamLabel('A'))} wählt den Kader gegen Schalke …</div>`}</div>
+    </div>`;
+  }
+  const sel = new Set(S.sel), full = sel.size >= n;
+  const pool = st.vflPool.slice().sort((x, y) => card(x).nr - card(y).nr).map(id => `<div class="dcard${sel.has(id) ? ' sel' : ''}${full ? ' full' : ''}" data-cid="${id}" role="button" tabindex="0" data-spick="${id}" aria-pressed="${sel.has(id)}">${cardHtml(id)}</div>`).join('');
+  const opp = [...B.lineup.map(id => [id, '']), ...B.bench.map(id => [id, ' bench'])].map(([id, c]) => `<span class="${c.trim()}" title="${esc(card(id).typ || '')}">${shirt(card(id))}${esc(card(id).name)}${c ? ' (Bank)' : ''}</span>`).join('');
+  return `<div class="scout sc-pick">
+    <div class="panel"><div class="sc-h" style="margin:0 0 8px">Gegner laut Scouts: ${esc(B.name)}</div><div class="sc-opp">${opp}</div>
+      <div class="row" style="margin-top:8px"><button class="btn small" id="scoutBack">Bericht nochmal ansehen</button></div></div>
+    <div class="sc-bar"><div><span class="sc-count">${sel.size} / ${n}</span> <span class="muted">Wähle deine ${n} VfL-Spieler für das Duell. Danach legst du wie gewohnt die Bank fest.</span></div>
+      <div class="row"><button class="btn small" id="scoutClear"${sel.size ? '' : ' disabled'}>Auswahl leeren</button><button class="btn primary" id="scoutGo"${sel.size === n ? '' : ' disabled'}>Mit diesem Kader ins Spiel</button></div></div>
+    <div class="sc-grid">${pool}</div>
+  </div>`;
+}
+function bindScout(){
+  const st = app.st, S = scoutState(st), n = FC.squadOf(st);
+  const nx = $('#scoutNext'); if (nx) nx.onclick = () => { S.step = 'pick'; render(); window.scrollTo(0, 0); };
+  const bk = $('#scoutBack'); if (bk) bk.onclick = () => { S.step = 'report'; render(); };
+  const cl = $('#scoutClear'); if (cl) cl.onclick = () => { S.sel = []; render(); };
+  const go = $('#scoutGo'); if (go) go.onclick = () => { if (S.sel.length === n) act({ type: 'squad', ids: S.sel.slice() }); };
+  document.querySelectorAll('[data-spick]').forEach(el => {
+    const f = () => { const id = el.dataset.spick, i = S.sel.indexOf(id); if (i >= 0) S.sel.splice(i, 1); else if (S.sel.length < n) { S.sel.push(id); SFX.play('flip'); announce(id); } render(); };
+    el.onclick = f; el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); f(); } };
+  });
+  if (S.step === 'report' && !S.flipped) { S.flipped = true; const k = st.teams.B.squad.length; for (let i = 0; i < k; i++) SFX.play('flip', 2600 + i * 180); }
 }
 // Gewählte Karte fliegt in die Leiste der Mannschaft; Stadionsprecher sagt den Spieler an
 function draftFx(old, next){
