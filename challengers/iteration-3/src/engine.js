@@ -52,7 +52,7 @@
   function emptyStats() { return { turns: 0, shots: 0, onTarget: 0, won: 0, lost: 0, passes: 0, yellow: 0, out: 0, duels: 0, xg: 0 }; }
   // Standard: alle 26 Karten → 13 pro Team (10 im Spiel + 3 Bank). Mit kleinerem Pool entsprechend weniger Bank.
   const SQUAD = 13, LINEUP = 10, MAX_SUBS = 3, MARKET = 5;
-  const CLUB_NAMES = { vfl: 'VfL Osnabrück', s04: 'FC Schalke 04', dfb: 'Deutschland' };
+  const CLUB_NAMES = { vfl: 'VfL Osnabrück', s04: 'FC Schalke 04', dfb: 'Deutschland', dfbf: 'Deutschland (Frauen)' };
   const squadOf = st => st.squadSize || SQUAD;
   const benchOf = st => Math.max(0, squadOf(st) - LINEUP);
   function setOut(st, k, text, extra) { if (st.cur) st.cur.out = Object.assign({ k, t: text }, st.cur.duel && st.cur.duel.kind !== 'Präsenz' ? { duel: st.cur.duel } : {}, extra || {}); }

@@ -638,7 +638,7 @@ button.gv-ar:hover{background:var(--att);color:#fff}
       <li>Torschuss: Punkte = Schusswert (Mitte) bzw. Kopfballwert, plus Assist des Spielers, der vorher am Ball war, plus 1 mit rotem Token, minus 1 bei Fernschuss. Der Schütze verteilt die Punkte offen auf die drei Keeperfelder. Dann wählen beide gleichzeitig eine Ecke. Gleiche Ecke: gehalten. Sonst würfelt der Schütze und muss echt unter den Feldwert kommen. Fehlschuss oder Parade: Abstoß (ZD).</li>
       <li>Token: Ein farbiges O bei der gewählten Aktion bringt diesen Token (max. je einer). <b>Version 3:</b> Die Token gehören zu einer einzelnen Aktion, vor oder hinter dem „/“, und nur diese Aktion bringt sie (z. B. Köhler ZO: nur „Gelb“ bringt die drei Token). Blau: zweiten Verteidiger ziehen. Grün: erschöpften Spieler beim Aufdecken entschöpfen. Rot: Option hinter „/“ bezahlen oder +1 beim Schuss. „Regeneriert“ entschöpft die Karte, „und erschöpft“ erschöpft sie.</li>
       <li>Zeit: Jeder Spielzug ist eine Minute. Halbzeit beim ersten Ballbesitzwechsel ab Minute 45, spätestens Minute 50. Ende beim ersten Ballbesitzwechsel ab Minute 90 plus eine Minute je Tor.</li>
-      <li><b>Spielmodus (neu in Version 3):</b> Kader zufällig, kompletter Draft (alle Karten offen) oder offener Markt (5 Karten offen, für jede gewählte wird eine vom verdeckten Stapel aufgedeckt). Kartenpool getrennt nach Verein: VfL-Karten alle, zufällig oder selbst abgehakt; Schalke-Karten nicht dabei, alle, zufällig oder selbst abgehakt. Pro Mannschaft höchstens 13 Karten: 10 im Spiel, der Rest auf der Bank; bei größerem Pool bleiben Karten übrig. Torhüter kommen nur von Vereinen, deren Karten im Pool sind. <b>Vereinsduell:</b> Gegner wählbar: FC Schalke 04 oder die deutsche Nationalmannschaft. Die Scouts zeigen zuerst den Kader des Gegners (13 zufällige Karten, Startelf und Bank stehen fest), dann wählt Heim 13 aus allen VfL-Karten. Gegen den Bot spielt der Bot den Gegner.</li>
+      <li><b>Spielmodus (neu in Version 3):</b> Kader zufällig, kompletter Draft (alle Karten offen) oder offener Markt (5 Karten offen, für jede gewählte wird eine vom verdeckten Stapel aufgedeckt). Kartenpool getrennt nach Verein: VfL-Karten alle, zufällig oder selbst abgehakt; Schalke-Karten nicht dabei, alle, zufällig oder selbst abgehakt. Pro Mannschaft höchstens 13 Karten: 10 im Spiel, der Rest auf der Bank; bei größerem Pool bleiben Karten übrig. Torhüter kommen nur von Vereinen, deren Karten im Pool sind. <b>Vereinsduell:</b> Gegner wählbar: FC Schalke 04, die deutsche Nationalmannschaft oder die Frauen-Nationalmannschaft (Werte nach ihrer Klasse im Frauenfußball, also etwa so stark wie die Männer-Nationalmannschaft). Die Scouts zeigen zuerst den Kader des Gegners (13 zufällige Karten, Startelf und Bank stehen fest), dann wählt Heim 13 aus allen VfL-Karten. Gegen den Bot spielt der Bot den Gegner.</li>
       <li><b>Halbzeit (neu in Version 3):</b> Jede Mannschaft darf bis zu 3 Spieler auswechseln. Wer Gelb-Rot gesehen hat, kann nicht ersetzt werden. Danach wird jedes Deck aus den 10 Spielern im Spiel frisch gemischt, die Ablage ist leer, Einwechselspieler sind frisch. Erschöpfung, Gelbe Karten und Token bleiben. Die Seiten werden gewechselt.</li>
       <li><b>Noten und xG:</b> Jeder Spieler bekommt eine Schulnote von 1 (sehr gut) bis 6 (ungenügend) nach seinen erfolgreichen und missglückten Aktionen, gewonnenen und verlorenen Duellen, Toren und Vorlagen, Keeper nach Paraden und Gegentoren. xG (erwartete Tore) ist die Summe der Torchancen aller Schüsse. Gezählt wird die Chance direkt nach der Punkteverteilung, bevor Schütze und Keeper ihre Ecke wählen – unter der Annahme, dass beide ihre Ecke klug mischen (Gleichgewicht des Torschuss-Duells). Auch eine Parade zählt also mit ihrer Torchance.</li>
       <li><b>Annahmen, bitte prüfen:</b> Fernschuss (nicht aus ZO) kostet 1 Punkt. Diagonalball geht aus LD nach RO, aus RD nach LO, aus der Mitte auf einen der beiden Flügel vorn. Gleichstand im Tempo-Duell nach Präsenz: Ball bleibt beim Angreifer, ohne Bewegung. Ein O in Cyan oder Lila gilt als blauer Token. Kopfballduell auch nach Präsenz gleich: Die Abwehr klärt. Im Kopfballduell gibt es keine Token und keine Token-Aktionen.</li>
@@ -2515,8 +2515,8 @@ function scoutHtml(st){
     const tail = 2.7 + (B.lineup.length + B.bench.length) * .18;
     return `<div class="scout">
       <div class="sc-report"><div class="sc-tag">Scouting-Bericht · vertraulich</div><h2>${esc(B.name)}</h2>
-        <div class="sc-msg${fresh ? '' : ' done'}">Unsere Scouts gehen davon aus, dass ${esc(st.opp === 'dfb' ? 'die Nationalmannschaft' : 'Schalke')} mit diesem Kader antritt.</div></div>
-      <div class="sc-h">Erwartete Startelf (${B.lineup.length}) · Torhüter ${esc(card(B.gk).name)}</div>
+        <div class="sc-msg${fresh ? '' : ' done'}">Unsere Scouts gehen davon aus, dass ${esc(st.opp === 'dfb' ? 'die Nationalmannschaft' : st.opp === 'dfbf' ? 'die Frauen-Nationalmannschaft' : 'Schalke')} mit diesem Kader antritt.</div></div>
+      <div class="sc-h">Erwartete Startelf (${B.lineup.length}) · ${st.opp === 'dfbf' ? 'Torhüterin' : 'Torhüter'} ${esc(card(B.gk).name)}</div>
       <div class="sc-grid">${cardsOf(B.lineup, 2.6)}</div>
       <div class="sc-h">Bank (${B.bench.length})</div>
       <div class="sc-grid">${cardsOf(B.bench, 2.6 + B.lineup.length * .18)}</div>
@@ -2903,12 +2903,12 @@ function lobbyHtml(){
 // ---------- Spieleinstellungen: Modus und Kartenpool (gilt für „anlegen“, „an einem Gerät“ und „gegen den Bot“) ----------
 const ALL_IDS = CARD_DATA.players.map(p => p.id);
 // Vereine: Karten ohne „club“ gehören zum VfL Osnabrück
-const CLUBS = [{ k: 'vfl', name: 'VfL Osnabrück', short: 'VfL' }, { k: 's04', name: 'FC Schalke 04', short: 'Schalke' }, { k: 'dfb', name: 'Deutschland', short: 'DFB' }];
+const CLUBS = [{ k: 'vfl', name: 'VfL Osnabrück', short: 'VfL' }, { k: 's04', name: 'FC Schalke 04', short: 'Schalke' }, { k: 'dfb', name: 'Deutschland', short: 'DFB' }, { k: 'dfbf', name: 'Deutschland (Frauen)', short: 'DFB-Frauen' }];
 const clubOf = p => p.club || 'vfl';
 const CLUB_IDS = Object.fromEntries(CLUBS.map(c => [c.k, CARD_DATA.players.filter(p => clubOf(p) === c.k).map(p => p.id)]));
 function settings(){
   const raw = LS.get('fc3-settings') || {};
-  const s = { mode: raw.mode || 'draft', chase: raw.chase || 'pay', opp: raw.opp === 'dfb' ? 'dfb' : 's04', clubs: {} };
+  const s = { mode: raw.mode || 'draft', chase: raw.chase || 'pay', opp: ['dfb', 'dfbf'].includes(raw.opp) ? raw.opp : 's04', clubs: {} };
   for (const c of CLUBS) {
     const ids = CLUB_IDS[c.k];
     // Ältere Einstellungen (ein gemeinsamer Pool) gelten für den VfL; Schalke und Deutschland sind anfangs nicht dabei
@@ -2951,14 +2951,14 @@ function settingsHtml(){
   };
   const club = s.mode === 'club';
   const info = club
-    ? `Die Scouts zeigen dir zuerst den Kader des Gegners (${FC.SQUAD} zufällige Karten), dann wählst du deine ${FC.SQUAD} aus allen VfL-Karten. Gegen den Bot spielt der Bot den Gegner. ${s.opp === 'dfb' ? 'Deutschland ist Weltklasse: ein Sieg wäre eine Sensation.' : 'Schalke ist deutlich stärker.'}`
+    ? `Die Scouts zeigen dir zuerst den Kader des Gegners (${FC.SQUAD} zufällige Karten), dann wählst du deine ${FC.SQUAD} aus allen VfL-Karten. Gegen den Bot spielt der Bot den Gegner. ${s.opp === 'dfb' || s.opp === 'dfbf' ? 'Weltklasse: ein Sieg wäre eine Sensation.' : 'Schalke ist deutlich stärker.'}`
     : settingsOk(s)
       ? `${n} Karten im Pool → ${per} pro Mannschaft: 10 im Spiel${bench ? `, ${bench} auf der Bank (Wechsel in der Halbzeit)` : ', keine Bank (keine Wechsel)'}${rest ? `, ${rest} Karten bleiben übrig` : ''}.${CLUBS.reduce((a, c) => a + clubCount(s, c.k), 0) % 2 ? ' Eine Karte bleibt zufällig draußen (ungerade Anzahl).' : ''}`
       : `Zu wenige Karten: Es braucht mindestens ${2 * FC.LINEUP} (10 pro Mannschaft). Bitte mehr Karten wählen.`;
   return `<div class="panel mode settings"><h2>Spielmodus</h2>
     <div class="setgrid">
       <label><span class="label">Kader</span><select id="setMode">${opt('draft', s.mode, 'Kompletter Draft (alle Karten offen)')}${opt('market', s.mode, 'Offener Markt (5 Karten offen, Nachschub vom Stapel)')}${opt('random', s.mode, 'Zufällig verteilt (kein Draft)')}${opt('club', s.mode, 'Vereinsduell: VfL gegen einen stärkeren Gegner')}</select></label>
-      ${club ? `<label><span class="label">Gegner</span><select id="setOpp">${opt('s04', s.opp, 'FC Schalke 04 (Bundesliga)')}${opt('dfb', s.opp, 'Deutschland (Nationalmannschaft)')}</select></label>` : CLUBS.map(clubRow).join('')}
+      ${club ? `<label><span class="label">Gegner</span><select id="setOpp">${opt('s04', s.opp, 'FC Schalke 04 (Bundesliga)')}${opt('dfb', s.opp, 'Deutschland (Nationalmannschaft)')}${opt('dfbf', s.opp, 'Deutschland (Frauen-Nationalmannschaft)')}</select></label>` : CLUBS.map(clubRow).join('')}
       <label><span class="label">Nach Steilpass, Tempo-Duell verloren (Test)</span><select id="setChase">${opt('pay', s.chase || 'pay', 'Abwehr überlaufen: Eingreifen nur gegen Kosten')}${opt('free', s.chase || 'pay', 'Abwehr normal')}</select></label>
     </div>
     <div class="${settingsOk(s) ? 'muted' : 'notice vwarn'}" style="font-size:13.5px">${info} Online legt der Gastgeber die Einstellung fest.</div>

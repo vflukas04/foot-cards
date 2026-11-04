@@ -97,3 +97,37 @@ Bot gegen Bot (VfL bzw. Schalke mit den 13 stärksten Karten, 1000 Spiele): Deut
 | Jonathan Burkardt (13) | Strafraumstürmer | T 5 · P 5 · A 2 · K 6 · S 8 |
 | Chris Führich (19) | Flügeldribbler | T 6 · P 2 · A 5 · K 2 · S 5 |
 | Saïd El Mala (27) | Flügel-Talent, Dribbler | T 7 · P 2 · A 3 · K 2 · S 6 |
+
+
+## Deutschland Frauen (neu, 04.11.2026)
+
+24 Feldspielerinnen (Wücks Oktober-Aufgebot 2026 plus die verletzten Stammkräfte Gwinn, Hendrich und Endemann), im Tor Berger (1, Ecken 2/2/2, spielt im Vereinsduell) und Johannes (12, 2/3/2). Rückennummern sind nicht offiziell. Werte nach der Klasse im Frauenfußball, also etwa so stark wie die Männer-Nationalmannschaft (Summe im Schnitt 22,9, 26 grüne Aktionen).
+
+Bot gegen Bot (Gegner mit den 13 stärksten Karten, 800 Spiele): gegen Schalke 81 % / 9 % / 10 %; gegen VfL 95 % / 3 % / 2 %; gegen die Männer ausgeglichen (wer den Kader wählt, gewinnt 56–59 %).
+
+| Karte | Typ | Werte |
+|---|---|---|
+| Giulia Gwinn (15) | Kapitänin, offensive Rechtsverteidigerin, Standards | T 6 · P 6 · A 5 · K 3 · S 5 |
+| Kathrin Hendrich (3) | Abwehrchefin, kopfballstark | T 4 · P 7 · A 1 · K 8 · S 2 |
+| Janina Minge (4) | Zweikampfstarke Innenverteidigerin | T 4 · P 7 · A 2 · K 6 · S 3 |
+| Sophia Kleinherne (5) | Spielstarke Innenverteidigerin | T 5 · P 6 · A 3 · K 6 · S 2 |
+| Bibiane Schulze Solano (18) | Linksfüßige Innenverteidigerin, aufbaustark | T 4 · P 6 · A 4 · K 6 · S 2 |
+| Marie Müller (21) | Schnelle Innenverteidigerin | T 6 · P 6 · A 1 · K 6 · S 1 |
+| Sarai Linder (2) | Schnelle, offensive Linksverteidigerin | T 7 · P 4 · A 4 · K 2 · S 3 |
+| Franziska Kett (17) | Offensive Linksverteidigerin, Dribblerin | T 6 · P 4 · A 5 · K 2 · S 4 |
+| Carlotta Wamser (14) | Schnelle Rechtsverteidigerin | T 7 · P 4 · A 4 · K 2 · S 3 |
+| Camilla Küver (16) | Robuste Rechtsverteidigerin | T 5 · P 6 · A 3 · K 5 · S 2 |
+| Elisa Senß (6) | Taktgeberin im Mittelfeld | T 4 · P 6 · A 6 · K 3 · S 5 |
+| Sjoeke Nüsken (8) | Torgefährlicher Box-to-Box, kopfballstark | T 5 · P 7 · A 4 · K 6 · S 6 |
+| Linda Dallmann (10) | Zehnerin, kreative Spielmacherin | T 5 · P 4 · A 6 · K 1 · S 6 |
+| Lisa Baum (23) | Junge Flügelspielerin, Linksfuß | T 6 · P 3 · A 5 · K 2 · S 5 |
+| Jule Brand (22) | Weltklasse-Dribblerin, Tempo | T 8 · P 3 · A 5 · K 2 · S 6 |
+| Klara Bühl (19) | Weltklasse-Flügelspielerin, Vorlagengeberin | T 7 · P 3 · A 7 · K 2 · S 7 |
+| Lea Schüller (11) | Strafraumstürmerin, kopfballstark | T 5 · P 6 · A 3 · K 7 · S 8 |
+| Laura Freigang (9) | Hängende Spitze, Torjägerin | T 5 · P 5 · A 5 · K 5 · S 7 |
+| Selina Cerci (7) | Strafraumstürmerin mit Tempo | T 7 · P 4 · A 2 · K 5 · S 7 |
+| Nicole Anyomi (13) | Tempo-Stürmerin | T 9 · P 3 · A 3 · K 2 · S 6 |
+| Vivien Endemann (20) | Flügelstürmerin, Dribblerin | T 7 · P 3 · A 4 · K 2 · S 6 |
+| Cora Zicai (24) | Flügel-Talent, Dribblerin | T 7 · P 2 · A 4 · K 2 · S 5 |
+| Melissa Kössler (25) | Schnelle Flügelstürmerin | T 7 · P 3 · A 3 · K 2 · S 5 |
+| Larissa Mühlhaus (26) | Junge Mittelstürmerin | T 5 · P 5 · A 2 · K 6 · S 6 |
