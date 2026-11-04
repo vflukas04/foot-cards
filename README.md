@@ -42,3 +42,6 @@ console.log(st.goals);
 
 
 Die Verbindung läuft direkt zwischen zwei Browsern über PeerJS (kostenloser Vermittlungsserver von PeerJS). Der Spielstand liegt beim Spieler, der das Spiel angelegt hat. Regeln und Kartenmaterial liegen im gemeinsamen Google-Drive-Ordner „Foot Cards“.
+
+## Spielarchiv (Iteration 3)
+Jedes Spiel auf der GitHub-Seite wird in Firestore gespeichert (`games/footcards/archiv/<gid>`, Projekt `burbenoginspired`, dieselbe Datenbank wie BurbenogInspired und 3GenQuiz): Modus, Namen, Stand, Kader, Statistik, Torschützen und der ganze Spielverlauf. Im Online-Spiel schreibt nur der Gastgeber. Lokal geöffnete Dateien schreiben nichts. Auslesen: `node tools/spiele.js` (Übersicht) bzw. `node tools/spiele.js <gid>` (Spielbericht).

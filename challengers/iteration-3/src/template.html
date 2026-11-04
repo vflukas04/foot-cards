@@ -1521,9 +1521,39 @@ function crowdReaction(prev, at){
 // ---------- Tempo und Auflösungsmoment ----------
 const SPEEDS = { langsam: 1.7, normal: 1, schnell: .5 };
 function speed(){ const v = (typeof LS!=='undefined' && LS.get('fc-speed')) || 'normal'; return SPEEDS[v] ? v : 'normal'; }
+/* ---------- Spielarchiv (Firestore, gleiche Datenbank wie BurbenogInspired und 3GenQuiz) ----------
+   Pro Spiel ein Dokument games/footcards/archiv/<gid>: Version, Modus, Namen, Stand, Kader, Draft,
+   Statistik, Torschützen und als JSON der Spielverlauf (Züge und Spielbericht). Nur von der GitHub-Seite aus
+   (der Schlüssel ist auf vflukas04.github.io beschränkt); im Online-Spiel schreibt nur der Gastgeber. */
+const CLOUD = { url: 'https://firestore.googleapis.com/v1/projects/burbenoginspired/databases/(default)/documents/games/footcards/archiv/',
+  key: 'AIzaSyDqKXqGho_rQveqs7ltUR_vHykgGClgL1I', timer: null, last: null };
+const cloudOn = () => /github\.io$/.test(location.hostname) && app.mode !== 'online' && !(app.mode === 'p2p' && !app.isHost);
+const toFS = v => v === null || v === undefined ? {nullValue:null} : Array.isArray(v) ? {arrayValue:{values:v.map(toFS)}}
+  : typeof v === 'object' ? {mapValue:{fields:Object.fromEntries(Object.entries(v).map(([k, x]) => [k, toFS(x)]))}}
+  : typeof v === 'boolean' ? {booleanValue:v} : typeof v === 'number' ? (Number.isInteger(v) ? {integerValue:String(v)} : {doubleValue:v}) : {stringValue:String(v)};
+function cloudDoc(st){
+  const team = s => { const t = st.teams[s] || {}; const o = {}; for (const k of Object.keys(t)) if (!['pile', 'discard', 'hand'].includes(k)) o[k] = t[k]; return o; };
+  const verlauf = { opts: st.opts || null, pickOrder: st.pickOrder, teams: { A: team('A'), B: team('B') }, track: st.track, log: st.log,
+    stats: st.stats, halfStats: st.halfStats, scorers: st.scorers, ps: st.ps };
+  return { iteration: 3, build: BUILD || '', gid: st.gid, start: st.start || null, stand: new Date().toISOString(),
+    modus: app.mode || '', draft: st.mode || '', phase: st.phase, halbzeit: st.half, minute: st.minute,
+    namen: st.names, tore: st.goals, ergebnis: st.result || '', verlauf: JSON.stringify(verlauf) };
+}
+function cloudSave(st, now){
+  if (!st || !st.gid || !cloudOn() || ['draft', 'setup', 'scout'].includes(st.phase) && !now) return;
+  CLOUD.last = st; clearTimeout(CLOUD.timer);
+  const go = () => { const s = CLOUD.last; if (!s) return; try {
+    fetch(CLOUD.url + s.gid + '?key=' + CLOUD.key, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+      body: JSON.stringify({ fields: toFS(cloudDoc(s)).mapValue.fields }) }).then(r => { if (!r.ok) console.warn('Archiv', r.status); }).catch(e => console.warn('Archiv', e));
+  } catch(e) { console.warn('Archiv', e); } };
+  now ? go() : (CLOUD.timer = setTimeout(go, 4000));
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && CLOUD.last) cloudSave(CLOUD.last, true); });
+
 function setState(next){
   const old = app.st;
   app.st = next;
+  try { cloudSave(next, next && (next.phase === 'over' || next.phase === 'half') && (!old || old.phase !== next.phase)); } catch(e) {}
   if (old && old.phase === 'half' && next.phase !== 'half' && next.phase !== 'over') {
     clearTimeout(app.swapTimer);
     app.swap = { st: next };
