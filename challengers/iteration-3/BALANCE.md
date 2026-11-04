@@ -63,3 +63,37 @@ Im Vereinsduell wählt Heim jetzt seine 13 aus allen VfL-Karten. Damit Schalke t
 | Token | 3 | 4 |
 
 Bot gegen Bot, VfL mit den 13 stärksten Karten: Schalke gewinnt 72 % (vorher 53 %), Remis 16 %, VfL 12 %.
+
+
+## Deutschland (neu, 04.11.2026)
+
+24 Feldspieler aus Klopps Herbst-Aufgeboten 2026 und zwei Torhüter: ter Stegen (1, Ecken 2/2/2, spielt im Vereinsduell) und Atubolu (12, 2/3/2). Rückennummern sind nicht offiziell. Wertesumme im Schnitt 22,4 (Schalke 18,6, VfL 13,6), 26 grüne Aktionen, kaum „--“.
+
+Bot gegen Bot (VfL bzw. Schalke mit den 13 stärksten Karten, 1000 Spiele): Deutschland – Schalke 82 % / 9 % Remis / 9 %; Deutschland – VfL 97 % / 3 % / 1 %; Schalke – VfL 74 % / 16 % / 11 %.
+
+| Karte | Typ | Werte |
+|---|---|---|
+| Jonathan Tah (4) | Abwehrchef, kopfballstark | T 3 · P 7 · A 1 · K 8 · S 2 |
+| Nico Schlotterbeck (15) | Spielstarker, aggressiver Innenverteidiger | T 4 · P 6 · A 3 · K 6 · S 3 |
+| Waldemar Anton (16) | Zweikampfstarker Innenverteidiger | T 4 · P 6 · A 1 · K 6 · S 2 |
+| Malick Thiaw (23) | Schneller Innenverteidiger | T 6 · P 6 · A 1 · K 6 · S 1 |
+| Yann Aurel Bisseck (24) | Wuchtiger Innenverteidiger | T 5 · P 7 · A 1 · K 7 · S 2 |
+| David Raum (3) | Schienenspieler links, Flankengeber | T 6 · P 4 · A 6 · K 2 · S 3 |
+| Maximilian Mittelstädt (18) | Robuster Linksverteidiger | T 5 · P 5 · A 4 · K 3 · S 4 |
+| Nathaniel Brown (14) | Schneller Linksverteidiger | T 7 · P 4 · A 3 · K 2 · S 2 |
+| Ridle Baku (25) | Offensiver Rechtsverteidiger | T 6 · P 4 · A 4 · K 3 · S 4 |
+| Joshua Kimmich (6) | Kapitän, Taktgeber | T 4 · P 7 · A 7 · K 3 · S 5 |
+| Aleksandar Pavlović (5) | Ballsicherer Sechser | T 4 · P 6 · A 4 · K 3 · S 3 |
+| Felix Nmecha (21) | Dribbelstarker Box-to-Box | T 6 · P 6 · A 4 · K 3 · S 5 |
+| Anton Stach (8) | Abräumer, laufstark | T 5 · P 7 · A 2 · K 5 · S 4 |
+| Nadiem Amiri (22) | Kreativer Achter | T 5 · P 4 · A 5 · K 1 · S 5 |
+| Tom Bischof (26) | Spielmacher-Talent, Standards | T 5 · P 3 · A 6 · K 1 · S 5 |
+| Jamal Musiala (10) | Weltklasse-Dribbler | T 7 · P 3 · A 5 · K 2 · S 7 |
+| Florian Wirtz (17) | Weltklasse-Spielmacher | T 6 · P 4 · A 7 · K 2 · S 7 |
+| Kai Havertz (7) | Falsche Neun, kopfballstark | T 5 · P 6 · A 4 · K 7 · S 7 |
+| Nick Woltemade (9) | Wandspieler, technisch stark | T 3 · P 7 · A 5 · K 7 · S 6 |
+| Serge Gnabry (20) | Torgefährlicher Flügelstürmer | T 7 · P 4 · A 3 · K 3 · S 7 |
+| Karim Adeyemi (11) | Tempo-Stürmer | T 9 · P 3 · A 3 · K 2 · S 6 |
+| Jonathan Burkardt (13) | Strafraumstürmer | T 5 · P 5 · A 2 · K 6 · S 8 |
+| Chris Führich (19) | Flügeldribbler | T 6 · P 2 · A 5 · K 2 · S 5 |
+| Saïd El Mala (27) | Flügel-Talent, Dribbler | T 7 · P 2 · A 3 · K 2 · S 6 |

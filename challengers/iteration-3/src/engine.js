@@ -52,6 +52,7 @@
   function emptyStats() { return { turns: 0, shots: 0, onTarget: 0, won: 0, lost: 0, passes: 0, yellow: 0, out: 0, duels: 0, xg: 0 }; }
   // Standard: alle 26 Karten → 13 pro Team (10 im Spiel + 3 Bank). Mit kleinerem Pool entsprechend weniger Bank.
   const SQUAD = 13, LINEUP = 10, MAX_SUBS = 3, MARKET = 5;
+  const CLUB_NAMES = { vfl: 'VfL Osnabrück', s04: 'FC Schalke 04', dfb: 'Deutschland' };
   const squadOf = st => st.squadSize || SQUAD;
   const benchOf = st => Math.max(0, squadOf(st) - LINEUP);
   function setOut(st, k, text, extra) { if (st.cur) st.cur.out = Object.assign({ k, t: text }, st.cur.duel && st.cur.duel.kind !== 'Präsenz' ? { duel: st.cur.duel } : {}, extra || {}); }
@@ -75,23 +76,27 @@
       return shuffle(pool.length >= 2 ? pool : DATA.gks.map(g => g.id));
     };
     if (opts.mode === 'club') {
-      // Vereinsduell: Die Scouts kennen den Schalke-Kader (13 zufällige Karten, Startelf und Bank stehen fest).
+      // Vereinsduell: Die Scouts kennen den Kader des Gegners (Schalke oder Deutschland; 13 zufällige Karten, Startelf und Bank stehen fest).
       // Danach wählt Heim seine 13 aus allen VfL-Karten (Phase „scout“), dann Name und Bank wie gewohnt.
       const own = c => shuffle(DATA.players.filter(p => clubOf(p.id) === c).map(p => p.id));
-      const va = DATA.players.filter(p => clubOf(p.id) === 'vfl').map(p => p.id), sb = own('s04');
+      const opp = CLUB_NAMES[opts.opp] && opts.opp !== 'vfl' ? opts.opp : 's04';
+      const va = DATA.players.filter(p => clubOf(p.id) === 'vfl').map(p => p.id), sb = own(opp);
       const n = Math.min(SQUAD, va.length, sb.length);
-      st.mode = 'club'; st.squadSize = n; st.poolSize = va.length + n;
+      st.mode = 'club'; st.opp = opp; st.squadSize = n; st.poolSize = va.length + n;
       st.vflPool = va;
       const B = st.teams.B;
       B.squad = sb.slice(0, n);
       B.bench = B.squad.slice().sort((x, y) => power(x) - power(y)).slice(0, Math.max(0, n - LINEUP));
       B.lineup = B.squad.filter(id => !B.bench.includes(id));
-      B.name = 'FC Schalke 04'; st.names.B = B.name;
-      const gv = pickGks(['vfl']), gs = DATA.gks.filter(g => g.club === 's04').map(g => g.id);
-      st.teams.A.gk = gv[0]; B.gk = gs.length ? shuffle(gs)[0] : gv[1];
-      st.opts = { mode: 'club', pool: null, poolIds: null, chaseRule: opts.chaseRule === 'free' ? 'free' : 'pay' };
+      B.name = CLUB_NAMES[opp]; st.names.B = B.name;
+      const gv = pickGks(['vfl']), gs = DATA.gks.filter(g => g.club === opp).map(g => g.id);
+      st.teams.A.gk = gv[0];
+      // Stärkster Torhüter des Gegners steht im Tor (niedrigste Eckenwerte): Karius bzw. ter Stegen
+      const gsum = id => byId[id].fields.reduce((x, y) => x + y, 0);
+      B.gk = gs.length ? gs.slice().sort((x, y) => gsum(x) - gsum(y))[0] : gv[1];
+      st.opts = { mode: 'club', opp, pool: null, poolIds: null, chaseRule: opts.chaseRule === 'free' ? 'free' : 'pay' };
       st.phase = 'scout';
-      log(st, `Vereinsduell: Die Scouts erwarten den FC Schalke 04 mit ${B.lineup.map(id => card(id).name).join(', ')}. Bank: ${B.bench.map(id => card(id).name).join(', ')}.`, 'info');
+      log(st, `Vereinsduell: Die Scouts erwarten ${B.name} mit ${B.lineup.map(id => card(id).name).join(', ')}. Bank: ${B.bench.map(id => card(id).name).join(', ')}.`, 'info');
       return st;
     }
     // Kartenpool: alle Karten oder eine zufällige Auswahl (gerade Anzahl, mindestens 2 × LINEUP); höchstens 13 pro Mannschaft
@@ -843,7 +848,7 @@
     if (ph === 'setup') {
       const t = st.teams[s];
       const bench = t.squad.slice().sort((x, y) => power(x) - power(y)).slice(0, benchOf(st));
-      return { type: 'team', name: st.mode === 'club' ? (s === 'A' ? 'VfL Osnabrück' : 'FC Schalke 04') : 'Bot-Elf', bench };
+      return { type: 'team', name: st.mode === 'club' ? (s === 'A' ? 'VfL Osnabrück' : CLUB_NAMES[st.opp || 's04']) : 'Bot-Elf', bench };
     }
     if (ph === 'half') {
       const t = st.teams[s], g = grades(st, s);
@@ -908,6 +913,6 @@
     return pick(acts);
   }
 
-  const api = { ZONES, MIRROR, LATERAL, QUER, FORWARD, BACKWARD, DIAG, ZONE_NAME, CORNERS, SQUAD, LINEUP, MAX_SUBS, MARKET, squadOf, benchOf, setData, card, other, newGame, legal, apply, actor, zoneRow, canPay, botAct, shotGame, distOk, DEF_BEATS, duelText, grades };
+  const api = { CLUB_NAMES, ZONES, MIRROR, LATERAL, QUER, FORWARD, BACKWARD, DIAG, ZONE_NAME, CORNERS, SQUAD, LINEUP, MAX_SUBS, MARKET, squadOf, benchOf, setData, card, other, newGame, legal, apply, actor, zoneRow, canPay, botAct, shotGame, distOk, DEF_BEATS, duelText, grades };
   if (typeof module !== 'undefined') module.exports = api; else root.FC = api;
 })(typeof window !== 'undefined' ? window : globalThis);
