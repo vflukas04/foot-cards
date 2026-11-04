@@ -2062,7 +2062,7 @@ function goalView(st, D){
   }
   // Felder im Tor
   const fieldHtml = fields.map((v, i) => {
-    if (ph === 'dist' && mine) return `<div class="gv-f decide decide-a"><span class="label">${FC.CORNERS[i]}</span><b>${v}</b><span class="gv-pm"><button class="btn small" data-dist="${i}:-1" ${dist.add[i]===0?'disabled':''} aria-label="weniger ${FC.CORNERS[i]}">−</button><button class="btn small" data-dist="${i}:1" ${used>=total?'disabled':''} aria-label="mehr ${FC.CORNERS[i]}">+</button></span><small>Treffer ${pct(v)} %</small></div>`;
+    if (ph === 'dist' && mine) return `<div class="gv-f decide decide-a"><span class="label">${FC.CORNERS[i]}</span><b>${v}</b><span class="gv-pm"><button class="btn small" data-dist="${i}:-1" ${dist.add[i]===0?'disabled':''} aria-label="weniger ${FC.CORNERS[i]}">−</button><button class="btn small" data-dist="${i}:1" ${used>=total||(v>=7&&!fields.every((w,j)=>j===i||w>=7))?'disabled':''} aria-label="mehr ${FC.CORNERS[i]}">+</button></span><small>Treffer ${pct(v)} %</small></div>`;
     if (ph === 'gk' && mine) return `<div class="gv-f pick decide decide-d" role="button" tabindex="0" data-act='{"type":"gk","n":${i}}' data-key="${i+1}" title="Keeper springt nach ${FC.CORNERS[i]}"><span class="label">${FC.CORNERS[i]}</span><b>${v}</b><small>hierhin springen</small></div>`;
     const hit = ph === 'replay' && rp.step >= 2 && i === sh.aim;
     return `<div class="gv-f${hit ? ' hit' : ''}"><span class="label">${FC.CORNERS[i]}</span><b>${v}</b>${ph !== 'replay' ? `<small>Treffer ${pct(v)} %</small>` : ''}</div>`;

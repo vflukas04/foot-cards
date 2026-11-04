@@ -288,8 +288,9 @@
     if (ph === 'move') { st.cur.targets.forEach(z => acts.push({ type: 'move', zone: z })); return acts; }
     if (ph === 'dist') {
       const sh = st.cur.shot;
-      distributions(sh.points).forEach(add => acts.push({ type: 'dist', add, boost: false }));
-      if (st.teams[s].tok.R && !st.cur.att.usedRed) distributions(sh.points + 1).forEach(add => acts.push({ type: 'dist', add, boost: true }));
+      const okAdd = add => distOk(sh.gkBase.map((v, i) => v + add[i]));
+      distributions(sh.points).filter(okAdd).forEach(add => acts.push({ type: 'dist', add, boost: false }));
+      if (st.teams[s].tok.R && !st.cur.att.usedRed) distributions(sh.points + 1).filter(okAdd).forEach(add => acts.push({ type: 'dist', add, boost: true }));
       return acts;
     }
     if (ph === 'gk') { [0, 1, 2].forEach(n => acts.push({ type: 'gk', n })); return acts; }
@@ -633,6 +634,8 @@
     } else { x[order[0]] = 1; q[order[0]] = 1; }
     return { v: best.v, p, x, q };
   }
+  // Ein Feld darf nur über 7 gehen, wenn alle anderen schon mindestens 7 haben (ab 7 trifft der Wurf sicher)
+  function distOk(fields) { return fields.every((v, i) => v <= 7 || fields.every((w, j) => j === i || w >= 7)); }
   function pickMix(w) { let r = Math.random() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < w.length; i++) { r -= w[i]; if (r <= 0 && w[i] > 0) return i; } return w.indexOf(Math.max(...w)); }
 
   function startShot(st, kind) {
@@ -885,9 +888,7 @@
       // Verteilung mit der besten Torchance (Spielwert), kein Feld über 7 (ab 7 trifft der Wurf sicher);
       // bei fast gleich guten Verteilungen zufällig wählen
       const base = st.cur.shot.gkBase;
-      let cand = distributions(n).map(add => ({ add, f: base.map((v, i) => v + add[i]) }));
-      const capped = cand.filter(c => c.f.every((v, i) => v <= Math.max(7, base[i])));
-      if (capped.length) cand = capped;
+      const cand = distributions(n).map(add => ({ add, f: base.map((v, i) => v + add[i]) })).filter(c => distOk(c.f));
       cand.forEach(c => { c.v = shotGame(c.f).v; });
       const top = Math.max(...cand.map(c => c.v));
       const good = cand.filter(c => c.v >= top - 0.005);
@@ -897,11 +898,17 @@
       return { type: 'gk', n: pickMix(shotGame(st.cur.shot.fields).q) };
     }
     if (ph === 'shot') {
-      return { type: 'aim', n: pickMix(shotGame(st.cur.shot.fields).x) };
+      // Gleichgewicht als Grundlage, pro Schuss mit „Bauchgefühl“ vermischt, damit der Bot nicht ablesbar ist:
+      // Anteil λ zwischen 15 und 45 %, Bauchgefühl = zufällige Gewichte auf alle Ecken mit Trefferchance
+      const g = shotGame(st.cur.shot.fields);
+      const lam = 0.15 + 0.3 * Math.random();
+      const gut = g.p.map(p => p > 0 ? -Math.log(1 - Math.random()) : 0);
+      const gs = gut.reduce((a, b) => a + b, 0) || 1;
+      return { type: 'aim', n: pickMix(g.x.map((x, i) => (1 - lam) * x + lam * gut[i] / gs)) };
     }
     return pick(acts);
   }
 
-  const api = { ZONES, MIRROR, LATERAL, QUER, FORWARD, BACKWARD, DIAG, ZONE_NAME, CORNERS, SQUAD, LINEUP, MAX_SUBS, MARKET, squadOf, benchOf, setData, card, other, newGame, legal, apply, actor, zoneRow, canPay, botAct, shotGame, DEF_BEATS, duelText, grades };
+  const api = { ZONES, MIRROR, LATERAL, QUER, FORWARD, BACKWARD, DIAG, ZONE_NAME, CORNERS, SQUAD, LINEUP, MAX_SUBS, MARKET, squadOf, benchOf, setData, card, other, newGame, legal, apply, actor, zoneRow, canPay, botAct, shotGame, distOk, DEF_BEATS, duelText, grades };
   if (typeof module !== 'undefined') module.exports = api; else root.FC = api;
 })(typeof window !== 'undefined' ? window : globalThis);
