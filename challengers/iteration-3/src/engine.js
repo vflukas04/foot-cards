@@ -288,9 +288,8 @@
     if (ph === 'move') { st.cur.targets.forEach(z => acts.push({ type: 'move', zone: z })); return acts; }
     if (ph === 'dist') {
       const sh = st.cur.shot;
-      const okAdd = add => distOk(sh.gkBase.map((v, i) => v + add[i]));
-      distributions(sh.points).filter(okAdd).forEach(add => acts.push({ type: 'dist', add, boost: false }));
-      if (st.teams[s].tok.R && !st.cur.att.usedRed) distributions(sh.points + 1).filter(okAdd).forEach(add => acts.push({ type: 'dist', add, boost: true }));
+      distributions(sh.points).forEach(add => acts.push({ type: 'dist', add, boost: false }));
+      if (st.teams[s].tok.R && !st.cur.att.usedRed) distributions(sh.points + 1).forEach(add => acts.push({ type: 'dist', add, boost: true }));
       return acts;
     }
     if (ph === 'gk') { [0, 1, 2].forEach(n => acts.push({ type: 'gk', n })); return acts; }
@@ -634,7 +633,7 @@
     } else { x[order[0]] = 1; q[order[0]] = 1; }
     return { v: best.v, p, x, q };
   }
-  // Ein Feld darf nur über 7 gehen, wenn alle anderen schon mindestens 7 haben (ab 7 trifft der Wurf sicher)
+  // Bot-Regel: ein Feld nur über 7, wenn alle anderen schon mindestens 7 haben (ab 7 trifft der Wurf sicher)
   function distOk(fields) { return fields.every((v, i) => v <= 7 || fields.every((w, j) => j === i || w >= 7)); }
   function pickMix(w) { let r = Math.random() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < w.length; i++) { r -= w[i]; if (r <= 0 && w[i] > 0) return i; } return w.indexOf(Math.max(...w)); }
 
