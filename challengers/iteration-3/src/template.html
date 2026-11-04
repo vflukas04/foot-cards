@@ -653,6 +653,7 @@ const CARD_DATA = /*CARDS*/null;
 const BUILD = /*BUILD*/null;   // Versionskennung (build.py); beide Geräte müssen dieselbe haben
 const DRAFT_TRACK = /*MUSIC*/null;   // eingebettete Musikdatei (build.py), sonst null
 const CHANT_HOME = /*CHANT_HOME*/null;   // Fangesang der Heimkurve (Aufnahme, Pixabay), sonst null
+const CLIP_GOAL = /*CLIP_GOAL*/null;   // Torjubel (Aufnahme, Mixkit), sonst null
 </script>
 <script>
 /*ENGINE*/
@@ -1237,7 +1238,7 @@ const SFX = (() => {
       musIn.connect(dry).connect(musBus); musIn.connect(lp); lp.connect(farG).connect(musBus); lp.connect(conv).connect(rev).connect(musBus);
       far = { dry, farG, rev, on: false };
     }
-    if (ctx && CHANT_HOME && !clips.home && !clips.loading) loadClip(ctx);
+    if (ctx && !clips.loading) loadClips(ctx);
     if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch(e){} }
     return ctx;
   }
@@ -1245,11 +1246,15 @@ const SFX = (() => {
   function env(g, t0, a, peak, dur){ g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(peak, t0 + a); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); }
   let bed = null;
   // Aufgenommener Heim-Fangesang (einmal dekodiert)
-  const clips = { home: null, loading: false };
-  function loadClip(c){
+  // Aufnahmen: Heim-Fangesang und Torjubel (einmal dekodiert)
+  const clips = { home: null, goal: null, loading: false };
+  function loadClips(c){
     clips.loading = true;
-    try { const bin = atob(CHANT_HOME.split(',')[1]), arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-      c.decodeAudioData(arr.buffer).then(b => { clips.home = b; }).catch(e => console.error(e)); } catch(e) { console.error(e); }
+    for (const [k, data] of [['home', CHANT_HOME], ['goal', CLIP_GOAL]]) {
+      if (!data) continue;
+      try { const bin = atob(data.split(',')[1]), arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        c.decodeAudioData(arr.buffer).then(b => { clips[k] = b; }).catch(e => console.error(e)); } catch(e) { console.error(e); }
+    }
   }
   // Stadionseite: Heim links, Gast rechts; die Gästekurve klingt etwas ferner
   function side(c, s){
@@ -1285,6 +1290,15 @@ const SFX = (() => {
     swell(c, t, len){ const d = len || 2.2; const n = noise(c, d), f = filt(c, 'bandpass', 380, .7), g = c.createGain(); f.frequency.setValueAtTime(380, t); f.frequency.exponentialRampToValueAtTime(820, t + d * .8); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.2, t + d * .75); g.gain.exponentialRampToValueAtTime(.0001, t + d); n.connect(f).connect(g).connect(crowdBus || sfxBus); n.start(t); n.stop(t + d); },
     // Tor: Aufschrei, langer Jubel mit vielen Stimmen und Applaus
     goalRoar(c, t, s){
+      if (clips.goal) {
+        // Aufnahme: Jubel des ganzen Stadions, etwas zur Kurve des Torschützen hin
+        const src = c.createBufferSource(), g = c.createGain(), out = crowdBus || sfxBus;
+        src.buffer = clips.goal;
+        let dest = out;
+        if (s && c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = s === 'A' ? -.35 : .35; p.connect(out); dest = p; }
+        g.gain.value = .85; src.connect(g).connect(dest); src.start(t);
+        return;
+      }
       const d = 5.5, n = noise(c, d), f = filt(c, 'bandpass', 600, .5), lp = filt(c, 'lowpass', 2600), g = c.createGain(), out = s ? side(c, s) : (crowdBus || sfxBus);
       f.frequency.setValueAtTime(500, t); f.frequency.exponentialRampToValueAtTime(900, t + .6); f.frequency.exponentialRampToValueAtTime(650, t + d);
       g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.75, t + .35); g.gain.setTargetAtTime(.45, t + .9, 1.2); g.gain.exponentialRampToValueAtTime(.0001, t + d);
@@ -1635,7 +1649,7 @@ function startReplay(prev){
   if (prev.att && prev.att.id && !/^--/.test(prev.att.eff || prev.att.action || '--')) SFX.play('kick');
   if (prev.def && prev.def.id || prev.shot) SFX.play('flip', t1 * m);
   SFX.play(outcomeSound(prev), t2 * m, prev.out && prev.out.k === 'goal' ? prev.possStart : undefined);
-  if (prev.out && prev.out.k === 'goal') SFX.play('chant', (t2 + 4200) * m, prev.possStart);
+  if (prev.out && prev.out.k === 'goal') SFX.play('chant', (t2 + 7500) * m, prev.possStart);   // nach dem ersten Jubel stimmt die Kurve ihr Lied an
   crowdReaction(prev, (t2 + 120) * m);
   if (prev.whistle) SFX.play('whistle', (t2 + 1000) * m, prev.whistle === 'Abpfiff' ? 3 : 2);
   if (prev.shot) { SFX.play('kick', (t2 - 150) * m); if (dice) SFX.play('murmur', tDice * m, 1.8); }
