@@ -1263,6 +1263,31 @@ const SFX = (() => {
     hey(c, t){ for (let i = 0; i < 26; i++) { const s0 = t + Math.random() * .07, d = .2 + Math.random() * .1; const n = noise(c, d + .05), f = filt(c, 'bandpass', 520 + Math.random() * 420, 5), f2 = filt(c, 'lowpass', 2200), g = c.createGain(); f.frequency.setValueAtTime(f.frequency.value * .85, s0); f.frequency.linearRampToValueAtTime(f.frequency.value * 1.15, s0 + d); env(g, s0, .015, .09, d); n.connect(f).connect(f2).connect(g).connect(crowdBus || sfxBus); n.start(s0); n.stop(s0 + d + .05); } },
     // Anschwellen: die Menge wird unruhig, kurz vor einer gefährlichen Szene
     swell(c, t, len){ const d = len || 2.2; const n = noise(c, d), f = filt(c, 'bandpass', 380, .7), g = c.createGain(); f.frequency.setValueAtTime(380, t); f.frequency.exponentialRampToValueAtTime(820, t + d * .8); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.2, t + d * .75); g.gain.exponentialRampToValueAtTime(.0001, t + d); n.connect(f).connect(g).connect(crowdBus || sfxBus); n.start(t); n.stop(t + d); },
+    // Tor: Aufschrei, langer Jubel mit vielen Stimmen und Applaus
+    goalRoar(c, t){
+      const d = 5.5, n = noise(c, d), f = filt(c, 'bandpass', 600, .5), lp = filt(c, 'lowpass', 2600), g = c.createGain();
+      f.frequency.setValueAtTime(500, t); f.frequency.exponentialRampToValueAtTime(900, t + .6); f.frequency.exponentialRampToValueAtTime(650, t + d);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.75, t + .35); g.gain.setTargetAtTime(.45, t + .9, 1.2); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      n.connect(f).connect(lp).connect(g).connect(crowdBus || sfxBus); n.start(t); n.stop(t + d);
+      for (let i = 0; i < 60; i++) { const s0 = t + .1 + Math.random() * 3.2, dd = .25 + Math.random() * .6; const v = noise(c, dd + .05), vf = filt(c, 'bandpass', 450 + Math.random() * 900, 5), vg = c.createGain(); vf.frequency.setValueAtTime(vf.frequency.value, s0); vf.frequency.linearRampToValueAtTime(vf.frequency.value * 1.3, s0 + dd); env(vg, s0, .03, .07 + Math.random() * .06, dd); v.connect(vf).connect(vg).connect(crowdBus || sfxBus); v.start(s0); v.stop(s0 + dd + .05); }
+      P.applause(c, t + 1.2, 3.8);
+    },
+    // Parade: lautes „Ohhh!“, das in Applaus übergeht
+    saveRoar(c, t){
+      const d = 2.2, n = noise(c, d), f = filt(c, 'bandpass', 520, .7), g = c.createGain();
+      f.frequency.setValueAtTime(700, t); f.frequency.exponentialRampToValueAtTime(330, t + d);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.55, t + .2); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      n.connect(f).connect(g).connect(crowdBus || sfxBus); n.start(t); n.stop(t + d);
+      P.applause(c, t + .7, 2.6);
+    },
+    // Vorbei: langgezogenes, enttäuschtes „Uuuuh“ der Menge
+    missGroan(c, t){
+      const d = 2.4, n = noise(c, d), f = filt(c, 'lowpass', 1000), bp = filt(c, 'bandpass', 420, .8), g = c.createGain();
+      f.frequency.setValueAtTime(1100, t); f.frequency.exponentialRampToValueAtTime(240, t + d);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.6, t + .25); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      n.connect(bp).connect(f).connect(g).connect(crowdBus || sfxBus); n.start(t); n.stop(t + d);
+      for (let i = 0; i < 24; i++) { const s0 = t + Math.random() * .5, dd = .6 + Math.random() * .7; const v = noise(c, dd + .05), vf = filt(c, 'bandpass', 380 + Math.random() * 400, 6), vg = c.createGain(); vf.frequency.setValueAtTime(vf.frequency.value * 1.2, s0); vf.frequency.exponentialRampToValueAtTime(vf.frequency.value * .7, s0 + dd); env(vg, s0, .08, .05, dd); v.connect(vf).connect(vg).connect(crowdBus || sfxBus); v.start(s0); v.stop(s0 + dd + .05); }
+    },
     ohh(c, t){ const n = noise(c, 1.3), f = filt(c, 'lowpass', 900), g = c.createGain(); f.frequency.setValueAtTime(950, t); f.frequency.exponentialRampToValueAtTime(220, t + 1.2); env(g, t, .3, .35, 1.3); n.connect(f).connect(g).connect(crowdBus || sfxBus); n.start(t); n.stop(t + 1.3); },
     whistle(c, t, times){ const k = times || 1; for (let i = 0; i < k; i++) { const t0 = t + i * .42, len = (i === k - 1 && k > 1) ? .75 : .28; const o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain(); o.frequency.value = 2900; l.frequency.value = 36; lg.gain.value = 110; l.connect(lg).connect(o.frequency); env(g, t0, .01, .16, len); o.connect(g).connect(sfxBus); o.start(t0); l.start(t0); o.stop(t0 + len); l.stop(t0 + len); } },
   };
@@ -1373,6 +1398,12 @@ function syncCrowd(){
   let mode = 'off', lvl = 0;
   if (app.mode && st) {
     if ((st.phase === 'half' && !app.replay) || app.swap) mode = 'half';
+    else if (app.replay && app.replay.prev.shot) {
+      // Torszene: Der Zug ist in der Spiellogik schon vorbei, das Stadion fiebert aber bis zur Auflösung mit
+      const o = app.replay.prev.shot.outcome;
+      mode = 'game'; lvl = app.replay.step < 2 ? 1 : o === 'tor' ? 1 : o === 'parade' ? .55 : .4;
+    }
+    else if (st.phase === 'over' && app.replay) { mode = 'game'; lvl = .3; }
     else if (!['draft','setup','scout','over'].includes(st.phase)) { mode = 'game'; lvl = tensionOf(st); }
   }
   SFX.far(mode === 'half');
@@ -1512,9 +1543,9 @@ function presenceMoment(st){
 const BEAT = 1500;
 function outcomeSound(p){
   const k = p.out.k, da = p.def && p.def.action, aa = p.att && (p.att.eff || p.att.action);
-  if (k === 'goal') return 'cheer';
-  if (k === 'save') return 'applause';
-  if (k === 'miss') return 'ohh';
+  if (k === 'goal') return 'goalRoar';
+  if (k === 'save') return 'saveRoar';
+  if (k === 'miss') return 'missGroan';
   if (k === 'yellow' || k === 'red') return 'whistle';
   if (k === 'presence') return 'slide';
   if (k === 'change') return (aa === 'Ballverlust' || aa === 'Fehlpass') ? 'ohh' : (da === 'Tackling' || da === 'Ballgewinn') ? 'slide' : 'kick';
