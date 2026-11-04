@@ -34,7 +34,7 @@ for src in sorted(list(root.glob('challengers/*/src')) + list(root.glob('2decks/
         t = t.replace('/*MUSIC*/null', data)
     # Stadion-Aufnahmen (wie die Musik nicht im Repository); fehlt eine Datei, wird sie aus index.html übernommen
     old_html = (src.parent / 'index.html').read_text(encoding='utf-8') if (src.parent / 'index.html').exists() else ''
-    for name, fname in (('CHANT_HOME', 'chant-home.mp3'), ('CLIP_GOAL', 'clip-goal.mp3')):
+    for name, fname in (('CHANT_HOME', 'chant-home.mp3'), ('CHANT_AWAY', 'chant-away.mp3')):
         if '/*' + name + '*/null' not in t:
             continue
         fp = src / fname
