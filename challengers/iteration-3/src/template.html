@@ -1308,7 +1308,7 @@ const SFX = (() => {
       voices(c, t, 26, .5, 450, 1300, .08, 1.3, out);
       for (let i = 0; i < 80; i++) { const s0 = t + .3 + Math.random() * 1.4, fade = 1 - (s0 - t - .3) / 1.6; const m = noise(c, .04), mf = filt(c, 'bandpass', 1100 + Math.random() * 2400, .9), mg = c.createGain(); env(mg, s0, .002, (.1 + Math.random() * .12) * fade * .9, .04); m.connect(mf).connect(mg).connect(out); m.start(s0); m.stop(s0 + .05); }
     },
-    // Fangesang (Rhythmus): Heim „Bum – Bum – Bum, klatsch-klatsch-klatsch, HEY!“, Gast mit eigenem Rhythmus; ca. 9 Sekunden
+    // Fangesang (Rhythmus): Heim „Bum – Bum – Bum, klatsch-klatsch-klatsch“, Gast mit eigenem Rhythmus; ca. 9 Sekunden
     chant(c, t, s){
       const out = side(c, s), beat = .5, home = s !== 'B';
       // leiser Chor darunter, der mitschwingt
@@ -1320,7 +1320,6 @@ const SFX = (() => {
         if (home) {
           [0, 1, 2].forEach(k => drum(c, b0 + k * beat, out));
           [3, 3.33, 3.66].forEach(k => claps(c, b0 + k * beat, out));
-          const h = b0 + 4 * beat; for (let i = 0; i < 30; i++) { const s0 = h + Math.random() * .06, d = .22 + Math.random() * .1; const v = noise(c, d + .05), vf = filt(c, 'bandpass', 520 + Math.random() * 420, 5), vg = c.createGain(); env(vg, s0, .015, .09, d); v.connect(vf).connect(vg).connect(out); v.start(s0); v.stop(s0 + d + .05); }
         } else {
           [0, .5, 1, 2].forEach(k => claps(c, b0 + k * beat, out, .9));
           drum(c, b0 + 3 * beat, out, .8);
