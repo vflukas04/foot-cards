@@ -59,7 +59,7 @@
   function newGame(opts) {
     opts = opts || {};
     const st = {
-      v: 2, seq: 0, phase: 'draft', mode: opts.mode || 'random', squadSize: SQUAD, poolSize: 0, deck: [],
+      v: 2, seq: 0, gid: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), start: Date.now(), phase: 'draft', mode: opts.mode || 'random', squadSize: SQUAD, poolSize: 0, deck: [],
       names: opts.names || { A: 'Heim', B: 'Gast' },
       teams: { A: emptyTeam(), B: emptyTeam() },
       pool: [], pickOrder: [],
@@ -127,7 +127,7 @@
   }
   function log(st, text, kind) {
     st.log.push({ m: st.minute, t: text, k: kind || '' });
-    if (st.log.length > 400) st.log.splice(0, st.log.length - 400);
+    if (st.log.length > 1500) st.log.splice(0, st.log.length - 1500);   // reicht für ein ganzes Spiel (Archiv)
   }
   // Nach dem Draft: Jede Mannschaft gibt sich einen Namen und wählt 3 Ersatzspieler
   function startSetup(st) {
