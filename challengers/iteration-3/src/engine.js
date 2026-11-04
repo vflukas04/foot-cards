@@ -473,6 +473,7 @@
         if (act.boost) { st.teams[s].tok.R = false; st.cur.att.usedRed = true; }
         const f = sh.gkBase.map((v, i) => v + sh.add[i]);
         sh.fields = f;
+        sh.xg = shotGame(f).v;   // erwartetes Tor vor der Wahl der Ecken
         log(st, `${card(sh.shooter).name} verteilt ${sh.points + (act.boost ? 1 : 0)} Punkte: Torwartfelder jetzt ${f.join(' · ')}.`, 'shot');
         st.phase = 'gk';
         break;
@@ -609,6 +610,31 @@
     endTurn(st, false);
   }
 
+  // Torschuss als Spiel zwischen Schütze und Keeper: Beide wählen gleichzeitig eine Ecke,
+  // gleiche Ecke = Parade, sonst Treffer mit Wahrscheinlichkeit p_i = (Feldwert − 1) / 6 (höchstens 1).
+  // Wert v = Torchance, wenn beide optimal mischen (Nash-Gleichgewicht). Der Keeper springt in Ecke i
+  // mit q_i = 1 − v/p_i, der Schütze zielt auf Ecke i mit x_i ∝ 1/p_i – jeweils nur auf den stärksten Ecken.
+  function shotProb(v) { return Math.max(0, Math.min(1, (v - 1) / 6)); }
+  function shotGame(fields) {
+    const p = fields.map(shotProb);
+    const order = [0, 1, 2].sort((i, j) => p[j] - p[i]);
+    let best = { v: 0, k: 1 };
+    for (let k = 2; k <= 3; k++) {
+      const S = order.slice(0, k);
+      if (S.some(i => p[i] <= 0)) break;
+      const v = (k - 1) / S.reduce((a, i) => a + 1 / p[i], 0);
+      if (v > best.v) best = { v, k };
+    }
+    const S = order.slice(0, best.k);
+    const x = [0, 0, 0], q = [0, 0, 0];
+    if (best.v > 0) {
+      const inv = S.reduce((a, i) => a + 1 / p[i], 0);
+      S.forEach(i => { x[i] = (1 / p[i]) / inv; q[i] = 1 - best.v / p[i]; });
+    } else { x[order[0]] = 1; q[order[0]] = 1; }
+    return { v: best.v, p, x, q };
+  }
+  function pickMix(w) { let r = Math.random() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < w.length; i++) { r -= w[i]; if (r <= 0 && w[i] > 0) return i; } return w.indexOf(Math.max(...w)); }
+
   function startShot(st, kind) {
     const a = st.cur.att, attS = st.poss, defS = other(attS);
     const sh = card(a.id);
@@ -631,6 +657,8 @@
     sh.aim = aim;
     const shooter = card(sh.shooter), gk = card(sh.gk);
     st.cur.shotDone = true;
+    if (sh.xg == null) sh.xg = shotGame(sh.fields).v;
+    st.stats[attS].xg = (st.stats[attS].xg || 0) + sh.xg;
     log(st, `Schuss nach ${CORNERS[aim]}, Torwart springt nach ${CORNERS[sh.gkN]}.`, 'shot');
     if (aim === sh.gkN) {
       sh.outcome = 'parade';
@@ -640,8 +668,6 @@
       st.lastShot = sh; st.poss = defS; st.ball = 'ZD'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.holder = null;
       return endTurn(st, true);
     }
-    sh.xg = 2 / 3 * Math.max(0, Math.min(1, (sh.fields[aim] - 1) / 6));
-    st.stats[attS].xg = (st.stats[attS].xg || 0) + sh.xg;
     const need = sh.fields[aim];
     const roll = rnd(6) + 1;
     sh.roll = roll; sh.need = need;
@@ -856,27 +882,26 @@
     if (ph === 'dist') {
       const boost = acts.some(a => a.boost);
       const n = st.cur.shot.points + (boost ? 1 : 0);
-      const t = rnd(3), add = [0, 0, 0];
-      // Hälfte auf ein Feld, Rest auf ein zweites
-      const t2 = (t + 1 + rnd(2)) % 3;
-      add[t] = Math.ceil(n / 2); add[t2] += n - add[t];
-      return { type: 'dist', add, boost };
+      // Verteilung mit der besten Torchance (Spielwert), kein Feld über 7 (ab 7 trifft der Wurf sicher);
+      // bei fast gleich guten Verteilungen zufällig wählen
+      const base = st.cur.shot.gkBase;
+      let cand = distributions(n).map(add => ({ add, f: base.map((v, i) => v + add[i]) }));
+      const capped = cand.filter(c => c.f.every((v, i) => v <= Math.max(7, base[i])));
+      if (capped.length) cand = capped;
+      cand.forEach(c => { c.v = shotGame(c.f).v; });
+      const top = Math.max(...cand.map(c => c.v));
+      const good = cand.filter(c => c.v >= top - 0.005);
+      return { type: 'dist', add: pick(good).add, boost };
     }
     if (ph === 'gk') {
-      const f = st.cur.shot.fields;
-      const best = f.indexOf(Math.max(...f));
-      return Math.random() < 0.55 ? { type: 'gk', n: best } : pick(acts);
+      return { type: 'gk', n: pickMix(shotGame(st.cur.shot.fields).q) };
     }
     if (ph === 'shot') {
-      const f = st.cur.shot.fields;
-      const w = f.map(v => Math.max(0.2, Math.min(5, v - 1)));
-      let r = Math.random() * w.reduce((a, b) => a + b, 0);
-      for (let i = 0; i < 3; i++) { r -= w[i]; if (r <= 0) return { type: 'aim', n: i }; }
-      return { type: 'aim', n: 2 };
+      return { type: 'aim', n: pickMix(shotGame(st.cur.shot.fields).x) };
     }
     return pick(acts);
   }
 
-  const api = { ZONES, MIRROR, LATERAL, QUER, FORWARD, BACKWARD, DIAG, ZONE_NAME, CORNERS, SQUAD, LINEUP, MAX_SUBS, MARKET, squadOf, benchOf, setData, card, other, newGame, legal, apply, actor, zoneRow, canPay, botAct, DEF_BEATS, duelText, grades };
+  const api = { ZONES, MIRROR, LATERAL, QUER, FORWARD, BACKWARD, DIAG, ZONE_NAME, CORNERS, SQUAD, LINEUP, MAX_SUBS, MARKET, squadOf, benchOf, setData, card, other, newGame, legal, apply, actor, zoneRow, canPay, botAct, shotGame, DEF_BEATS, duelText, grades };
   if (typeof module !== 'undefined') module.exports = api; else root.FC = api;
 })(typeof window !== 'undefined' ? window : globalThis);
