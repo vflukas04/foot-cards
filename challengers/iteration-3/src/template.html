@@ -81,7 +81,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .pcard .head{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .pcard .pname{font-family:var(--font-d);font-weight:700;font-size:17px;line-height:1.1}
 .shirt{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:26px;padding:0 5px;border-radius:5px 5px 7px 7px;color:#fff;font-family:var(--font-d);font-weight:800;font-size:15px;clip-path:polygon(18% 0,82% 0,100% 22%,86% 36%,86% 100%,14% 100%,14% 36%,0 22%)}
-.shirt.lila{background:var(--lila)}.shirt.blau{background:var(--blau)}
+.shirt.lila{background:var(--lila)}.shirt.blau{background:var(--blau)}.shirt.weiss{background:linear-gradient(#fff 0 70%,#111 70% 80%,#d00 80% 90%,#ffce00 90%);color:#111}
 .shirt.tilt{transform:rotate(90deg)}
 .shots{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;border:1px solid var(--line);border-radius:6px;font-family:var(--font-d);font-weight:700;text-align:center;font-size:14px;font-variant-numeric:tabular-nums;width:78px;flex:none}
 .shots span{border:1px solid var(--line);padding:1px 0}
@@ -638,7 +638,7 @@ button.gv-ar:hover{background:var(--att);color:#fff}
       <li>Torschuss: Punkte = Schusswert (Mitte) bzw. Kopfballwert, plus Assist des Spielers, der vorher am Ball war, plus 1 mit rotem Token, minus 1 bei Fernschuss. Der Schütze verteilt die Punkte offen auf die drei Keeperfelder. Dann wählen beide gleichzeitig eine Ecke. Gleiche Ecke: gehalten. Sonst würfelt der Schütze und muss echt unter den Feldwert kommen. Fehlschuss oder Parade: Abstoß (ZD).</li>
       <li>Token: Ein farbiges O bei der gewählten Aktion bringt diesen Token (max. je einer). <b>Version 3:</b> Die Token gehören zu einer einzelnen Aktion, vor oder hinter dem „/“, und nur diese Aktion bringt sie (z. B. Köhler ZO: nur „Gelb“ bringt die drei Token). Blau: zweiten Verteidiger ziehen. Grün: erschöpften Spieler beim Aufdecken entschöpfen. Rot: Option hinter „/“ bezahlen oder +1 beim Schuss. „Regeneriert“ entschöpft die Karte, „und erschöpft“ erschöpft sie.</li>
       <li>Zeit: Jeder Spielzug ist eine Minute. Halbzeit beim ersten Ballbesitzwechsel ab Minute 45, spätestens Minute 50. Ende beim ersten Ballbesitzwechsel ab Minute 90 plus eine Minute je Tor.</li>
-      <li><b>Spielmodus (neu in Version 3):</b> Kader zufällig, kompletter Draft (alle Karten offen) oder offener Markt (5 Karten offen, für jede gewählte wird eine vom verdeckten Stapel aufgedeckt). Kartenpool getrennt nach Verein: VfL-Karten alle, zufällig oder selbst abgehakt; Schalke-Karten nicht dabei, alle, zufällig oder selbst abgehakt. Pro Mannschaft höchstens 13 Karten: 10 im Spiel, der Rest auf der Bank; bei größerem Pool bleiben Karten übrig. Torhüter kommen nur von Vereinen, deren Karten im Pool sind. <b>Vereinsduell:</b> Heim spielt mit 13 zufälligen VfL-Karten, Gast (gegen den Bot: der Bot) mit 13 zufälligen Schalke-Karten und Loris Karius im Tor.</li>
+      <li><b>Spielmodus (neu in Version 3):</b> Kader zufällig, kompletter Draft (alle Karten offen) oder offener Markt (5 Karten offen, für jede gewählte wird eine vom verdeckten Stapel aufgedeckt). Kartenpool getrennt nach Verein: VfL-Karten alle, zufällig oder selbst abgehakt; Schalke-Karten nicht dabei, alle, zufällig oder selbst abgehakt. Pro Mannschaft höchstens 13 Karten: 10 im Spiel, der Rest auf der Bank; bei größerem Pool bleiben Karten übrig. Torhüter kommen nur von Vereinen, deren Karten im Pool sind. <b>Vereinsduell:</b> Gegner wählbar: FC Schalke 04 oder die deutsche Nationalmannschaft. Die Scouts zeigen zuerst den Kader des Gegners (13 zufällige Karten, Startelf und Bank stehen fest), dann wählt Heim 13 aus allen VfL-Karten. Gegen den Bot spielt der Bot den Gegner.</li>
       <li><b>Halbzeit (neu in Version 3):</b> Jede Mannschaft darf bis zu 3 Spieler auswechseln. Wer Gelb-Rot gesehen hat, kann nicht ersetzt werden. Danach wird jedes Deck aus den 10 Spielern im Spiel frisch gemischt, die Ablage ist leer, Einwechselspieler sind frisch. Erschöpfung, Gelbe Karten und Token bleiben. Die Seiten werden gewechselt.</li>
       <li><b>Noten und xG:</b> Jeder Spieler bekommt eine Schulnote von 1 (sehr gut) bis 6 (ungenügend) nach seinen erfolgreichen und missglückten Aktionen, gewonnenen und verlorenen Duellen, Toren und Vorlagen, Keeper nach Paraden und Gegentoren. xG (erwartete Tore) ist die Summe der Torchancen aller Schüsse. Gezählt wird die Chance direkt nach der Punkteverteilung, bevor Schütze und Keeper ihre Ecke wählen – unter der Annahme, dass beide ihre Ecke klug mischen (Gleichgewicht des Torschuss-Duells). Auch eine Parade zählt also mit ihrer Torchance.</li>
       <li><b>Annahmen, bitte prüfen:</b> Fernschuss (nicht aus ZO) kostet 1 Punkt. Diagonalball geht aus LD nach RO, aus RD nach LO, aus der Mitte auf einen der beiden Flügel vorn. Gleichstand im Tempo-Duell nach Präsenz: Ball bleibt beim Angreifer, ohne Bewegung. Ein O in Cyan oder Lila gilt als blauer Token. Kopfballduell auch nach Präsenz gleich: Die Abwehr klärt. Im Kopfballduell gibt es keine Token und keine Token-Aktionen.</li>
@@ -2354,7 +2354,7 @@ function setupHtml(st){
     return `<div class="panel setup"><h2 class="setup-h">${esc(t.name)} steht.</h2><div class="notice wait"><span class="thinking"></span>${esc(playerLabel(o))} stellt noch ${o==='A'?'die Heimmannschaft':'die Gastmannschaft'} auf …</div></div>`;
   }
   const key = s + ':' + t.squad.join();
-  if (!app.setup || app.setup.key !== key) app.setup = { key, seat: s, bench: nBench ? t.squad.slice(-nBench) : [], name: st.mode === 'club' ? (s === 'A' ? 'VfL Osnabrück' : 'FC Schalke 04') : '' };
+  if (!app.setup || app.setup.key !== key) app.setup = { key, seat: s, bench: nBench ? t.squad.slice(-nBench) : [], name: st.mode === 'club' ? (s === 'A' ? 'VfL Osnabrück' : FC.CLUB_NAMES[st.opp || 's04']) : '' };
   const S = app.setup, fly = !app.revealed.has('fly-' + key); app.revealed.add('fly-' + key);
   const ok = S.bench.length === nBench;
   const who = app.mode === 'local' ? `<span class="label">${esc(playerLabel(s))} ist dran · ${esc(playerLabel(o))} schaut bitte weg</span>` : '';
@@ -2515,14 +2515,14 @@ function scoutHtml(st){
     const tail = 2.7 + (B.lineup.length + B.bench.length) * .18;
     return `<div class="scout">
       <div class="sc-report"><div class="sc-tag">Scouting-Bericht · vertraulich</div><h2>${esc(B.name)}</h2>
-        <div class="sc-msg${fresh ? '' : ' done'}">Unsere Scouts gehen davon aus, dass Schalke mit diesem Kader antritt.</div></div>
+        <div class="sc-msg${fresh ? '' : ' done'}">Unsere Scouts gehen davon aus, dass ${esc(st.opp === 'dfb' ? 'die Nationalmannschaft' : 'Schalke')} mit diesem Kader antritt.</div></div>
       <div class="sc-h">Erwartete Startelf (${B.lineup.length}) · Torhüter ${esc(card(B.gk).name)}</div>
       <div class="sc-grid">${cardsOf(B.lineup, 2.6)}</div>
       <div class="sc-h">Bank (${B.bench.length})</div>
       <div class="sc-grid">${cardsOf(B.bench, 2.6 + B.lineup.length * .18)}</div>
       <div class="row" style="justify-content:center;${fresh ? `opacity:0;animation:pop .4s ease-out ${tail.toFixed(1)}s forwards` : ''}">${mine
         ? `<button class="btn primary" id="scoutNext">Weiter: eigenen Kader wählen (${n} aus ${st.vflPool.length})</button>`
-        : `<div class="notice wait"><span class="thinking"></span>${esc(teamLabel('A'))} wählt den Kader gegen Schalke …</div>`}</div>
+        : `<div class="notice wait"><span class="thinking"></span>${esc(teamLabel('A'))} wählt den Kader gegen ${esc(B.name)} …</div>`}</div>
     </div>`;
   }
   const sel = new Set(S.sel), full = sel.size >= n;
@@ -2903,15 +2903,15 @@ function lobbyHtml(){
 // ---------- Spieleinstellungen: Modus und Kartenpool (gilt für „anlegen“, „an einem Gerät“ und „gegen den Bot“) ----------
 const ALL_IDS = CARD_DATA.players.map(p => p.id);
 // Vereine: Karten ohne „club“ gehören zum VfL Osnabrück
-const CLUBS = [{ k: 'vfl', name: 'VfL Osnabrück', short: 'VfL' }, { k: 's04', name: 'FC Schalke 04', short: 'Schalke' }];
+const CLUBS = [{ k: 'vfl', name: 'VfL Osnabrück', short: 'VfL' }, { k: 's04', name: 'FC Schalke 04', short: 'Schalke' }, { k: 'dfb', name: 'Deutschland', short: 'DFB' }];
 const clubOf = p => p.club || 'vfl';
 const CLUB_IDS = Object.fromEntries(CLUBS.map(c => [c.k, CARD_DATA.players.filter(p => clubOf(p) === c.k).map(p => p.id)]));
 function settings(){
   const raw = LS.get('fc3-settings') || {};
-  const s = { mode: raw.mode || 'draft', chase: raw.chase || 'pay', clubs: {} };
+  const s = { mode: raw.mode || 'draft', chase: raw.chase || 'pay', opp: raw.opp === 'dfb' ? 'dfb' : 's04', clubs: {} };
   for (const c of CLUBS) {
     const ids = CLUB_IDS[c.k];
-    // Ältere Einstellungen (ein gemeinsamer Pool) gelten für den VfL; Schalke ist anfangs nicht dabei
+    // Ältere Einstellungen (ein gemeinsamer Pool) gelten für den VfL; Schalke und Deutschland sind anfangs nicht dabei
     const def = c.k === 'vfl' ? { pool: raw.pool || 'all', count: raw.count || 20, custom: raw.custom || ids.slice() } : { pool: 'none', count: 10, custom: ids.slice() };
     const o = Object.assign(def, (raw.clubs || {})[c.k] || {});
     if (c.k === 'vfl' && o.pool === 'none') o.pool = 'all';
@@ -2928,7 +2928,7 @@ function settingsOk(s){ return s.mode === 'club' || poolCount(s) >= 2 * FC.LINEU
 function shuffled(a){ a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function gameOpts(){
   const s = settings(), base = { chaseRule: s.chase === 'free' ? 'free' : 'pay', names: { A: 'Heim', B: 'Gast' } };
-  if (s.mode === 'club') return Object.assign({ mode: 'club' }, base);
+  if (s.mode === 'club') return Object.assign({ mode: 'club', opp: s.opp }, base);
   // Pool je Verein zusammenstellen: alle, zufällige Auswahl oder selbst abgehakt
   const ids = [];
   for (const c of CLUBS) {
@@ -2951,14 +2951,14 @@ function settingsHtml(){
   };
   const club = s.mode === 'club';
   const info = club
-    ? `Heim spielt mit ${FC.SQUAD} zufälligen VfL-Karten, Gast mit ${FC.SQUAD} zufälligen Schalke-Karten und Loris Karius im Tor. Gegen den Bot spielt der Bot Schalke. Schalke ist deutlich stärker.`
+    ? `Die Scouts zeigen dir zuerst den Kader des Gegners (${FC.SQUAD} zufällige Karten), dann wählst du deine ${FC.SQUAD} aus allen VfL-Karten. Gegen den Bot spielt der Bot den Gegner. ${s.opp === 'dfb' ? 'Deutschland ist Weltklasse: ein Sieg wäre eine Sensation.' : 'Schalke ist deutlich stärker.'}`
     : settingsOk(s)
       ? `${n} Karten im Pool → ${per} pro Mannschaft: 10 im Spiel${bench ? `, ${bench} auf der Bank (Wechsel in der Halbzeit)` : ', keine Bank (keine Wechsel)'}${rest ? `, ${rest} Karten bleiben übrig` : ''}.${CLUBS.reduce((a, c) => a + clubCount(s, c.k), 0) % 2 ? ' Eine Karte bleibt zufällig draußen (ungerade Anzahl).' : ''}`
       : `Zu wenige Karten: Es braucht mindestens ${2 * FC.LINEUP} (10 pro Mannschaft). Bitte mehr Karten wählen.`;
   return `<div class="panel mode settings"><h2>Spielmodus</h2>
     <div class="setgrid">
-      <label><span class="label">Kader</span><select id="setMode">${opt('draft', s.mode, 'Kompletter Draft (alle Karten offen)')}${opt('market', s.mode, 'Offener Markt (5 Karten offen, Nachschub vom Stapel)')}${opt('random', s.mode, 'Zufällig verteilt (kein Draft)')}${opt('club', s.mode, 'Vereinsduell: VfL gegen Schalke (feste Kader)')}</select></label>
-      ${club ? '' : CLUBS.map(clubRow).join('')}
+      <label><span class="label">Kader</span><select id="setMode">${opt('draft', s.mode, 'Kompletter Draft (alle Karten offen)')}${opt('market', s.mode, 'Offener Markt (5 Karten offen, Nachschub vom Stapel)')}${opt('random', s.mode, 'Zufällig verteilt (kein Draft)')}${opt('club', s.mode, 'Vereinsduell: VfL gegen einen stärkeren Gegner')}</select></label>
+      ${club ? `<label><span class="label">Gegner</span><select id="setOpp">${opt('s04', s.opp, 'FC Schalke 04 (Bundesliga)')}${opt('dfb', s.opp, 'Deutschland (Nationalmannschaft)')}</select></label>` : CLUBS.map(clubRow).join('')}
       <label><span class="label">Nach Steilpass, Tempo-Duell verloren (Test)</span><select id="setChase">${opt('pay', s.chase || 'pay', 'Abwehr überlaufen: Eingreifen nur gegen Kosten')}${opt('free', s.chase || 'pay', 'Abwehr normal')}</select></label>
     </div>
     <div class="${settingsOk(s) ? 'muted' : 'notice vwarn'}" style="font-size:13.5px">${info} Online legt der Gastgeber die Einstellung fest.</div>
@@ -2978,6 +2978,7 @@ function bindSettings(){
   const save = f => { const n = settings(); f(n); saveSettings(n); render(); };
   const m = $('#setMode'); if (m) m.onchange = () => save(n => { n.mode = m.value; });
   const ch = $('#setChase'); if (ch) ch.onchange = () => save(n => { n.chase = ch.value; });
+  const op = $('#setOpp'); if (op) op.onchange = () => save(n => { n.opp = op.value; });
   document.querySelectorAll('[data-cpool]').forEach(el => el.onchange = () => save(n => { n.clubs[el.dataset.cpool].pool = el.value; }));
   document.querySelectorAll('[data-ccount]').forEach(el => el.onchange = () => save(n => { n.clubs[el.dataset.ccount].count = +el.value; }));
   document.querySelectorAll('[data-ccustom]').forEach(el => el.onclick = () => { app.poolEdit = el.dataset.ccustom; render(); });
