@@ -32,6 +32,13 @@ for src in sorted(list(root.glob('challengers/*/src')) + list(root.glob('2decks/
         prev = re.search(r'const DRAFT_TRACK = ("data:audio/mpeg;base64,[A-Za-z0-9+/=]+");', old.read_text(encoding='utf-8')) if old.exists() else None
         data = ('"data:audio/mpeg;base64,' + base64.b64encode(music.read_bytes()).decode() + '"') if music.exists() else (prev.group(1) if prev else 'null')
         t = t.replace('/*MUSIC*/null', data)
+    # Heim-Fangesang: aus src/chant-home.mp3 (wie die Musik nicht im Repository); sonst aus index.html übernommen
+    chant = src / 'chant-home.mp3'
+    if '/*CHANT_HOME*/null' in t:
+        old = src.parent / 'index.html'
+        prev = re.search(r'const CHANT_HOME = ("data:audio/mpeg;base64,[A-Za-z0-9+/=]+");', old.read_text(encoding='utf-8')) if old.exists() else None
+        data = ('"data:audio/mpeg;base64,' + base64.b64encode(chant.read_bytes()).decode() + '"') if chant.exists() else (prev.group(1) if prev else 'null')
+        t = t.replace('/*CHANT_HOME*/null', data)
     out = src.parent / 'index.html'
     out.write_text(HEAD + t + '</body></html>', encoding='utf-8')
     print('gebaut:', out.relative_to(root))
