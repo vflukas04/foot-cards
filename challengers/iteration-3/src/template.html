@@ -1215,28 +1215,42 @@ const SFX = (() => {
   let ctx = null;
   const on = () => { try { return JSON.parse(localStorage.getItem('fc-sound')) !== false; } catch(e) { return true; } };
   // Lautstärke: eigener Kanal für Geräusche und für Musik; Regler 0–100, Standard entspricht der bisherigen Lautstärke
-  let sfxBus = null, musBus = null;
-  const DEF = { sfx: 80, music: 70 };
+  let sfxBus = null, musBus = null, crowdBus = null, musIn = null, far = null;
+  const DEF = { sfx: 80, music: 70, crowd: 70 };
   const getVol = k => { try { const v = JSON.parse(localStorage.getItem('fc-vol-' + k)); return typeof v === 'number' ? v : DEF[k]; } catch(e) { return DEF[k]; } };
   const gainFor = k => Math.pow(Math.max(0, getVol(k)) / DEF[k], 1.6);
-  function applyVol(){ if (!ctx || !sfxBus) return; const t = ctx.currentTime; sfxBus.gain.setTargetAtTime(gainFor('sfx'), t, .04); musBus.gain.setTargetAtTime(gainFor('music'), t, .04); }
+  function applyVol(){ if (!ctx || !sfxBus) return; const t = ctx.currentTime; sfxBus.gain.setTargetAtTime(gainFor('sfx'), t, .04); musBus.gain.setTargetAtTime(gainFor('music'), t, .04); crowdBus.gain.setTargetAtTime(gainFor('crowd'), t, .04); }
   function ac(create){
     if (!ctx && create) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { ctx = null; } }
     if (ctx && !sfxBus) { sfxBus = ctx.createGain(); sfxBus.connect(ctx.destination); musBus = ctx.createGain(); musBus.connect(ctx.destination); sfxBus.gain.value = gainFor('sfx'); musBus.gain.value = gainFor('music'); }
+    if (ctx && !crowdBus) {
+      crowdBus = ctx.createGain(); crowdBus.gain.value = gainFor('crowd'); crowdBus.connect(ctx.destination);
+      // Musik: trocken oder „von fern“ (leiser, dumpfer, mit Stadionhall)
+      musIn = ctx.createGain();
+      const dry = ctx.createGain(), lp = ctx.createBiquadFilter(), farG = ctx.createGain(), conv = ctx.createConvolver(), rev = ctx.createGain();
+      lp.type = 'lowpass'; lp.frequency.value = 1100; lp.Q.value = .4;
+      const len = Math.floor(ctx.sampleRate * 2.8), ir = ctx.createBuffer(2, len, ctx.sampleRate);
+      for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
+      conv.buffer = ir;
+      dry.gain.value = 1; farG.gain.value = 0; rev.gain.value = 0;
+      musIn.connect(dry).connect(musBus); musIn.connect(lp); lp.connect(farG).connect(musBus); lp.connect(conv).connect(rev).connect(musBus);
+      far = { dry, farG, rev, on: false };
+    }
     if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch(e){} }
     return ctx;
   }
   function noise(c, dur){ const b = c.createBuffer(1, Math.max(1, Math.floor(c.sampleRate * dur)), c.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; const s = c.createBufferSource(); s.buffer = b; return s; }
   function env(g, t0, a, peak, dur){ g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(peak, t0 + a); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); }
+  let bed = null;
   function filt(c, type, f, q){ const x = c.createBiquadFilter(); x.type = type; x.frequency.value = f; if (q) x.Q.value = q; return x; }
   const P = {
     flip(c, t){ const n = noise(c, .08), f = filt(c, 'highpass', 2600), g = c.createGain(); env(g, t, .004, .22, .07); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + .09); },
     shuffle(c, t){ for (let i = 0; i < 16; i++) P.flip(c, t + i * .05 + Math.random() * .02); },
     kick(c, t){ const o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t + .12); env(g, t, .003, .45, .16); o.connect(g).connect(sfxBus); o.start(t); o.stop(t + .17); },
     slide(c, t){ const n = noise(c, .65), f = filt(c, 'bandpass', 1800, 1.1), g = c.createGain(); f.frequency.setValueAtTime(2200, t); f.frequency.exponentialRampToValueAtTime(260, t + .6); env(g, t, .03, .55, .65); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + .66); },
-    applause(c, t, len){ const dur = len || 1.8; for (let i = 0; i < 90; i++) { const s = t + Math.random() * dur * .85, fade = 1 - (s - t) / dur; const n = noise(c, .04), f = filt(c, 'bandpass', 1100 + Math.random() * 2400, .9), g = c.createGain(); env(g, s, .002, .05 + .14 * fade, .035); n.connect(f).connect(g).connect(sfxBus); n.start(s); n.stop(s + .05); } },
-    cheer(c, t){ P.applause(c, t, 2.6); const n = noise(c, 2.8), f = filt(c, 'bandpass', 650, .7), g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.4, t + .45); g.gain.exponentialRampToValueAtTime(.0001, t + 2.8); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + 2.8); },
-    murmur(c, t, len){ const d = len || 2.4; const n = noise(c, d), f = filt(c, 'bandpass', 420, .8), g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.22, t + d * .6); g.gain.exponentialRampToValueAtTime(.0001, t + d); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + d); },
+    applause(c, t, len){ const dur = len || 1.8; for (let i = 0; i < 90; i++) { const s = t + Math.random() * dur * .85, fade = 1 - (s - t) / dur; const n = noise(c, .04), f = filt(c, 'bandpass', 1100 + Math.random() * 2400, .9), g = c.createGain(); env(g, s, .002, .05 + .14 * fade, .035); n.connect(f).connect(g).connect(crowdBus || sfxBus); n.start(s); n.stop(s + .05); } },
+    cheer(c, t){ P.applause(c, t, 2.6); const n = noise(c, 2.8), f = filt(c, 'bandpass', 650, .7), g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.4, t + .45); g.gain.exponentialRampToValueAtTime(.0001, t + 2.8); n.connect(f).connect(g).connect(crowdBus || sfxBus); n.start(t); n.stop(t + 2.8); },
+    murmur(c, t, len){ const d = len || 2.4; const n = noise(c, d), f = filt(c, 'bandpass', 420, .8), g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.22, t + d * .6); g.gain.exponentialRampToValueAtTime(.0001, t + d); n.connect(f).connect(g).connect(crowdBus || sfxBus); n.start(t); n.stop(t + d); },
     // Token bekommen: helles, aufsteigendes Glöckchen
     tokgain(c, t){ [[1046.5, 0], [1568, .09], [2093, .18]].forEach(([f, d]) => { const o = c.createOscillator(), o2 = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o2.type = 'sine'; o.frequency.value = f; o2.frequency.value = f * 2.01; const g2 = c.createGain(); g2.gain.value = .25; o2.connect(g2).connect(g); o.connect(g); env(g, t + d, .004, .22, .45); g.connect(sfxBus); o.start(t + d); o2.start(t + d); o.stop(t + d + .5); o2.stop(t + d + .5); }); },
     // Token ausgeben: kurzes, absteigendes „Pfft“ mit leisem Ton nach unten
@@ -1245,14 +1259,48 @@ const SFX = (() => {
     // Erschöpft: kurzes Hecheln, drei Atemzüge
     pant(c, t){ for (let i = 0; i < 3; i++) { const s = t + i * .26, len = i % 2 ? .16 : .2; const n = noise(c, len + .02), f = filt(c, 'bandpass', i % 2 ? 1500 : 1100, 1.6), lp = filt(c, 'lowpass', 2600), g = c.createGain(); env(g, s, .03, i % 2 ? .5 : .7, len); n.connect(f).connect(lp).connect(g).connect(sfxBus); n.start(s); n.stop(s + len + .02); } },
     board(c, t){ [[988, 0], [1319, .16]].forEach(([f, d]) => { const o = c.createOscillator(), g = c.createGain(); o.type = 'square'; o.frequency.value = f; const lp = filt(c, 'lowpass', 2400); env(g, t + d, .006, .09, .22); o.connect(lp).connect(g).connect(sfxBus); o.start(t + d); o.stop(t + d + .25); }); },
-    ohh(c, t){ const n = noise(c, 1.3), f = filt(c, 'lowpass', 900), g = c.createGain(); f.frequency.setValueAtTime(950, t); f.frequency.exponentialRampToValueAtTime(220, t + 1.2); env(g, t, .3, .35, 1.3); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + 1.3); },
+    // „Hey!“: viele Stimmen gleichzeitig, kurz und kräftig (nach einer starken Grätsche)
+    hey(c, t){ for (let i = 0; i < 26; i++) { const s0 = t + Math.random() * .07, d = .2 + Math.random() * .1; const n = noise(c, d + .05), f = filt(c, 'bandpass', 520 + Math.random() * 420, 5), f2 = filt(c, 'lowpass', 2200), g = c.createGain(); f.frequency.setValueAtTime(f.frequency.value * .85, s0); f.frequency.linearRampToValueAtTime(f.frequency.value * 1.15, s0 + d); env(g, s0, .015, .09, d); n.connect(f).connect(f2).connect(g).connect(crowdBus || sfxBus); n.start(s0); n.stop(s0 + d + .05); } },
+    // Anschwellen: die Menge wird unruhig, kurz vor einer gefährlichen Szene
+    swell(c, t, len){ const d = len || 2.2; const n = noise(c, d), f = filt(c, 'bandpass', 380, .7), g = c.createGain(); f.frequency.setValueAtTime(380, t); f.frequency.exponentialRampToValueAtTime(820, t + d * .8); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.2, t + d * .75); g.gain.exponentialRampToValueAtTime(.0001, t + d); n.connect(f).connect(g).connect(crowdBus || sfxBus); n.start(t); n.stop(t + d); },
+    ohh(c, t){ const n = noise(c, 1.3), f = filt(c, 'lowpass', 900), g = c.createGain(); f.frequency.setValueAtTime(950, t); f.frequency.exponentialRampToValueAtTime(220, t + 1.2); env(g, t, .3, .35, 1.3); n.connect(f).connect(g).connect(crowdBus || sfxBus); n.start(t); n.stop(t + 1.3); },
     whistle(c, t, times){ const k = times || 1; for (let i = 0; i < k; i++) { const t0 = t + i * .42, len = (i === k - 1 && k > 1) ? .75 : .28; const o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain(); o.frequency.value = 2900; l.frequency.value = 36; lg.gain.value = 110; l.connect(lg).connect(o.frequency); env(g, t0, .01, .16, len); o.connect(g).connect(sfxBus); o.start(t0); l.start(t0); o.stop(t0 + len); l.stop(t0 + len); } },
   };
   return {
     on,
     toggle(){ try { localStorage.setItem('fc-sound', JSON.stringify(!on())); } catch(e){} if (on()) ac(true); },
     ctx(){ return on() ? ac(false) : null; },
-    musicOut(){ return musBus; },
+    musicOut(){ return musIn || musBus; },
+    // Musik „von fern“ (Halbzeit): 20 % leiser, dumpf, mit Hall
+    far(on){ if (window.__crowdlog && on && window.__crowdlog[window.__crowdlog.length - 1] !== 'far') window.__crowdlog.push('far'); const c = on !== undefined && ctx; if (!c || !far || far.on === !!on) return; far.on = !!on; const t = ctx.currentTime;
+      far.dry.gain.setTargetAtTime(on ? 0 : 1, t, .6); far.farG.gain.setTargetAtTime(on ? .5 : 0, t, .6); far.rev.gain.setTargetAtTime(on ? .55 : 0, t, .6); },
+    // Stadionkulisse: Grundrauschen der Menge, Lautstärke folgt der Spannung (0 = still, 1 = Torchance)
+    crowd(level, mode){
+      if (window.__crowdlog) { const l = window.__crowdlog, k = mode + ':' + (+level).toFixed(2); if (l[l.length - 1] !== k) l.push(k); }   // nur in Tests
+      if (!on()) { if (bed) { try { bed.g.gain.setTargetAtTime(.0001, ctx.currentTime, .3); } catch(e){} } return; }
+      const c = ac(false); if (!c || !crowdBus) return;
+      if (!bed) {
+        const len = c.sampleRate * 4, b = c.createBuffer(2, len, c.sampleRate);
+        for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); let last = 0; for (let i = 0; i < len; i++) { last = (last + .02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5 + (Math.random() * 2 - 1) * .15; } }
+        const src = c.createBufferSource(), bp = filt(c, 'bandpass', 520, .55), lp = filt(c, 'lowpass', 1800), g = c.createGain(), lfo = c.createOscillator(), lg = c.createGain();
+        src.buffer = b; src.loop = true; g.gain.value = .0001; lfo.frequency.value = .13; lg.gain.value = .25;
+        src.connect(bp).connect(lp).connect(g).connect(crowdBus); src.start();
+        bed = { src, g, level: 0, mode: 'off', voices: null };
+        bed.voices = setInterval(() => {   // einzelne Stimmen und Rufe über dem Rauschen
+          if (!on() || !ctx || bed.mode === 'off') return;
+          const p = bed.mode === 'half' ? .55 : bed.level > .4 ? (bed.level - .4) * 1.8 : 0;
+          if (Math.random() > p) return;
+          const t0 = ctx.currentTime + Math.random() * .2, d = .12 + Math.random() * .45, half = bed.mode === 'half';
+          const n = noise(ctx, d + .05), f = filt(ctx, 'bandpass', 280 + Math.random() * 900, 4 + Math.random() * 5), g2 = ctx.createGain();
+          f.frequency.setValueAtTime(f.frequency.value, t0); f.frequency.linearRampToValueAtTime(f.frequency.value * (half ? .9 : 1.25), t0 + d);
+          env(g2, t0, .04, (half ? .025 : .03 + bed.level * .05) * (.5 + Math.random()), d); n.connect(f).connect(g2).connect(crowdBus); n.start(t0); n.stop(t0 + d + .05);
+        }, 220);
+      }
+      const target = mode === 'off' ? .0001 : mode === 'half' ? .09 : .012 + Math.pow(Math.max(0, Math.min(1, level)), 1.6) * .3;
+      const up = target > bed.g.gain.value;
+      bed.level = mode === 'game' ? level : 0; bed.mode = mode;
+      bed.g.gain.setTargetAtTime(Math.max(.0001, target), c.currentTime, up ? .5 : 1.6);
+    },
     vol: getVol,
     setVol(k, v){ try { localStorage.setItem('fc-vol-' + k, JSON.stringify(v)); } catch(e){} applyVol(); },
     unlock(){ if (on()) ac(true); },
@@ -1304,8 +1352,64 @@ function syncMusic(){
   const st = app.st;
   if (SFX.on() && app.mode && st && (['draft','setup','scout'].includes(st.phase) || (st.phase === 'half' && !app.replay) || app.swap)) TRACK.start(SFX.ctx(), SFX.musicOut());
   else TRACK.stop();
+  syncCrowd();
 }
 
+// ---------- Stadionkulisse: still, wenn das Spiel dahinplätschert; laut, wenn es gefährlich wird ----------
+// Spannung 0–1 aus dem Spielstand: Zone des Balls (aus Sicht des Angreifers), Flanke, Steilpass, Vorlage, Torchance
+const ZONE_TENSION = { LD: .03, ZD: .03, RD: .03, ZM: .1, LO: .3, RO: .3, ZO: .45 };
+function tensionOf(st){
+  if (!st || !st.ball) return 0;
+  if (['dist','gk','shot'].includes(st.phase)) return 1;
+  let t = ZONE_TENSION[st.ball] || 0;
+  if (st.presence) t = Math.max(t, .3);
+  if (st.through) t = Math.max(t, .6);
+  if (st.flank) t = Math.max(t, .75);   // Flanke unterwegs: gleich kommt das Kopfballduell
+  if (st.volley) t = Math.max(t, .8);
+  return t;
+}
+function syncCrowd(){
+  const st = app.st;
+  let mode = 'off', lvl = 0;
+  if (app.mode && st) {
+    if ((st.phase === 'half' && !app.replay) || app.swap) mode = 'half';
+    else if (!['draft','setup','scout','over'].includes(st.phase)) { mode = 'game'; lvl = tensionOf(st); }
+  }
+  SFX.far(mode === 'half');
+  SFX.crowd(lvl, mode);
+  // Wird es plötzlich gefährlich, geht ein Raunen durchs Stadion
+  const prev = app.crowdLvl || 0; app.crowdLvl = lvl;
+  if (mode === 'game' && lvl >= .7 && prev < .7) SFX.play('swell', 300);
+  // Halbzeit: einmal pro Spiel eine Durchsage des Stadionsprechers
+  const gameKey = st ? st.teams.A.squad.join(',') + '|' + st.teams.B.squad.join(',') : '';
+  if (mode === 'half' && !app.swap && app.halfTalk !== gameKey) {
+    app.halfTalk = gameKey;
+    setTimeout(() => { if (app.st && app.st.phase === 'half') say(halfAnnouncement(app.st), .55); }, 7000);
+  }
+}
+function halfAnnouncement(st){
+  const a = st.goals.A, b = st.goals.B, score = `${a} zu ${b}`;
+  const lines = [
+    `Liebe Zuschauer, zur Halbzeit steht es ${score}. Die zweite Halbzeit beginnt in wenigen Minuten.`,
+    `Eine Durchsage: Der Fahrer des blauen Kombis mit dem Kennzeichen O S, F C 19, bitte kommen Sie zu Ihrem Fahrzeug.`,
+    `Zur Halbzeit gibt es an allen Ständen Bratwurst zum Halbzeitpreis. Halbzeitstand: ${score}.`,
+  ];
+  return lines[Math.floor(Math.random() * lines.length)];
+}
+// Fan-Reaktion auf eine aufgelöste Szene, sparsam dosiert (nicht nach jedem Zug)
+function crowdReaction(prev, at){
+  const o = prev.out || {}, da = prev.def && prev.def.action, aa = prev.att && (prev.att.eff || prev.att.action);
+  if (prev.shot || ['goal','save','miss'].includes(o.k)) return;   // Torszenen haben eigene Klänge
+  const now = Date.now(); if (app.crowdCool && now - app.crowdCool < 2600) return;
+  let snd = null, arg;
+  if (o.k === 'change' && (da === 'Tackling' || da === 'Ballgewinn')) snd = Math.random() < .75 ? 'hey' : null;
+  else if (o.duel && o.k !== 'presence') {
+    const du = o.duel, diff = Math.abs((du.kind2 ? du.a2 - du.d2 : du.a - du.d));
+    if (du.kind2 || diff <= 1) { snd = Math.random() < .7 ? 'murmur' : null; arg = 1.3; }
+    else if (diff >= 3) { snd = Math.random() < .6 ? 'applause' : null; arg = 1; }
+  } else if (o.k === 'change' && da === 'Passabfangen') { snd = Math.random() < .35 ? 'applause' : null; arg = .8; }
+  if (snd) { app.crowdCool = now; SFX.play(snd, at, arg); }
+}
 // ---------- Tempo und Auflösungsmoment ----------
 const SPEEDS = { langsam: 1.7, normal: 1, schnell: .5 };
 function speed(){ const v = (typeof LS!=='undefined' && LS.get('fc-speed')) || 'normal'; return SPEEDS[v] ? v : 'normal'; }
@@ -1413,7 +1517,7 @@ function outcomeSound(p){
   if (k === 'miss') return 'ohh';
   if (k === 'yellow' || k === 'red') return 'whistle';
   if (k === 'presence') return 'slide';
-  if (k === 'change') return (aa === 'Ballverlust' || aa === 'Fehlpass') ? 'ohh' : 'applause';
+  if (k === 'change') return (aa === 'Ballverlust' || aa === 'Fehlpass') ? 'ohh' : (da === 'Tackling' || da === 'Ballgewinn') ? 'slide' : 'kick';
   if (da && !/^--/.test(da)) return 'slide';     // Abwehr hat es versucht und ist ins Leere gegangen
   return 'kick';
 }
@@ -1428,6 +1532,7 @@ function startReplay(prev){
   if (prev.att && prev.att.id && !/^--/.test(prev.att.eff || prev.att.action || '--')) SFX.play('kick');
   if (prev.def && prev.def.id || prev.shot) SFX.play('flip', t1 * m);
   SFX.play(outcomeSound(prev), t2 * m);
+  crowdReaction(prev, (t2 + 120) * m);
   if (prev.whistle) SFX.play('whistle', (t2 + 1000) * m, prev.whistle === 'Abpfiff' ? 3 : 2);
   if (prev.shot) { SFX.play('kick', (t2 - 150) * m); if (dice) SFX.play('murmur', tDice * m, 1.8); }
   if (prev.att && prev.att.tired) SFX.play('pant', 150 * m);
@@ -2339,14 +2444,14 @@ function draftFx(old, next){
 const CALL_NAME = { 'Hwang Hee-chan': 'Hwang', 'Junior Dina Ebimbe': 'Dina Ebimbe', 'Adi Waku Menga': 'Waku Menga' };
 function callName(p){ return CALL_NAME[p.name] || p.name.trim().split(/\s+/).pop(); }
 function announce(id, queue){ if (!queue) { try { speechSynthesis.cancel(); } catch(e){} } say(callName(card(id))); }
-function say(text){
+function say(text, vol){
   if (!SFX.on() || !('speechSynthesis' in window)) return;
   try {
     const u = new SpeechSynthesisUtterance(text);
     const v = speechSynthesis.getVoices().filter(x => /^de/i.test(x.lang));
     u.voice = v.find(x => /male|mann|google|markus|yannick|stefan/i.test(x.name)) || v[0] || null;
     u.lang = 'de-DE'; u.rate = .95; u.pitch = .9;
-    u.volume = Math.max(0, Math.min(1, SFX.vol('sfx') / 100));
+    u.volume = Math.max(0, Math.min(1, SFX.vol('sfx') / 100 * (vol || 1)));
     speechSynthesis.speak(u);
   } catch(e) { console.error(e); }
 }
@@ -2799,10 +2904,13 @@ window.addEventListener('beforeunload', () => { try { if (app.conn) app.conn.clo
 function initVolume(){
   const box = $('#volCtl');
   box.innerHTML = `<label class="vol" title="Lautstärke der Musik (läuft während des Drafts)"><span class="label">Musik</span><input type="range" id="volMusic" min="0" max="100" step="5" value="${SFX.vol('music')}" aria-label="Lautstärke Musik"></label>
-    <label class="vol" title="Lautstärke der Spielgeräusche"><span class="label">Geräusche</span><input type="range" id="volSfx" min="0" max="100" step="5" value="${SFX.vol('sfx')}" aria-label="Lautstärke Geräusche"></label>`;
+    <label class="vol" title="Lautstärke der Spielgeräusche"><span class="label">Geräusche</span><input type="range" id="volSfx" min="0" max="100" step="5" value="${SFX.vol('sfx')}" aria-label="Lautstärke Geräusche"></label>
+    <label class="vol" title="Lautstärke des Publikums (Kulisse, Jubel, Raunen)"><span class="label">Stadion</span><input type="range" id="volCrowd" min="0" max="100" step="5" value="${SFX.vol('crowd')}" aria-label="Lautstärke Stadion"></label>`;
   $('#volMusic').oninput = e => SFX.setVol('music', +e.target.value);
   $('#volSfx').oninput = e => SFX.setVol('sfx', +e.target.value);
-  $('#volSfx').onchange = () => SFX.play('applause', 0, .7);   // kurze Hörprobe
+  $('#volSfx').onchange = () => SFX.play('kick');   // kurze Hörprobe
+  $('#volCrowd').oninput = e => SFX.setVol('crowd', +e.target.value);
+  $('#volCrowd').onchange = () => SFX.play('applause', 0, .7);
 }
 initVolume();
 boot();
