@@ -1242,6 +1242,17 @@ const SFX = (() => {
   function noise(c, dur){ const b = c.createBuffer(1, Math.max(1, Math.floor(c.sampleRate * dur)), c.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; const s = c.createBufferSource(); s.buffer = b; return s; }
   function env(g, t0, a, peak, dur){ g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(peak, t0 + a); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); }
   let bed = null;
+  // Stadionseite: Heim links, Gast rechts; die Gästekurve klingt etwas ferner
+  function side(c, s){
+    const out = crowdBus || sfxBus; if (!s || !c.createStereoPanner) return out;
+    const p = c.createStereoPanner(); p.pan.value = s === 'A' ? -.65 : .65;
+    if (s === 'B') { const lp = c.createBiquadFilter(), g = c.createGain(); lp.type = 'lowpass'; lp.frequency.value = 1900; g.gain.value = .7; lp.connect(g).connect(p); p.connect(out); return lp; }
+    p.connect(out); return p;
+  }
+  // Viele Stimmen: kurze, formantartig gefilterte Rauschstöße
+  function voices(c, t, n, len, lo, hi, peak, rise, out){ for (let i = 0; i < n; i++) { const s0 = t + Math.random() * len, d = .2 + Math.random() * .45; const v = noise(c, d + .05), f = filt(c, 'bandpass', lo + Math.random() * (hi - lo), 5), g = c.createGain(); f.frequency.setValueAtTime(f.frequency.value, s0); f.frequency.linearRampToValueAtTime(f.frequency.value * rise, s0 + d); env(g, s0, .03, peak * (.6 + Math.random() * .8), d); v.connect(f).connect(g).connect(out); v.start(s0); v.stop(s0 + d + .05); } }
+  function claps(c, t, out, vol){ for (let i = 0; i < 34; i++) { const s0 = t + (Math.random() - .5) * .035; const n = noise(c, .035), f = filt(c, 'bandpass', 1300 + Math.random() * 1800, 1.1), g = c.createGain(); env(g, s0, .002, (.07 + Math.random() * .06) * (vol || 1), .035); n.connect(f).connect(g).connect(out); n.start(s0); n.stop(s0 + .04); } }
+  function drum(c, t, out, vol){ const o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(48, t + .18); env(g, t, .004, .55 * (vol || 1), .3); o.connect(g).connect(out); o.start(t); o.stop(t + .32); const n = noise(c, .06), f = filt(c, 'lowpass', 500), g2 = c.createGain(); env(g2, t, .002, .25 * (vol || 1), .06); n.connect(f).connect(g2).connect(out); n.start(t); n.stop(t + .07); }
   function filt(c, type, f, q){ const x = c.createBiquadFilter(); x.type = type; x.frequency.value = f; if (q) x.Q.value = q; return x; }
   const P = {
     flip(c, t){ const n = noise(c, .08), f = filt(c, 'highpass', 2600), g = c.createGain(); env(g, t, .004, .22, .07); n.connect(f).connect(g).connect(sfxBus); n.start(t); n.stop(t + .09); },
@@ -1264,12 +1275,12 @@ const SFX = (() => {
     // Anschwellen: die Menge wird unruhig, kurz vor einer gefährlichen Szene
     swell(c, t, len){ const d = len || 2.2; const n = noise(c, d), f = filt(c, 'bandpass', 380, .7), g = c.createGain(); f.frequency.setValueAtTime(380, t); f.frequency.exponentialRampToValueAtTime(820, t + d * .8); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.2, t + d * .75); g.gain.exponentialRampToValueAtTime(.0001, t + d); n.connect(f).connect(g).connect(crowdBus || sfxBus); n.start(t); n.stop(t + d); },
     // Tor: Aufschrei, langer Jubel mit vielen Stimmen und Applaus
-    goalRoar(c, t){
-      const d = 5.5, n = noise(c, d), f = filt(c, 'bandpass', 600, .5), lp = filt(c, 'lowpass', 2600), g = c.createGain();
+    goalRoar(c, t, s){
+      const d = 5.5, n = noise(c, d), f = filt(c, 'bandpass', 600, .5), lp = filt(c, 'lowpass', 2600), g = c.createGain(), out = s ? side(c, s) : (crowdBus || sfxBus);
       f.frequency.setValueAtTime(500, t); f.frequency.exponentialRampToValueAtTime(900, t + .6); f.frequency.exponentialRampToValueAtTime(650, t + d);
       g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.75, t + .35); g.gain.setTargetAtTime(.45, t + .9, 1.2); g.gain.exponentialRampToValueAtTime(.0001, t + d);
-      n.connect(f).connect(lp).connect(g).connect(crowdBus || sfxBus); n.start(t); n.stop(t + d);
-      for (let i = 0; i < 60; i++) { const s0 = t + .1 + Math.random() * 3.2, dd = .25 + Math.random() * .6; const v = noise(c, dd + .05), vf = filt(c, 'bandpass', 450 + Math.random() * 900, 5), vg = c.createGain(); vf.frequency.setValueAtTime(vf.frequency.value, s0); vf.frequency.linearRampToValueAtTime(vf.frequency.value * 1.3, s0 + dd); env(vg, s0, .03, .07 + Math.random() * .06, dd); v.connect(vf).connect(vg).connect(crowdBus || sfxBus); v.start(s0); v.stop(s0 + dd + .05); }
+      n.connect(f).connect(lp).connect(g).connect(out); n.start(t); n.stop(t + d);
+      for (let i = 0; i < 60; i++) { const s0 = t + .1 + Math.random() * 3.2, dd = .25 + Math.random() * .6; const v = noise(c, dd + .05), vf = filt(c, 'bandpass', 450 + Math.random() * 900, 5), vg = c.createGain(); vf.frequency.setValueAtTime(vf.frequency.value, s0); vf.frequency.linearRampToValueAtTime(vf.frequency.value * 1.3, s0 + dd); env(vg, s0, .03, .07 + Math.random() * .06, dd); v.connect(vf).connect(vg).connect(out); v.start(s0); v.stop(s0 + dd + .05); }
       P.applause(c, t + 1.2, 3.8);
     },
     // Parade: lautes „Ohhh!“, das in Applaus übergeht
@@ -1287,6 +1298,35 @@ const SFX = (() => {
       g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.6, t + .25); g.gain.exponentialRampToValueAtTime(.0001, t + d);
       n.connect(bp).connect(f).connect(g).connect(crowdBus || sfxBus); n.start(t); n.stop(t + d);
       for (let i = 0; i < 24; i++) { const s0 = t + Math.random() * .5, dd = .6 + Math.random() * .7; const v = noise(c, dd + .05), vf = filt(c, 'bandpass', 380 + Math.random() * 400, 6), vg = c.createGain(); vf.frequency.setValueAtTime(vf.frequency.value * 1.2, s0); vf.frequency.exponentialRampToValueAtTime(vf.frequency.value * .7, s0 + dd); env(vg, s0, .08, .05, dd); v.connect(vf).connect(vg).connect(crowdBus || sfxBus); v.start(s0); v.stop(s0 + dd + .05); }
+    },
+    // Tackling gewonnen: kurzer Jubel „Jaaa!“ der Kurve, die den Ball bekommt, mit Applaus (Hörbeispiel Variante A)
+    tackleCheer(c, t, s){
+      const out = side(c, s), d = 1.6, n = noise(c, d), f = filt(c, 'bandpass', 550, .6), lp = filt(c, 'lowpass', 2400), g = c.createGain();
+      f.frequency.setValueAtTime(480, t); f.frequency.exponentialRampToValueAtTime(820, t + .35); f.frequency.exponentialRampToValueAtTime(560, t + d);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.5, t + .18); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      n.connect(f).connect(lp).connect(g).connect(out); n.start(t); n.stop(t + d);
+      voices(c, t, 26, .5, 450, 1300, .08, 1.3, out);
+      for (let i = 0; i < 80; i++) { const s0 = t + .3 + Math.random() * 1.4, fade = 1 - (s0 - t - .3) / 1.6; const m = noise(c, .04), mf = filt(c, 'bandpass', 1100 + Math.random() * 2400, .9), mg = c.createGain(); env(mg, s0, .002, (.1 + Math.random() * .12) * fade * .9, .04); m.connect(mf).connect(mg).connect(out); m.start(s0); m.stop(s0 + .05); }
+    },
+    // Fangesang (Rhythmus): Heim „Bum – Bum – Bum, klatsch-klatsch-klatsch, HEY!“, Gast mit eigenem Rhythmus; ca. 9 Sekunden
+    chant(c, t, s){
+      const out = side(c, s), beat = .5, home = s !== 'B';
+      // leiser Chor darunter, der mitschwingt
+      const dd = 9.4, n = noise(c, dd), f = filt(c, 'bandpass', home ? 430 : 500, 2.2), g = c.createGain();
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.12, t + 1); g.gain.setValueAtTime(.12, t + dd - 1.2); g.gain.exponentialRampToValueAtTime(.0001, t + dd);
+      n.connect(f).connect(g).connect(out); n.start(t); n.stop(t + dd);
+      for (let bar = 0; bar < 4; bar++) {
+        const b0 = t + .4 + bar * 4 * beat * 1.1;
+        if (home) {
+          [0, 1, 2].forEach(k => drum(c, b0 + k * beat, out));
+          [3, 3.33, 3.66].forEach(k => claps(c, b0 + k * beat, out));
+          const h = b0 + 4 * beat; for (let i = 0; i < 30; i++) { const s0 = h + Math.random() * .06, d = .22 + Math.random() * .1; const v = noise(c, d + .05), vf = filt(c, 'bandpass', 520 + Math.random() * 420, 5), vg = c.createGain(); env(vg, s0, .015, .09, d); v.connect(vf).connect(vg).connect(out); v.start(s0); v.stop(s0 + d + .05); }
+        } else {
+          [0, .5, 1, 2].forEach(k => claps(c, b0 + k * beat, out, .9));
+          drum(c, b0 + 3 * beat, out, .8);
+          voices(c, b0 + 3.4 * beat, 22, .1, 420, 900, .07, 1.2, out);
+        }
+      }
     },
     ohh(c, t){ const n = noise(c, 1.3), f = filt(c, 'lowpass', 900), g = c.createGain(); f.frequency.setValueAtTime(950, t); f.frequency.exponentialRampToValueAtTime(220, t + 1.2); env(g, t, .3, .35, 1.3); n.connect(f).connect(g).connect(crowdBus || sfxBus); n.start(t); n.stop(t + 1.3); },
     whistle(c, t, times){ const k = times || 1; for (let i = 0; i < k; i++) { const t0 = t + i * .42, len = (i === k - 1 && k > 1) ? .75 : .28; const o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), g = c.createGain(); o.frequency.value = 2900; l.frequency.value = 36; lg.gain.value = 110; l.connect(lg).connect(o.frequency); env(g, t0, .01, .16, len); o.connect(g).connect(sfxBus); o.start(t0); l.start(t0); o.stop(t0 + len); l.stop(t0 + len); } },
@@ -1321,7 +1361,7 @@ const SFX = (() => {
           env(g2, t0, .04, (half ? .025 : .03 + bed.level * .05) * (.5 + Math.random()), d); n.connect(f).connect(g2).connect(crowdBus); n.start(t0); n.stop(t0 + d + .05);
         }, 220);
       }
-      const target = mode === 'off' ? .0001 : mode === 'half' ? .09 : .012 + Math.pow(Math.max(0, Math.min(1, level)), 1.6) * .3;
+      const target = mode === 'off' || (mode === 'game' && level <= 0) ? .0001 : mode === 'half' ? .09 : .01 + Math.pow(Math.max(0, Math.min(1, level)), 1.6) * .3;
       const up = target > bed.g.gain.value;
       bed.level = mode === 'game' ? level : 0; bed.mode = mode;
       bed.g.gain.setTargetAtTime(Math.max(.0001, target), c.currentTime, up ? .5 : 1.6);
@@ -1382,13 +1422,12 @@ function syncMusic(){
 
 // ---------- Stadionkulisse: still, wenn das Spiel dahinplätschert; laut, wenn es gefährlich wird ----------
 // Spannung 0–1 aus dem Spielstand: Zone des Balls (aus Sicht des Angreifers), Flanke, Steilpass, Vorlage, Torchance
-const ZONE_TENSION = { LD: .03, ZD: .03, RD: .03, ZM: .1, LO: .3, RO: .3, ZO: .45 };
+const ZONE_TENSION = { LD: 0, ZD: 0, RD: 0, ZM: 0, LO: 0, RO: 0, ZO: .5 };   // nur vor dem Tor wird es laut
 function tensionOf(st){
   if (!st || !st.ball) return 0;
   if (['dist','gk','shot'].includes(st.phase)) return 1;
   let t = ZONE_TENSION[st.ball] || 0;
-  if (st.presence) t = Math.max(t, .3);
-  if (st.through) t = Math.max(t, .6);
+  if (st.through && st.through.to === 'ZO') t = Math.max(t, .6);   // Steilpass ins Zentrum; auf den Flügel bleibt es ruhig
   if (st.flank) t = Math.max(t, .75);   // Flanke unterwegs: gleich kommt das Kopfballduell
   if (st.volley) t = Math.max(t, .8);
   return t;
@@ -1411,12 +1450,35 @@ function syncCrowd(){
   // Wird es plötzlich gefährlich, geht ein Raunen durchs Stadion
   const prev = app.crowdLvl || 0; app.crowdLvl = lvl;
   if (mode === 'game' && lvl >= .7 && prev < .7) SFX.play('swell', 300);
+  // Fangesang in der 15., 30., 60. und 75. Minute: Es singt die Kurve, deren Mannschaft gerade überlegen war
+  if (mode === 'game' && !app.replay && st) {
+    const key = st.teams.A.squad.join(',') + '|' + st.teams.B.squad.join(',');
+    if (!app.chants || app.chants.key !== key) app.chants = { key, done: [] };
+    const due = [15, 30, 60, 75].filter(m => st.minute >= m && !app.chants.done.includes(m));
+    if (due.length) {
+      due.forEach(m => app.chants.done.push(m));
+      const m = due[due.length - 1];
+      if (st.minute - m <= 3) SFX.play('chant', 500, dominantSide(st, m - 15, m));
+    }
+  }
   // Halbzeit: einmal pro Spiel eine Durchsage des Stadionsprechers
   const gameKey = st ? st.teams.A.squad.join(',') + '|' + st.teams.B.squad.join(',') : '';
   if (mode === 'half' && !app.swap && app.halfTalk !== gameKey) {
     app.halfTalk = gameKey;
     setTimeout(() => { if (app.st && app.st.phase === 'half') say(halfAnnouncement(app.st), .55); }, 7000);
   }
+}
+// Wer war in den letzten 15 Minuten überlegen? Ballbesitz vorne, Torschüsse, gewonnene Bälle, Tore. Gleichstand: Heim
+function dominantSide(st, from, to){
+  const pts = { A: 0, B: 0 };
+  for (const e of st.track || []) {
+    if (e.m < from || e.m >= to) continue;
+    if (['LO','ZO','RO'].includes(e.bs)) pts[e.ps] += 1;
+    if (['goal','save','miss'].includes(e.k)) pts[e.ps] += 2;
+    if (e.k === 'goal') pts[e.ps] += 4;
+    if (e.k === 'change' && e.pe !== e.ps) pts[e.pe] += 1;
+  }
+  return pts.B > pts.A ? 'B' : 'A';
 }
 function halfAnnouncement(st){
   const a = st.goals.A, b = st.goals.B, score = `${a} zu ${b}`;
@@ -1431,9 +1493,10 @@ function halfAnnouncement(st){
 function crowdReaction(prev, at){
   const o = prev.out || {}, da = prev.def && prev.def.action, aa = prev.att && (prev.att.eff || prev.att.action);
   if (prev.shot || ['goal','save','miss'].includes(o.k)) return;   // Torszenen haben eigene Klänge
-  const now = Date.now(); if (app.crowdCool && now - app.crowdCool < 2600) return;
+  const now = Date.now(); const tackle = o.k === 'change' && (da === 'Tackling' || da === 'Ballgewinn');
+  if (!tackle && app.crowdCool && now - app.crowdCool < 2600) return;
   let snd = null, arg;
-  if (o.k === 'change' && (da === 'Tackling' || da === 'Ballgewinn')) snd = Math.random() < .75 ? 'hey' : null;
+  if (o.k === 'change' && (da === 'Tackling' || da === 'Ballgewinn')) { app.crowdCool = now; SFX.play('tackleCheer', at, prev.possEnd); return; }
   else if (o.duel && o.k !== 'presence') {
     const du = o.duel, diff = Math.abs((du.kind2 ? du.a2 - du.d2 : du.a - du.d));
     if (du.kind2 || diff <= 1) { snd = Math.random() < .7 ? 'murmur' : null; arg = 1.3; }
@@ -1562,7 +1625,8 @@ function startReplay(prev){
   const at = (ms, f) => app.replay.timers.push(setTimeout(() => { if (app.replay && app.replay.prev === prev) f(); }, ms * m));
   if (prev.att && prev.att.id && !/^--/.test(prev.att.eff || prev.att.action || '--')) SFX.play('kick');
   if (prev.def && prev.def.id || prev.shot) SFX.play('flip', t1 * m);
-  SFX.play(outcomeSound(prev), t2 * m);
+  SFX.play(outcomeSound(prev), t2 * m, prev.out && prev.out.k === 'goal' ? prev.possStart : undefined);
+  if (prev.out && prev.out.k === 'goal') SFX.play('chant', (t2 + 4200) * m, prev.possStart);
   crowdReaction(prev, (t2 + 120) * m);
   if (prev.whistle) SFX.play('whistle', (t2 + 1000) * m, prev.whistle === 'Abpfiff' ? 3 : 2);
   if (prev.shot) { SFX.play('kick', (t2 - 150) * m); if (dice) SFX.play('murmur', tDice * m, 1.8); }
