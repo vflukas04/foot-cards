@@ -235,3 +235,7 @@ Simulation Draft, 150 Spiele je Regel: Tore pro Spiel überlaufen 6,11 · normal
 ## 05.11.2026: Blacha ohne grünen Token
 
 David Blacha (18), Zone Mitte, Angriff: Querpass (grün) erzeugt keinen grünen Token mehr. Die blauen Token beim Querpass hinten (LD/ZD/RD) und beim „--“ in der Abwehr vorne Mitte bleiben.
+
+## 05.11.2026: Turnier – Draft-Token für den Beutezug-Verlierer
+
+Wer im Beutezug eine Karte abgeben muss, bekommt zusätzlich zur zufälligen Ersatzkarte einen zweiten Draft-Token für die nächste Station (2 statt 1, verfällt wie gehabt am Ende der Station). Bei Unentschieden gibt es keinen Beutezug und keinen Extra-Token.

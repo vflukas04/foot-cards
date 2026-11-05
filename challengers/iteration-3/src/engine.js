@@ -949,9 +949,11 @@
     T.toMove = T.start;
     log(st, `Turnier, Station ${T.station + 1} (${TOUR_STATIONS[T.station].name}): Draft ${R.tier === 't5' ? 'Fünftligisten' : R.tier === 'vfl' ? 'VfL' : 'Nationalspieler'}, je ${R.picks} Karten. ${st.names[T.start]} zieht zuerst.`, 'info');
   }
-  function tourStation(st, i, start) {
+  function tourStation(st, i, start, bonus) {
     const T = st.tour;
-    T.station = i; T.round = 0; T.start = start; T.tokens = { A: 1, B: 1 }; T.gkTaken = { A: 0, B: 0 };
+    T.station = i; T.round = 0; T.start = start; T.tokens = { A: 1, B: 1 };
+    if (bonus) T.tokens[bonus]++;
+    if (!bonus) T.lastSteal = null;   // kein Beutezug (Unentschieden): alte Meldung nicht wieder zeigen   // Beutezug: der Verlierer bekommt für die nächste Station einen zusätzlichen Draft-Token T.gkTaken = { A: 0, B: 0 };
     st.phase = 'tdraft'; st.cur = null;
     tourRound(st);
   }
@@ -1034,9 +1036,9 @@
     const comp = pool.length ? pool[rnd(pool.length)] : null;
     if (comp) T.col[o][k].push(comp);
     T.lastSteal = { by: s, from: o, id, comp };
-    log(st, `Beutezug: ${st.names[s]} holt ${card(id).name}. ${st.names[o]} bekommt als Entschädigung ${comp ? card(comp).name : 'niemanden (Vorrat leer)'}.`, 'info');
+    log(st, `Beutezug: ${st.names[s]} holt ${card(id).name}. ${st.names[o]} bekommt als Entschädigung ${comp ? card(comp).name : 'niemanden (Vorrat leer)'} und einen zusätzlichen Draft-Token.`, 'info');
     T.steal = null;
-    tourStation(st, T.station + 1, o);   // Verlierer zieht zuerst
+    tourStation(st, T.station + 1, o, o);   // Verlierer zieht zuerst und bekommt einen zusätzlichen Draft-Token
   }
 
   // ---------- Bot ----------
