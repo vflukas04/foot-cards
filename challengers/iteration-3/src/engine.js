@@ -935,7 +935,7 @@
     { lineup: 6, name: '7 gegen 7', rounds: [{ tier: 't5', picks: 7, gkMarket: true }] },
     { lineup: 8, name: '9 gegen 9', rounds: [{ tier: 'vfl', picks: 3 }] },
     { lineup: 10, name: '11 gegen 11', rounds: [{ tier: 'vfl', picks: 3 }] },
-    { lineup: 10, name: 'Finale', rounds: [{ tier: 'nat', picks: 2 }, { tier: 'vfl', picks: 2 }] },
+    { lineup: 10, name: 'Finale', rounds: [{ tier: 'vfl', picks: 2 }, { tier: 'nat', picks: 2 }] },
   ];
   const TOUR_MARKET = 3;
   const tourOwned = T => new Set([...T.col.A.f, ...T.col.A.g, ...T.col.B.f, ...T.col.B.g]);
