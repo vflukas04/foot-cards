@@ -231,3 +231,7 @@ Abstufung bleibt: DFB–S04 86 %, DFB–VfL 98 %, S04–VfL 77 %, VfL–Flutlich
 Nach verlorenem Tempo-Duell gibt es jetzt drei Testregeln (Einstellungen): „Abwehr überlaufen“ (Standard, Eingreifen nur gegen Kosten), „Abwehr normal“ und neu „Abwehr unmöglich“ (die Abwehr kann gar nicht eingreifen, die Aktion gelingt immer, eigene Fehler wie Fehlpass ausgenommen).
 
 Simulation Draft, 150 Spiele je Regel: Tore pro Spiel überlaufen 6,11 · normal 5,63 · unmöglich 5,91. Ein angekommener Steilpass passiert etwa 2-mal pro Spiel.
+
+## 05.11.2026: Blacha ohne grünen Token
+
+David Blacha (18), Zone Mitte, Angriff: Querpass (grün) erzeugt keinen grünen Token mehr. Die blauen Token beim Querpass hinten (LD/ZD/RD) und beim „--“ in der Abwehr vorne Mitte bleiben.
