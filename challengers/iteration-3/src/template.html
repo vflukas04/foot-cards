@@ -302,6 +302,21 @@ table.stats td:first-child{text-align:left;color:var(--muted)}
 .pe-row b{font-family:var(--font-d);font-size:16px;flex:1}
 .pe-row span{font-size:12.5px}
 /* Draft */
+.tour{margin-top:16px;display:flex;flex-direction:column;gap:14px}
+.tour-head{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;justify-content:space-between;background:#0d0f12;color:#fff;border-radius:12px;padding:14px 16px}
+.tour-head h2{color:#fff;font-size:26px;margin:2px 0}.tour-head .ttable{background:#fff;color:#111;border-radius:8px;max-width:520px}
+.ttable td,.ttable th{padding:4px 8px;text-align:center}.ttable td:first-child,.ttable th:first-child{text-align:left}.ttable tr.cur td{background:#fff6cc}.ttable tr.tsum td{font-weight:800;border-top:2px solid #111}
+.tour-mini{margin:8px 0}
+.tmarkets{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:900px){.tmarkets{grid-template-columns:1fr}}
+.tmarket .pool{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-top:8px}.tmarket.own .khead{outline:3px solid var(--hl);outline-offset:-3px}
+.tmarket .dcard.off .pcard{opacity:.5}.dcard.tpk{cursor:pointer}.dcard.tpk:hover .pcard,.dcard.tpk:focus .pcard{outline:3px solid var(--hl)}
+.ttag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--surface2);margin-bottom:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ttag.t-t5{background:#e7d9c9}.ttag.t-vfl{background:#e8d3f0}.ttag.t-nat{background:#ffe9a8}
+.tcols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tlist{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:3px}.tlist li{display:flex;align-items:center;gap:8px;padding:3px 6px;border:1px solid var(--line);border-radius:7px;background:var(--surface)}
+.tlist li span:nth-child(2){flex:1;display:flex;flex-direction:column}.tlist li small{font-size:11.5px;color:var(--muted)}
+.ttok{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:999px;background:#d5e6ff;color:#123}.ttok.used{background:var(--surface2);color:var(--muted);text-decoration:line-through}
+.tpool{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
 .scout{margin-top:16px;display:flex;flex-direction:column;gap:14px}
 .sc-report{background:#0d0f12;color:#fff;border:3px solid #111;border-radius:12px;padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .sc-report .sc-tag{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#9fd3ff}
@@ -639,6 +654,7 @@ button.gv-ar:hover{background:var(--att);color:#fff}
       <li>Token: Ein farbiges O bei der gewählten Aktion bringt diesen Token (max. je einer). <b>Version 3:</b> Die Token gehören zu einer einzelnen Aktion, vor oder hinter dem „/“, und nur diese Aktion bringt sie (z. B. Köhler ZO: nur „Gelb“ bringt die drei Token). Blau: zweiten Verteidiger ziehen. Grün: erschöpften Spieler beim Aufdecken entschöpfen. Rot: Option hinter „/“ bezahlen oder +1 beim Schuss. „Regeneriert“ entschöpft die Karte, „und erschöpft“ erschöpft sie.</li>
       <li>Zeit: Jeder Spielzug ist eine Minute. Halbzeit beim ersten Ballbesitzwechsel ab Minute 45, spätestens Minute 50. Ende beim ersten Ballbesitzwechsel ab Minute 90 plus eine Minute je Tor.</li>
       <li><b>Spielmodus (neu in Version 3):</b> Kader zufällig, kompletter Draft (alle Karten offen) oder offener Markt (5 Karten offen, für jede gewählte wird eine vom verdeckten Stapel aufgedeckt). Kartenpool getrennt nach Verein: VfL-Karten alle, zufällig oder selbst abgehakt; Schalke-Karten nicht dabei, alle, zufällig oder selbst abgehakt. Pro Mannschaft höchstens 13 Karten: 10 im Spiel, der Rest auf der Bank; bei größerem Pool bleiben Karten übrig. Torhüter kommen nur von Vereinen, deren Karten im Pool sind. <b>Vereinsduell:</b> Gegner wählbar: FC Schalke 04, die deutsche Nationalmannschaft, die Frauen-Nationalmannschaft (Werte nach ihrer Klasse im Frauenfußball, also etwa so stark wie die Männer-Nationalmannschaft) oder einer der erfundenen Fünftligisten Union Flutlicht 05 und SV Ascheplatz. Die Scouts zeigen zuerst den Kader des Gegners (13 zufällige Karten, Startelf und Bank stehen fest), dann wählt Heim 13 aus allen VfL-Karten. Gegen den Bot spielt der Bot den Gegner.</li>
+      <li><b>Turnier zu zweit (seit 05.11.):</b> Vier Spiele, vor jedem ein Draft. Station 1: je 7 Karten aus der 5. Liga, davon genau ein Keeper aus dem Keeper-Markt; 7 gegen 7, 54 Minuten. Station 2: je 3 VfL-Karten; 9 gegen 9, 72 Minuten. Station 3: je 3 VfL-Karten; 11 gegen 11, 90 Minuten. Station 4: je 2 Nationalspieler (Männer und Frauen gemischt) und 2 VfL-Karten; Finale 11 gegen 11, 90 Minuten. Jeder hat einen eigenen Markt mit 3 offenen Karten; aus dem eigenen Markt gratis, aus dem Markt des Gegners gegen einen Token (1 pro Station, verfällt). Höchstens ein Torhüter pro Station. Wer das letzte Spiel verloren hat, zieht zuerst. Punkte für den Sieg: 1, 2, 3, 4; bei Unentschieden bekommen beide die Punkte. Nach Spiel 1 bis 3 holt sich der Sieger eine Karte des Verlierers, der eine zufällige Karte derselben Stufe und Art aus dem Vorrat bekommt. Gleichstand am Ende: Finalsieger, sonst Tordifferenz. Das Turnier wird gespeichert (an einem Gerät: „Turnier fortsetzen“, online: „Eigenes Spiel fortsetzen“).</li>
       <li><b>Neue Aktionen (seit 05.11., vor allem in der 5. Liga):</b> <b>Kerze</b>: Der Ball geht hoch, die Abwehraktion zählt nicht (nur Gelb). Im nächsten Zug decken beide eine neue Karte auf: Kopfballduell (bei Gleichstand Präsenz). Wer gewinnt, hat den Ball in derselben Zone; bei erneutem Gleichstand behält ihn die Mannschaft, die die Kerze geschlagen hat. Danach beginnt ein neuer Zug. <b>Slapstick</b>: Die Abwehraktion zählt nicht (nur Gelb); Präsenz-Duell der gerade gespielten Karten (bei Gleichstand Tempo). Gewonnen: Ball eine Zone nach vorn oder zur Seite; verloren: Ballbesitzwechsel; Gleichstand: Ball bleibt. <b>Befreiungsschlag</b> (nur hinten): Der Ball fliegt gerade nach vorn (links hinten nach links vorn, Mitte hinten nach vorn Mitte, rechts hinten nach rechts vorn), danach hat immer der Gegner den Ball, tief in seiner Hälfte. Grün kommt er sicher an; sonst kann Passabfangen ihn direkt vor dem eigenen Tor abfangen.</li>
       <li><b>Halbzeit (neu in Version 3):</b> Jede Mannschaft darf bis zu 3 Spieler auswechseln. Wer Gelb-Rot gesehen hat, kann nicht ersetzt werden. Danach wird jedes Deck aus den 10 Spielern im Spiel frisch gemischt, die Ablage ist leer, Einwechselspieler sind frisch. Erschöpfung, Gelbe Karten und Token bleiben. Die Seiten werden gewechselt.</li>
       <li><b>Noten und xG:</b> Jeder Spieler bekommt eine Schulnote von 1 (sehr gut) bis 6 (ungenügend) nach seinen erfolgreichen und missglückten Aktionen, gewonnenen und verlorenen Duellen, Toren und Vorlagen, Keeper nach Paraden und Gegentoren. xG (erwartete Tore) ist die Summe der Torchancen aller Schüsse. Gezählt wird die Chance direkt nach der Punkteverteilung, bevor Schütze und Keeper ihre Ecke wählen – unter der Annahme, dass beide ihre Ecke klug mischen (Gleichgewicht des Torschuss-Duells). Auch eine Parade zählt also mit ihrer Torchance.</li>
@@ -1203,6 +1219,8 @@ function reduceMotion(){ try { return matchMedia('(prefers-reduced-motion: reduc
 
 function canAct(st){
   if (!st || app.busy || app.replay) return false;
+  // Turnier: Nach dem Abpfiff darf jeder auf „Weiter“ drücken
+  if (st.phase === 'over' && st.tour) return app.mode === 'local' || (app.mode === 'p2p' && app.connected);
   const a = FC.actor(st);
   if (!a) return false;
   if (app.mode === 'local') return true;
@@ -1431,7 +1449,7 @@ const TRACK = (() => {
 // Musik läuft nur im Draft und nur mit eingeschaltetem Ton; mit dem Anpfiff klingt sie aus
 function syncMusic(){
   const st = app.st;
-  if (SFX.on() && app.mode && st && (['draft','setup','scout'].includes(st.phase) || (st.phase === 'half' && !app.replay) || app.swap)) TRACK.start(SFX.ctx(), SFX.musicOut());
+  if (SFX.on() && app.mode && st && (['draft','setup','scout','tdraft','tsteal','tover'].includes(st.phase) || (st.phase === 'half' && !app.replay) || app.swap)) TRACK.start(SFX.ctx(), SFX.musicOut());
   else TRACK.stop();
   syncCrowd();
 }
@@ -1459,7 +1477,7 @@ function syncCrowd(){
       mode = 'game'; lvl = app.replay.step < 2 ? 1 : o === 'tor' ? 1 : o === 'parade' ? .55 : .4;
     }
     else if (st.phase === 'over' && app.replay) { mode = 'game'; lvl = .3; }
-    else if (!['draft','setup','scout','over'].includes(st.phase)) { mode = 'game'; lvl = tensionOf(st); }
+    else if (!['draft','setup','scout','over','tdraft','tsteal','tover'].includes(st.phase)) { mode = 'game'; lvl = tensionOf(st); }
   }
   SFX.far(mode === 'half');
   SFX.crowd(lvl, mode);
@@ -1470,11 +1488,11 @@ function syncCrowd(){
   if (mode === 'game' && !app.replay && st) {
     const key = st.teams.A.squad.join(',') + '|' + st.teams.B.squad.join(',');
     if (!app.chants || app.chants.key !== key) app.chants = { key, done: [] };
-    const due = [15, 30, 60, 75].filter(m => st.minute >= m && !app.chants.done.includes(m));
+    const HL = FC.halfOf(st), due = [HL / 3, 2 * HL / 3, HL + HL / 3, HL + 2 * HL / 3].map(Math.round).filter(m => st.minute >= m && !app.chants.done.includes(m));
     if (due.length) {
       due.forEach(m => app.chants.done.push(m));
       const m = due[due.length - 1];
-      if (st.minute - m <= 3) SFX.play('chant', 500, dominantSide(st, m - 15, m));
+      if (st.minute - m <= 3) SFX.play('chant', 500, dominantSide(st, m - Math.round(HL / 3), m));
     }
   }
   // Halbzeit: einmal pro Spiel eine Durchsage des Stadionsprechers
@@ -1556,6 +1574,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 
 function setState(next){
   const old = app.st;
+  try { tourSave(next); } catch(e){}
   app.st = next;
   try { cloudSave(next, next && (next.phase === 'over' || next.phase === 'half') && (!old || old.phase !== next.phase)); } catch(e) {}
   if (old && old.phase === 'half' && next.phase !== 'half' && next.phase !== 'over') {
@@ -1696,21 +1715,21 @@ function endReplay(){
   if (app.mode === 'bot') runBot();
 }
 function boardHtml(st){
-  const pct = Math.min(100, st.minute / 95 * 100);
+  const HL = FC.halfOf(st), pct = Math.min(100, st.minute / (2 * HL + 5) * 100);
   const waitingB = (app.mode==='online' && !(app.gameDoc && app.gameDoc.seats && app.gameDoc.seats.B)) || (app.mode==='p2p' && !app.connected);
   const rp = app.replay;
   const g = { A: st.goals.A, B: st.goals.B };
   if (rp && rp.prev.out.k === 'goal' && rp.step < 2) g[rp.prev.possStart]--;
   const pulse = rp && rp.prev.out.k === 'goal' && rp.step >= 2;
-  const clock = st.phase==='over' && !rp ? 'Abpfiff' : st.phase==='draft' ? 'Draft' : st.phase==='scout' ? 'Scouting' : st.phase==='setup' ? 'Aufstellung' : (st.phase==='half' && !rp) || app.swap ? 'Halbzeitpause' : `${rp?rp.prev.minute+1:st.minute}. Minute · ${rp&&rp.prev.half?rp.prev.half:st.half}. Halbzeit`;
+  const clock = st.phase==='tdraft' ? 'Turnier · Draft' : st.phase==='tsteal' ? 'Turnier · Beutezug' : st.phase==='tover' ? 'Turnierende' : st.phase==='over' && !rp ? 'Abpfiff' : st.phase==='draft' ? 'Draft' : st.phase==='scout' ? 'Scouting' : st.phase==='setup' ? 'Aufstellung' : (st.phase==='half' && !rp) || app.swap ? 'Halbzeitpause' : `${rp?rp.prev.minute+1:st.minute}. Minute · ${rp&&rp.prev.half?rp.prev.half:st.half}. Halbzeit`;
   const possNow = rp ? (rp.step>=2?rp.prev.possEnd:rp.prev.possStart) : st.poss;
-  const pd = s => possNow===s && !['draft','setup','scout'].includes(st.phase) && !((st.phase==='over'||st.phase==='half')&&!rp) && !app.swap ? '<span class="possdot" title="Ballbesitz"></span>' : '';
+  const pd = s => possNow===s && !['draft','setup','scout','tdraft','tsteal','tover'].includes(st.phase) && !((st.phase==='over'||st.phase==='half')&&!rp) && !app.swap ? '<span class="possdot" title="Ballbesitz"></span>' : '';
   const vwarn = app.mode === 'p2p' && app.versionMismatch ? `<div class="notice vwarn" style="margin-top:12px"><b>Ihr spielt unterschiedliche Versionen</b> (du: ${esc(BUILD || '?')}, ${app.isHost ? 'dein Gegner' : 'Gastgeber'}: ${esc(app.versionMismatch)}). Das führt zu Fehlern. Bitte ${app.isHost ? 'deinen Gegner die Seite neu laden lassen' : 'die Seite neu laden'} (Strg+F5 bzw. Cmd+Shift+R) und neu beitreten. Die Version steht oben neben dem Titel.</div>` : '';
   return vwarn + `<div class="board">
-    <div class="team tbox ta"><div class="tname">${pd('A')}${esc(teamLabel('A'))}</div><div class="tsub">${st.teams.A.name&&playerLabel('A')!=='Heim'?esc(playerLabel('A'))+' · ':''}Heim · ${esc(card(st.teams.A.gk).name)} (${card(st.teams.A.gk).fields.join('-')})</div></div>
+    <div class="team tbox ta"><div class="tname">${pd('A')}${esc(teamLabel('A'))}</div><div class="tsub">${st.teams.A.name&&playerLabel('A')!=='Heim'?esc(playerLabel('A'))+' · ':''}Heim${st.teams.A.gk ? ` · ${esc(card(st.teams.A.gk).name)} (${card(st.teams.A.gk).fields.join('-')})` : ''}</div></div>
     <div><div class="score${pulse?' pulse':''}">${g.A}:${g.B}</div><div class="clock">${clock}</div></div>
-    <div class="team right tbox tb"><div class="tname">${esc(teamLabel('B'))}${pd('B')}</div><div class="tsub">${st.teams.B.name&&playerLabel('B')!=='Gast'?esc(playerLabel('B'))+' · ':''}Gast · ${esc(card(st.teams.B.gk).name)} (${card(st.teams.B.gk).fields.join('-')})</div></div>
-    <div class="timeline"><i style="width:${pct}%"></i><b style="left:${45/95*100}%"></b></div>
+    <div class="team right tbox tb"><div class="tname">${esc(teamLabel('B'))}${pd('B')}</div><div class="tsub">${st.teams.B.name&&playerLabel('B')!=='Gast'?esc(playerLabel('B'))+' · ':''}Gast${st.teams.B.gk ? ` · ${esc(card(st.teams.B.gk).name)} (${card(st.teams.B.gk).fields.join('-')})` : ''}</div></div>
+    <div class="timeline"><i style="width:${pct}%"></i><b style="left:${HL/(2*HL+5)*100}%"></b></div>
   </div>${waitingB?(app.mode==='p2p'?`<div class="notice wait" style="margin-top:12px">${app.isHost?`Warte auf Gegner. Spielcode: <b class="codebig" style="font-size:24px">${esc(app.code)}</b> – schick deinem Gegner diesen Code.`:'Verbinde mit dem Spiel …'} ${esc(app.p2pStatus)}</div>`:`<div class="notice wait" style="margin-top:12px">Warte auf Gegner. Spielcode: <b class="codebig" style="font-size:24px">${esc(app.code)}</b> – teile den Code oder den Link mit deinem Gegner.</div>`):''}`;
 }
 
@@ -1779,6 +1798,7 @@ function render(){
   const scrollY = window.scrollY;
   app.flipIdx = 0;
   if (st.phase === 'draft') { v.innerHTML = boardHtml(st) + draftHtml(st); bindGame(); return; }
+  if (['tdraft', 'tsteal', 'tover'].includes(st.phase)) { v.innerHTML = boardHtml(st) + tourHtml(st); bindTour(); window.scrollTo(0, scrollY); return; }
   if (st.phase === 'scout') { v.innerHTML = boardHtml(st) + scoutHtml(st); bindScout(); window.scrollTo(0, scrollY); return; }
   if (st.phase === 'setup') {
     const ae = document.activeElement, fid = ae && ae.id === 'teamName' ? ae.selectionStart : null;
@@ -1825,7 +1845,7 @@ document.addEventListener('keydown', e => {
 // ---------- Zwangszüge ----------
 // Hat der Spieler, der dran ist, nur eine einzige erlaubte Aktion, wird sie automatisch gewählt.
 function forcedAct(st){
-  if (!st || app.replay || !canAct(st) || st.phase === 'setup' || st.phase === 'half' || st.phase === 'scout') return null;
+  if (!st || app.replay || !canAct(st) || ['setup','half','scout','over','tdraft','tsteal','tover'].includes(st.phase)) return null;
   const acts = FC.legal(st, FC.actor(st));
   return acts.length === 1 ? acts[0] : null;
 }
@@ -2164,6 +2184,7 @@ function centerHtml(st, D){
     return replayHtml(st) + `<div class="row nextrow"><div class="progress"><i style="animation-duration:${rp.total}ms;animation-delay:-${gone}ms"></i></div><button class="btn primary" id="next" data-enter>Weiter</button></div>`;
   }
   if (st.phase === 'over') {
+    if (st.tour) return `<div class="banner outcome o-goal">Abpfiff · ${st.goals.A}:${st.goals.B} · ${esc(st.goals.A===st.goals.B?'Unentschieden':'Sieg '+teamLabel(st.goals.A>st.goals.B?'A':'B'))}</div>` + tourOverHtml(st) + recapHtml(st);
     return `<div class="banner outcome o-goal">Abpfiff · ${st.goals.A}:${st.goals.B} · ${esc(st.goals.A===st.goals.B?'Unentschieden':'Sieg '+teamLabel(st.goals.A>st.goals.B?'A':'B'))}</div>` + recapHtml(st) + `<div class="row"><button class="btn primary" id="again" data-enter>Neues Spiel</button></div>`;
   }
   const active = st.phase === 'att' ? 1 : st.phase === 'def' || st.phase === 'def_pick2' ? 2 : 3;
@@ -2356,12 +2377,12 @@ function lineupToken(id, bench, extra){
 function setupHtml(st){
   const s = setupSeat(st);
   if (!s) return '<div class="empty">Gleich geht es los …</div>';
-  const t = st.teams[s], o = FC.other(s), nBench = FC.benchOf(st);
+  const t = st.teams[s], o = FC.other(s), nBench = FC.benchOf(st, s);
   if (st.ready[s]) {
     return `<div class="panel setup"><h2 class="setup-h">${esc(t.name)} steht.</h2><div class="notice wait"><span class="thinking"></span>${esc(playerLabel(o))} stellt noch ${o==='A'?'die Heimmannschaft':'die Gastmannschaft'} auf …</div></div>`;
   }
   const key = s + ':' + t.squad.join();
-  if (!app.setup || app.setup.key !== key) app.setup = { key, seat: s, bench: nBench ? t.squad.slice(-nBench) : [], name: st.mode === 'club' ? (s === 'A' ? 'VfL Osnabrück' : FC.CLUB_NAMES[st.opp || 's04']) : '' };
+  if (!app.setup || app.setup.key !== key) app.setup = { key, seat: s, bench: nBench ? t.squad.slice(-nBench) : [], name: st.mode === 'club' ? (s === 'A' ? 'VfL Osnabrück' : FC.CLUB_NAMES[st.opp || 's04']) : st.tour ? (st.tour.names[s] && !['Heim','Gast'].includes(st.tour.names[s]) ? st.tour.names[s] : '') : '', gk: t.gk };
   const S = app.setup, fly = !app.revealed.has('fly-' + key); app.revealed.add('fly-' + key);
   const ok = S.bench.length === nBench;
   const who = app.mode === 'local' ? `<span class="label">${esc(playerLabel(s))} ist dran · ${esc(playerLabel(o))} schaut bitte weg</span>` : '';
@@ -2374,6 +2395,7 @@ function setupHtml(st){
       <div class="lside l">eigenes Tor</div><div class="lside r">Angriff →</div>${tokens}</div>
       <div class="lprev" id="lprev"><div class="muted">Spieler antippen oder mit der Maus darüberfahren, um die Karte zu sehen.</div></div></div>
     ${benchHtml}
+    ${(t.gks || []).length > 1 ? `<div class="lbench"><span class="label">Torhüter</span>${t.gks.map(g => `<button type="button" class="btn small${S.gk === g ? ' primary' : ''}" data-setgk="${g}">${esc(card(g).name)} <small>(${card(g).fields.join('-')})</small></button>`).join('')}</div>` : ''}
     <div class="setup-foot"><label class="setup-name"><span class="label">Name deiner Mannschaft</span>
       <input type="text" id="teamName" maxlength="24" placeholder="${s==='A'?'z. B. FC Lila 04':'z. B. SV Weiß-Blau'}" value="${esc(S.name)}" autocomplete="off"></label>
       <div class="setup-sum"><b>${t.squad.length - S.bench.length}</b> auf dem Feld · <b>${S.bench.length}</b> auf der Bank</div>
@@ -2388,16 +2410,84 @@ function bindSetup(){
     const f = () => {
       const id = el.dataset.bench, i = S.bench.indexOf(id);
       if (i >= 0) S.bench.splice(i, 1);
-      else if (S.bench.length < FC.benchOf(app.st)) S.bench.push(id);
-      else if (!FC.benchOf(app.st)) return;
+      else if (S.bench.length < FC.benchOf(app.st, S.seat)) S.bench.push(id);
+      else if (!FC.benchOf(app.st, S.seat)) return;
       else { S.bench.shift(); S.bench.push(id); }   // Bank voll: der zuerst Gesetzte rückt wieder auf
       render();
     };
     el.onclick = f; el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); f(); } };
   });
   const n = $('#teamName'); if (n) n.oninput = () => { S.name = n.value; };
-  const ok = $('#setupOk'); if (ok) ok.onclick = () => act({ type: 'team', name: (S.name || '').trim(), bench: S.bench.slice() });
+  document.querySelectorAll('[data-setgk]').forEach(b => b.onclick = () => { S.gk = b.dataset.setgk; render(); });
+  const ok = $('#setupOk'); if (ok) ok.onclick = () => act(Object.assign({ type: 'team', name: (S.name || '').trim(), bench: S.bench.slice() }, S.gk && (app.st.teams[S.seat].gks || []).length > 1 ? { gk: S.gk } : {}));
 }
+
+// ---------- Turnier: Draft mit Marktplätzen, Beutezug, Turnierende ----------
+const TIER_NAME = { t5: '5. Liga', vfl: 'VfL', nat: 'National' };
+function tourSeat(st){ return app.mode === 'local' ? FC.actor(st) : app.me; }
+function tierTag(id){ const p = card(id); return `<span class="ttag t-${FC.tierOf(id)}">${TIER_NAME[FC.tierOf(id)] || ''}${p.club && FC.CLUB_NAMES[p.club] && FC.tierOf(id) !== 'vfl' ? ' · ' + esc(FC.CLUB_NAMES[p.club]) : ''}${p.typ ? ' · ' + esc(p.typ) : ''}</span>`; }
+function tourTable(st){
+  const T = st.tour, rows = FC.TOUR_STATIONS.map((S, i) => {
+    const r = T.results[i], cur = i === T.station && !r;
+    const res = r ? `${r.goals[0]}:${r.goals[1]}` : cur ? '<span class="muted">läuft</span>' : '';
+    const pts = s => r ? (!r.winner || r.winner === s ? '+' + r.pts : '0') : '';
+    return `<tr class="${cur ? 'cur' : ''}"><td>${i + 1}. ${esc(S.name)}<small class="muted"> · ${S.lineup * 9} Min. · Sieg ${FC.TOUR_POINTS[i]} P.</small></td><td>${pts('A')}</td><td>${res}</td><td>${pts('B')}</td></tr>`;
+  }).join('');
+  return `<table class="stats ttable"><tr><th>Spiel</th><th>${esc(teamLabel('A'))}</th><th></th><th>${esc(teamLabel('B'))}</th></tr>${rows}
+    <tr class="tsum"><td>Punkte</td><td>${T.points.A}</td><td></td><td>${T.points.B}</td></tr></table>`;
+}
+function tourCol(st, s){
+  const T = st.tour, c = T.col[s];
+  const row = id => { const p = card(id); return `<li data-tprev="${id}">${shirt(p)}<span><b>${esc(p.name)}</b><small>${p.fields ? 'Torhüter ' + p.fields.join('-') : `T${p.tempo} · P${p.praesenz} · A${p.assist} · K${p.kopf} · S${p.schuss}`}</small></span><span class="ttag t-${FC.tierOf(id)}">${TIER_NAME[FC.tierOf(id)]}</span></li>`; };
+  return `<div class="tcol"><div class="khead t${s === 'A' ? 'a' : 'b'}"><b>${esc(teamLabel(s))}</b><span>${c.f.length} Feld · ${c.g.length} Tor</span></div>
+    <ul class="tlist">${[...c.g, ...c.f].map(row).join('') || '<li class="muted">noch leer</li>'}</ul></div>`;
+}
+function tourHtml(st){
+  const T = st.tour, S = FC.TOUR_STATIONS[T.station];
+  const head = `<div class="tour-head"><div><div class="sc-tag">Turnier · Station ${T.station + 1} von 4</div><h2>${esc(S.name)}</h2></div>${tourTable(st)}</div>`;
+  if (st.phase === 'tover') {
+    const w = T.winner;
+    return `<div class="tour">${head}<div class="banner outcome o-goal">${w ? `${esc(teamLabel(w))} gewinnt das Turnier!` : 'Das Turnier endet unentschieden!'}<small>${T.points.A}:${T.points.B} Punkte · Tordifferenz ${T.goals.A >= 0 ? '+' : ''}${T.goals.A} / ${T.goals.B >= 0 ? '+' : ''}${T.goals.B}</small></div>
+      <div class="tcols">${tourCol(st, 'A')}${tourCol(st, 'B')}</div><div class="row" style="justify-content:center"><button class="btn primary" id="tourLeave">Zur Übersicht</button></div></div>`;
+  }
+  const me = tourSeat(st), a = FC.actor(st), mine = canAct(st) && a === me;
+  if (st.phase === 'tsteal') {
+    const by = T.steal.by, from = T.steal.from, ids = [...T.col[from].g, ...T.col[from].f];
+    const cards = ids.map(id => `<div class="dcard${mine ? ' tpk' : ''}" data-cid="${id}"${mine ? ` role="button" tabindex="0" data-tsteal="${id}"` : ''}>${tierTag(id)}${cardHtml(id, { cls: mine ? 'pickable' : '' })}</div>`).join('');
+    return `<div class="tour">${head}<div class="notice${mine ? '' : ' wait'}">${mine ? `<b>Beutezug:</b> Du hast gewonnen und darfst dir eine Karte von ${esc(teamLabel(from))} nehmen.` : `<span class="thinking"></span>${esc(teamLabel(by))} sucht sich eine Karte aus dem Kader von ${esc(teamLabel(from))} aus …`} Der Verlierer bekommt eine zufällige Karte derselben Stufe und Art aus dem Vorrat.</div>
+      <div class="pool tpool">${cards}</div></div>`;
+  }
+  // Draft
+  const R = S.rounds[T.round], o = FC.other(a), legal = new Set(FC.legal(st, a).map(x => x.id));
+  const tierN = R.tier === 't5' ? 'Fünftligisten' : R.tier === 'vfl' ? 'VfL-Spieler' : 'Nationalspieler (Männer und Frauen)';
+  const ls = T.lastSteal && T.lastSteal.comp !== undefined && T.round === 0 && T.picksLeft.A + T.picksLeft.B === 2 * R.picks
+    ? `<div class="notice">Beutezug: <b>${esc(teamLabel(T.lastSteal.by))}</b> hat sich <b>${esc(card(T.lastSteal.id).name)}</b> geholt. ${esc(teamLabel(T.lastSteal.from))} bekommt als Entschädigung <b>${T.lastSteal.comp ? esc(card(T.lastSteal.comp).name) : 'niemanden'}</b>.</div>` : '';
+  const mk = (s, label) => {
+    const cost = s !== a;
+    const cards = T.market[s].map(id => { const ok = mine && legal.has(id); return `<div class="dcard${ok ? ' tpk' : ' off'}" data-cid="${id}"${ok ? ` role="button" tabindex="0" data-tpick="${id}"` : ''}>${tierTag(id)}${cardHtml(id, { cls: ok ? 'pickable' : '' })}</div>`; }).join('') || '<div class="muted">leer</div>';
+    return `<div class="tmarket${s === a ? ' own' : ''}"><div class="khead t${s === 'A' ? 'a' : 'b'}"><b>Markt ${esc(teamLabel(s))}</b><span>${cost ? `kostet ${esc(teamLabel(a))} 1 Token` : 'gratis'}</span></div><div class="pool">${cards}</div></div>`;
+  };
+  const gkm = T.gkMarket.length ? `<div class="tmarket"><div class="khead"><b>Keeper-Markt</b><span>gratis · jeder braucht genau einen Keeper</span></div><div class="pool">${T.gkMarket.map(id => { const ok = mine && legal.has(id); return `<div class="dcard${ok ? ' tpk' : ' off'}" data-cid="${id}"${ok ? ` role="button" tabindex="0" data-tpick="${id}"` : ''}>${tierTag(id)}${cardHtml(id, { cls: ok ? 'pickable' : '' })}</div>`; }).join('')}</div></div>` : '';
+  const tok = s => `<span class="ttok${T.tokens[s] ? '' : ' used'}" title="Token: eine Karte aus dem Markt des Gegners">${T.tokens[s] ? '1 Token' : 'Token weg'}</span>`;
+  const who = mine ? `<b>${app.mode === 'local' ? esc(teamLabel(a)) + ' ist dran' : 'Du bist dran'}</b>: Wähle eine Karte.` : `<span class="thinking"></span>${esc(teamLabel(a))} wählt …`;
+  return `<div class="tour">${head}${ls}
+    <div class="notice${mine ? '' : ' wait'}">${who} Draft: ${esc(tierN)}, je ${R.picks} Karten${R.gkMarket ? ', davon 1 Keeper' : ''}. Noch zu ziehen: ${esc(teamLabel('A'))} ${T.picksLeft.A} ${tok('A')} · ${esc(teamLabel('B'))} ${T.picksLeft.B} ${tok('B')}. Höchstens ein Torhüter pro Station.</div>
+    <div class="tmarkets">${mk(a, '')}${mk(o, '')}</div>${gkm}
+    <div class="tcols">${tourCol(st, 'A')}${tourCol(st, 'B')}</div></div>`;
+}
+function bindTour(){
+  const go = (el, f) => { el.onclick = f; el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); f(); } }; };
+  document.querySelectorAll('[data-tpick]').forEach(el => go(el, () => { SFX.play('flip'); announce(el.dataset.tpick); act({ type: 'tpick', id: el.dataset.tpick }); }));
+  document.querySelectorAll('[data-tsteal]').forEach(el => go(el, () => { SFX.play('tackleCheer', 0, FC.actor(app.st)); act({ type: 'tsteal', id: el.dataset.tsteal }); }));
+  const l = $('#tourLeave'); if (l) l.onclick = leave;
+}
+function tourOverHtml(st){
+  const T = st.tour, i = T.station, last = i >= FC.TOUR_STATIONS.length - 1, r = T.results[i];
+  const nxt = last ? 'Zum Turnier-Ergebnis' : r && r.winner ? 'Weiter zum Beutezug' : 'Weiter zum nächsten Draft';
+  return `<div class="tour-mini">${tourTable(st)}</div><div class="row"><button class="btn primary" id="tourNext" data-enter>${nxt}</button></div>`;
+}
+// Turnier lokal speichern, damit man es am nächsten Abend fortsetzen kann
+function tourSave(st){ if (st && st.tour && app.mode === 'local') LS.set('fc3-tour', { st, t: Date.now() }); }
 
 // ---------- Schulnoten ----------
 const fmtXg = x => (x || 0).toFixed(2).replace('.', ',');
@@ -2610,6 +2700,7 @@ function bindGame(){
   const md = $('#modal'); if (md) { md.onclick = e => { if (e.target===md) { app.zoom=null; render(); } }; md.onkeydown = e => { if (e.key==='Escape') { app.zoom=null; render(); } }; }
   const nx = $('#next'); if (nx) nx.onclick = endReplay;
   const rp2 = $('#recapPlay'); if (rp2) { rp2.onclick = startRecap; if (!app.recapAuto && app.st && app.st.phase==='over') { app.recapAuto = app.st.turn; setTimeout(startRecap, 400); } }
+  const tn = $('#tourNext'); if (tn) tn.onclick = () => act({ type: 'tnext' });
   const ag = $('#again'); if (ag) ag.onclick = () => { if (app.mode==='online') leave(); else if (app.mode==='p2p') { if (app.isHost) p2pRestart(); else flash('Ein neues Spiel startet dein Gegner.'); } else startLocal(app.mode, gameOpts()); };
 }
 
@@ -2793,14 +2884,14 @@ function p2pRestart(){
   p2pSetState(FC.newGame(Object.assign({ names:{A:'Heim',B:'Gast'} }, (app.st && app.st.opts) || gameOpts())));
 }
 function p2pAvailable(){ return typeof window.Peer === 'function'; }
-function p2pHost(resume){
+function p2pHost(resume, opts){
   if (!p2pAvailable()) { app.lobbyMsg = 'Die Verbindungsbibliothek konnte nicht geladen werden. Bist du online?'; render(); return; }
   p2pClose();
   const saved = resume ? LS.get('fc3-host-game') : null;
   app.mode = 'p2p'; app.isHost = true; app.me = 'A';
   app.code = saved ? saved.code : newCode6();
   app.p2pNames = saved ? saved.names : { A: myName(), B: '' };
-  app.st = saved ? saved.st : FC.newGame(gameOpts());
+  app.st = saved ? saved.st : FC.newGame(opts || gameOpts());
   LS.set('fc3-host-game', { code: app.code, st: app.st, names: app.p2pNames, t: Date.now() });
   app.p2pStatus = 'Verbinde mit dem Vermittlungsserver …';
   render();
@@ -2838,7 +2929,7 @@ function p2pHostData(d){
   if (d.t === 'sync') { if (!app.st || d.seq !== app.st.seq) p2pSend({ t:'state', st: app.st, names: app.p2pNames, build: BUILD }); return; }
   if (d.t === 'act') {
     const st = app.st;
-    const free = d.a && (d.a.type === 'team' || d.a.type === 'ready');   // Aufstellung und Halbzeit laufen gleichzeitig
+    const free = d.a && (d.a.type === 'team' || d.a.type === 'ready' || d.a.type === 'tnext');   // Aufstellung und Halbzeit laufen gleichzeitig
     if (!FC.legal(st, 'B').length || (!free && d.seq !== st.seq)) { p2pSend({ t:'state', st, names: app.p2pNames }); return; }
     let next; try { next = FC.apply(st, 'B', d.a); } catch(e){ p2pSend({ t:'state', st, names: app.p2pNames }); return; }
     p2pSetState(next);
@@ -3008,6 +3099,11 @@ function localPanels(){
       <div class="muted">Ihr gebt das Gerät hin und her. Bei der Torwartwahl schaut der Angreifer weg.</div>
       <div class="row"><button class="btn primary" id="local">Spiel starten</button></div>
     </div>
+    <div class="panel mode"><h2>Turnier zu zweit</h2>
+      <div class="muted">Vier Spiele, dazwischen Draft: 7 gegen 7 mit Fünftligisten, dann 9 gegen 9 und 11 gegen 11 mit VfL-Spielern, Finale mit Nationalspielern. Wer gewinnt, holt sich eine Karte vom Gegner.</div>
+      <div class="row"><button class="btn primary" id="tourLocal">An einem Gerät</button>${P2P_BUILD ? '<button class="btn" id="tourP2P">Online (Spielcode)</button>' : ''}</div>
+      ${(() => { const sv = LS.get('fc3-tour'); return sv && sv.st && sv.st.phase !== 'tover' ? `<div class="row"><button class="btn" id="tourResume">Turnier fortsetzen <small>(Station ${sv.st.tour.station + 1} · ${sv.st.tour.points.A}:${sv.st.tour.points.B} Punkte)</small></button></div>` : ''; })()}
+    </div>
     <div class="panel mode"><h2>Gegen den Bot</h2>
       <div class="muted">Zum Regeln-Üben allein. Der Bot spielt einfach und etwas zufällig.</div>
       <div class="row"><button class="btn primary" id="bot">Spiel starten</button></div>
@@ -3025,6 +3121,9 @@ function bindLobby(){
   const pr = $('#p2pResume'); if (pr) pr.onclick = () => { app.lobbyMsg=''; p2pHost(true); };
   const pn = $('#p2pName'); if (pn) pn.onchange = () => myName();
   $('#local').onclick = () => startLocal('local', gameOpts());
+  const tl = $('#tourLocal'); if (tl) tl.onclick = () => startLocal('local', { mode: 'tour', chaseRule: gameOpts().chaseRule, names: { A: 'Heim', B: 'Gast' } });
+  const tp = $('#tourP2P'); if (tp) tp.onclick = () => { app.lobbyMsg=''; p2pHost(false, { mode: 'tour', chaseRule: gameOpts().chaseRule, names: { A: 'Heim', B: 'Gast' } }); };
+  const tr = $('#tourResume'); if (tr) tr.onclick = () => { const sv = LS.get('fc3-tour'); if (!sv) return; clearReplayTimers(); app.replay = null; app.mode = 'local'; app.me = null; app.st = sv.st; render(); };
   $('#bot').onclick = () => startLocal('bot', gameOpts());
 }
 
