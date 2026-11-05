@@ -650,7 +650,7 @@ button.gv-ar:hover{background:var(--att);color:#fff}
       <li>Jede Mannschaft hat 13 der 26 Feldspieler (zufällig oder per Draft, Reihenfolge A-B-B-A …, es werden alle Karten verteilt) und einen der beiden Keeper (zufällig). <b>Neu in Version 3:</b> Nach dem Draft gibt sich jede Mannschaft einen Namen und setzt 3 Spieler auf die Ersatzbank, die anderen 10 bilden das Deck.</li>
       <li>Ein Spielzug: Beide ziehen ihre Karte. Der Verteidiger sieht seine Karte sofort und kann schon überlegen. Der Angreifer deckt auf und wählt seine Aktion (orange). Danach deckt der Verteidiger auf, sieht die Angriffsaktion und wählt in der gespiegelten Zone (blau). Die Option hinter „/“ kostet: Spieler erschöpfen oder Token (Angreifer rot, Verteidiger blau).</li>
       <li>Abwehr: Passabfangen schlägt Querpass, Rückpass, Steilpass, Flanke, Vorlage, Diagonalball und <b>neu in Version 3 auch „--“, aber keine grünen Pässe</b>. Tackling schlägt Dribbling und „--“. Block schlägt Schuss und Kopfball, Schuss blocken den Schuss und <b>neu in Version 3 auch „--“</b>. Ballgewinn schlägt alles außer grüne Aktionen. Ball sichern ist nicht zu erobern.</li>
-      <li>Steilpass: Spielt die Abwehr Passabfangen (nicht gegen grüne Pässe), ist der Ball weg. Sonst folgt im nächsten Zug sofort ein Tempo-Duell: Beide decken ihre nächste Karte auf, es zählt das Tempo (bei Gleichstand die Präsenz). Gewinnt die Abwehr, erobert sie den Ball in der Zielzone. Gleichstand: Ball bleibt, ohne Bewegung. <b>Neu in Version 3:</b> Gewinnt der Angreifer, kommt der Ball in der Zone davor an, und <b>dieselbe Karte macht sofort ihre Aktion</b> (keine neue Karte). <b>Testregel „Abwehr überlaufen“</b> (im Spielmodus umschaltbar): Die Abwehr kann nur eingreifen, wenn sie bezahlt, Option vor „/“ Erschöpfen oder blauer Token, Option hinter „/“ beides; sonst gelingt die Aktion (eigene Fehler wie Fehlpass ausgenommen). Sprint: Tempo-Duell der Karten, die gerade gespielt werden, danach wie Dribbling.</li>
+      <li>Steilpass: Spielt die Abwehr Passabfangen (nicht gegen grüne Pässe), ist der Ball weg. Sonst folgt im nächsten Zug sofort ein Tempo-Duell: Beide decken ihre nächste Karte auf, es zählt das Tempo (bei Gleichstand die Präsenz). Gewinnt die Abwehr, erobert sie den Ball in der Zielzone. Gleichstand: Ball bleibt, ohne Bewegung. <b>Neu in Version 3:</b> Gewinnt der Angreifer, kommt der Ball in der Zone davor an, und <b>dieselbe Karte macht sofort ihre Aktion</b> (keine neue Karte). <b>Testregel „Abwehr überlaufen“</b> (im Spielmodus umschaltbar): Die Abwehr kann nur eingreifen, wenn sie bezahlt, Option vor „/“ Erschöpfen oder blauer Token, Option hinter „/“ beides; sonst gelingt die Aktion (eigene Fehler wie Fehlpass ausgenommen). Weitere Testregeln: „Abwehr normal“ (Abwehr wählt ganz normal) und „Abwehr unmöglich“ (Abwehr kann gar nicht eingreifen, die Aktion gelingt immer, eigene Fehler ausgenommen). Sprint: Tempo-Duell der Karten, die gerade gespielt werden, danach wie Dribbling.</li>
       <li>„--“ gegen „--“: Der Ball ist frei. Im nächsten Zug decken beide sofort eine neue Karte auf, es zählt deren Präsenz (bei Gleichstand das Tempo, ist auch das gleich, bleibt der Ballführende am Ball). <b>Neu in Version 3:</b> Der Gewinner spielt mit seiner Karte ganz normal den Angriff, auch wenn es vorher die Abwehr war, und sieht dabei schon die Karte des Verlierers. Der Verlierer reagiert mit seiner Abwehraktion. Erst danach ist der Zug vorbei. Für Halbzeit und Abpfiff zählt ein Ballbesitzwechsel, wenn der Ball am Ende des Zuges bei der anderen Mannschaft ist als vor dem Duell.</li>
       <li>Vorlage: Kommt sie an, schießt im nächsten Zug die nächste Karte des Angreifers direkt (Schusswert plus Assist des Vorlagengebers). Die Abwehr deckt dabei keine Karte auf.</li>
       <li>Gelbe Karte: Foul, der Angreifer bleibt am Ball, seine Aktion wird nicht ausgeführt. Zweite Gelbe: Der Spieler ist raus. „Gelb OOO“ bringt alle drei Token. Fehlpass: Ball sofort weg.</li>
@@ -1879,7 +1879,8 @@ function scheduleAuto(st){
 }
 // Sondersituation, in der die Karten nur verglichen werden (nach gewonnenem Tempo-Duell spielt man wieder normal)
 const special = c => !!(c && (c.header || (c.through && !c.chase) || c.volley));
-const chasePay = st => !!(st.cur && st.cur.chase && (!st.opts || st.opts.chaseRule !== 'free'));
+const chasePay = st => !!(st.cur && st.cur.chase && (!st.opts || !['free','none'].includes(st.opts.chaseRule)));
+const chaseNone = st => !!(st.cur && st.cur.chase && st.opts && st.opts.chaseRule === 'none');
 function choiceLabel(st, ph, x){
   const c = st.cur, side = c[ph];
   if (!side.id) return { a: 'Keine Karte mehr', g: 0 };
@@ -1949,8 +1950,8 @@ function situationHtml(st){
   }
   if (c.through && c.chase && c.duel) {
     return sitHtml('Steilpass kommt an', `Tempo-Duell gewonnen · Zone ${st.ball}`, vsHtml(c.duel, a&&a.id, d&&d.id, attS, defS),
-      chasePay(st) ? 'Der Angreifer macht jetzt seine Aktion. Die Abwehr ist überlaufen und kann nur gegen Kosten eingreifen.' : 'Der Angreifer macht jetzt seine Aktion, danach wählt die Abwehr ganz normal.',
-      'Gewinnt der Ballführende das Tempo-Duell nach einem Steilpass, kommt der Ball an und dieselbe Karte macht sofort ihre Aktion, es wird keine neue Karte gezogen. Testregel „Abwehr überlaufen“: Die Abwehr kann nur eingreifen, wenn sie bezahlt (Option vor „/“: Erschöpfen oder blauer Token, Option hinter „/“: beides). Im Spielmodus lässt sich stattdessen „Abwehr normal“ einstellen.');
+      chasePay(st) ? 'Der Angreifer macht jetzt seine Aktion. Die Abwehr ist überlaufen und kann nur gegen Kosten eingreifen.' : chaseNone(st) ? 'Der Angreifer macht jetzt seine Aktion. Die Abwehr ist abgehängt und kann nicht mehr eingreifen.' : 'Der Angreifer macht jetzt seine Aktion, danach wählt die Abwehr ganz normal.',
+      'Gewinnt der Ballführende das Tempo-Duell nach einem Steilpass, kommt der Ball an und dieselbe Karte macht sofort ihre Aktion, es wird keine neue Karte gezogen. Testregel „Abwehr überlaufen“: Die Abwehr kann nur eingreifen, wenn sie bezahlt (Option vor „/“: Erschöpfen oder blauer Token, Option hinter „/“: beides). In den Einstellungen lässt sich stattdessen „Abwehr normal“ oder „Abwehr unmöglich“ (die Aktion gelingt immer) einstellen.');
   }
   if (c.through) {
     return sitHtml('Tempo-Duell', `nach Steilpass in ${c.through.to}`, vsHtml(preview('Tempo','Präsenz'), a&&a.id, d&&d.id, attS, defS),
@@ -3051,7 +3052,7 @@ function poolCount(s){ const n = CLUBS.reduce((a, c) => a + clubCount(s, c.k), 0
 function settingsOk(s){ return s.mode === 'club' || poolCount(s) >= 2 * FC.LINEUP; }
 function shuffled(a){ a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function gameOpts(){
-  const s = settings(), base = { chaseRule: s.chase === 'free' ? 'free' : 'pay', names: { A: 'Heim', B: 'Gast' } };
+  const s = settings(), base = { chaseRule: ['free','none'].includes(s.chase) ? s.chase : 'pay', names: { A: 'Heim', B: 'Gast' } };
   if (s.mode === 'club') return Object.assign({ mode: 'club', opp: s.opp }, base);
   // Pool je Verein zusammenstellen: alle, zufällige Auswahl oder selbst abgehakt
   const ids = [];
@@ -3083,7 +3084,7 @@ function settingsHtml(){
     <div class="setgrid">
       <label><span class="label">Kader</span><select id="setMode">${opt('draft', s.mode, 'Kompletter Draft (alle Karten offen)')}${opt('market', s.mode, 'Offener Markt (5 Karten offen, Nachschub vom Stapel)')}${opt('random', s.mode, 'Zufällig verteilt (kein Draft)')}${opt('club', s.mode, 'Vereinsduell: VfL gegen einen Gegner deiner Wahl')}</select></label>
       ${club ? `<label><span class="label">Gegner</span><select id="setOpp">${opt('s04', s.opp, 'FC Schalke 04 (Bundesliga)')}${opt('dfb', s.opp, 'Deutschland (Nationalmannschaft)')}${opt('dfbf', s.opp, 'Deutschland (Frauen-Nationalmannschaft)')}${opt('flu', s.opp, 'Union Flutlicht 05 (5. Liga)')}${opt('asche', s.opp, 'SV Ascheplatz (5. Liga)')}</select></label>` : CLUBS.map(clubRow).join('')}
-      <label><span class="label">Nach Steilpass, Tempo-Duell verloren (Test)</span><select id="setChase">${opt('pay', s.chase || 'pay', 'Abwehr überlaufen: Eingreifen nur gegen Kosten')}${opt('free', s.chase || 'pay', 'Abwehr normal')}</select></label>
+      <label><span class="label">Nach Steilpass, Tempo-Duell verloren (Test)</span><select id="setChase">${opt('pay', s.chase || 'pay', 'Abwehr überlaufen: Eingreifen nur gegen Kosten')}${opt('free', s.chase || 'pay', 'Abwehr normal')}${opt('none', s.chase || 'pay', 'Abwehr unmöglich: Aktion gelingt immer')}</select></label>
     </div>
     <div class="${settingsOk(s) ? 'muted' : 'notice vwarn'}" style="font-size:13.5px">${info} Online legt der Gastgeber die Einstellung fest.</div>
   </div>`;

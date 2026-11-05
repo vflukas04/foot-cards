@@ -225,3 +225,9 @@ Damit weiterhin etwa 6 Tore pro Spiel fallen, sind die Feldwerte links und recht
 
 Tore pro Spiel (Simulation): Draft 6,00 → 6,03 · Schalke-Duell 5,37 → 5,98 · Flutlicht 5,34 → 5,72. Ohne die Eckenanpassung wären es nur 4,5–4,8 gewesen.
 Abstufung bleibt: DFB–S04 86 %, DFB–VfL 98 %, S04–VfL 77 %, VfL–Flutlicht 91 %, Flutlicht–Ascheplatz ausgeglichen.
+
+## 05.11.2026: Dritte Testregel nach Steilpass
+
+Nach verlorenem Tempo-Duell gibt es jetzt drei Testregeln (Einstellungen): „Abwehr überlaufen“ (Standard, Eingreifen nur gegen Kosten), „Abwehr normal“ und neu „Abwehr unmöglich“ (die Abwehr kann gar nicht eingreifen, die Aktion gelingt immer, eigene Fehler wie Fehlpass ausgenommen).
+
+Simulation Draft, 150 Spiele je Regel: Tore pro Spiel überlaufen 6,11 · normal 5,63 · unmöglich 5,91. Ein angekommener Steilpass passiert etwa 2-mal pro Spiel.
