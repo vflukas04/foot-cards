@@ -221,7 +221,7 @@
       const defS = other(att);
       const did = st.cur.def.id;
       if (!id || !did) { st.cur.presence = false; return; }
-      const r = duel(id, did, 'praesenz', 'tempo');
+      const r = duel(id, did, 'praesenz', 'tempo', auraBonus(st, att));
       st.cur.duel = r; st.stats[r.win === 'def' ? defS : att].duels++;
       log(st, `Präsenz-Duell: ${duelText(r)}.`, 'duel');
       if (r.win === 'att') { ratePt(st, id, .5); ratePt(st, did, -.5); } else if (r.win === 'def') { ratePt(st, did, .5); ratePt(st, id, -.5); }
@@ -545,19 +545,30 @@
   }
 
   // Duell: zuerst Wert a, bei Gleichstand Wert b
-  function duel(attId, defId, first, second) {
+  function duel(attId, defId, first, second, bonus) {
     const A = card(attId), D = defId ? card(defId) : null;
     const key = { tempo: 'Tempo', praesenz: 'Präsenz', kopf: 'Kopfball' };
-    const av = A[first], dv = D ? D[first] : 0;
+    const ba = (bonus && bonus.a) || 0, bd = (bonus && bonus.d) || 0;
+    const av = A[first] + ba, dv = (D ? D[first] : 0) + bd;
     const res = { kind: key[first], a: av, d: dv };
+    if (ba) res.auraA = ba; if (bd) res.auraD = bd;
     if (av !== dv) { res.win = av > dv ? 'att' : 'def'; return res; }
     const av2 = A[second], dv2 = D ? D[second] : 0;
     res.kind2 = key[second]; res.a2 = av2; res.d2 = dv2;
     res.win = av2 === dv2 ? 'tie' : av2 > dv2 ? 'att' : 'def';
     return res;
   }
+  // Ausstrahlung des Torhüters: Bei Präsenz-Duellen in der eigenen Abwehrmitte bekommt der eigene Spieler +Ausstrahlung
+  // (Ball beim Angreifer in ZD = vor dessen Tor; Ball in ZO = vor dem Tor der Abwehr)
+  function auraBonus(st, attS) {
+    const gkA = st.teams[attS].gk, gkD = st.teams[other(attS)].gk;
+    if (st.ball === 'ZD' && gkA && card(gkA).aura) return { a: card(gkA).aura, d: 0 };
+    if (st.ball === 'ZO' && gkD && card(gkD).aura) return { a: 0, d: card(gkD).aura };
+    return null;
+  }
   function duelText(r) {
     let t = `${r.kind} ${r.a}:${r.d}`;
+    if (r.auraA || r.auraD) t += ` (inkl. +${r.auraA || r.auraD} Ausstrahlung des Torhüters)`;
     if (r.kind2) t += `, dann ${r.kind2} ${r.a2}:${r.d2}`;
     return t;
   }
@@ -642,7 +653,7 @@
     if (act === 'Slapstick') {
       const targets = [...(FORWARD[z] ? [FORWARD[z]] : []), ...LATERAL[z]];
       if (da === null || !d || !d.id) return offerMove(st, targets, 'Slapstick');
-      const r = duel(a.id, d.id, 'praesenz', 'tempo');
+      const r = duel(a.id, d.id, 'praesenz', 'tempo', auraBonus(st, attS));
       st.cur.duel = r; st.stats[r.win === 'def' ? defS : attS].duels++;
       log(st, `Slapstick, Präsenz-Duell: ${duelText(r)}.`, 'duel');
       if (r.win === 'def') return change(st, 'Slapstick misslungen', r);
@@ -725,11 +736,14 @@
     const assistId = h && h.s === attS && h.id !== a.id ? h.id : null;
     const assist = assistId ? card(assistId).assist : 0;
     const fern = kind === 'Schuss' && st.ball !== 'ZO';
-    const points = Math.max(0, base + assist - (fern ? 1 : 0));
     const gk = card(st.teams[defS].gk);
-    st.cur.shot = { shooter: a.id, kind, base, assist, assistId, fern, points, gkBase: gk.fields.slice(), gk: gk.id, add: [0, 0, 0] };
+    // Torhüter: Distanz (Fernschuss), 1 gegen 1 (Schuss aus der Mitte vorne, auch Direktschuss), Strafraumbeherrschung (Kopfball)
+    const ded = kind === 'Kopfball' ? { k: 'box', name: 'Strafraumbeherrschung', v: gk.box || 0 }
+      : fern ? { k: 'dist', name: 'Distanz', v: gk.dist == null ? 1 : gk.dist } : { k: 'ovo', name: '1 gegen 1', v: gk.ovo || 0 };
+    const points = Math.max(0, base + assist - ded.v);
+    st.cur.shot = { shooter: a.id, kind, base, assist, assistId, fern, ded, points, gkBase: gk.fields.slice(), gk: gk.id, add: [0, 0, 0] };
     st.stats[attS].shots++;
-    log(st, `${kind}! ${sh.name} kommt zum Abschluss: ${kind === 'Kopfball' ? 'Kopfball' : 'Schuss'}wert ${base}${assist ? ` + Assist ${assist} (${card(assistId).name})` : ''}${fern ? ' − 1 Fernschuss' : ''} = ${points} Punkte.`, 'shot');
+    log(st, `${kind}! ${sh.name} kommt zum Abschluss: ${kind === 'Kopfball' ? 'Kopfball' : 'Schuss'}wert ${base}${assist ? ` + Assist ${assist} (${card(assistId).name})` : ''}${ded.v ? ` − ${ded.name} ${ded.v} (${gk.name})` : ''} = ${points} Punkte.`, 'shot');
     st.phase = 'dist';
   }
 
