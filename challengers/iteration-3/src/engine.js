@@ -54,7 +54,11 @@
   const SQUAD = 13, LINEUP = 10, MAX_SUBS = 3, MARKET = 5;
   const CLUB_NAMES = { vfl: 'VfL Osnabrück', s04: 'FC Schalke 04', dfb: 'Deutschland', dfbf: 'Deutschland (Frauen)', flu: 'Union Flutlicht 05', asche: 'SV Ascheplatz' };
   const squadOf = st => st.squadSize || SQUAD;
-  const benchOf = st => Math.max(0, squadOf(st) - LINEUP);
+  // Spielgröße: 10 Feldspieler und 2 × 45 Minuten, im Turnier auch 6 bzw. 8 Feldspieler (9 Durchgänge durch den Stapel)
+  const lineupOf = st => st.lineupSize || LINEUP;
+  const halfOf = st => st.halfLen || 45;
+  // Im Turnier hat jede Mannschaft ihren eigenen Kader: Bank = Kader minus Aufstellung
+  const benchOf = (st, s) => Math.max(0, (s && st.mode === 'tour' ? st.teams[s].squad.length : squadOf(st)) - lineupOf(st));
   function setOut(st, k, text, extra) { if (st.cur) st.cur.out = Object.assign({ k, t: text }, st.cur.duel && st.cur.duel.kind !== 'Präsenz' ? { duel: st.cur.duel } : {}, extra || {}); }
 
   function newGame(opts) {
@@ -75,6 +79,7 @@
       const pool = DATA.gks.filter(g => clubs.includes(g.club || 'vfl')).map(g => g.id);
       return shuffle(pool.length >= 2 ? pool : DATA.gks.map(g => g.id));
     };
+    if (opts.mode === 'tour') return tourNew(st, opts);
     if (opts.mode === 'club') {
       // Vereinsduell: Die Scouts kennen den Kader des Gegners (Schalke oder Deutschland; 13 zufällige Karten, Startelf und Bank stehen fest).
       // Danach wählt Heim seine 13 aus allen VfL-Karten (Phase „scout“), dann Name und Bank wie gewohnt.
@@ -249,6 +254,8 @@
     switch (st.phase) {
       case 'draft': return st.pickOrder[0];
       case 'scout': return 'A';
+      case 'tdraft': return st.tour.toMove;
+      case 'tsteal': return st.tour.steal.by;
       case 'setup': case 'half': return !st.ready.A ? 'A' : !st.ready.B ? 'B' : null;
       case 'def': case 'def_pick2': case 'gk': return other(st.poss);
       case 'att': case 'move': case 'dist': case 'shot': return st.poss;
@@ -272,6 +279,9 @@
     // Mannschaft und Halbzeit: beide Seiten handeln unabhängig voneinander, jede einmal
     if (st.phase === 'setup' || st.phase === 'half') return st.ready[s] ? [] : [{ type: st.phase === 'setup' ? 'team' : 'ready' }];
     if (st.phase === 'scout') return s === 'A' ? [{ type: 'squad' }] : [];
+    if (st.phase === 'tdraft') return tourPicks(st, s);
+    if (st.phase === 'tsteal') { const T = st.tour; return T.steal.by === s ? [...T.col[T.steal.from].f, ...T.col[T.steal.from].g].map(id => ({ type: 'tsteal', id })) : []; }
+    if (st.phase === 'over' && st.tour) return [{ type: 'tnext' }];
     if (actor(st) !== s) return [];
     const acts = [];
     const ph = st.phase;
@@ -327,8 +337,10 @@
     if (!legal(st, s).some(a => a.type === act.type)) return false;
     if (act.type === 'team') {
       const b = act.bench;
-      return Array.isArray(b) && b.length === benchOf(st) && new Set(b).size === b.length && b.every(id => t.squad.includes(id)) && typeof (act.name || '') === 'string';
+      return Array.isArray(b) && b.length === benchOf(st, s) && new Set(b).size === b.length && b.every(id => t.squad.includes(id)) && typeof (act.name || '') === 'string'
+        && (act.gk == null || (t.gks || []).includes(act.gk));
     }
+    if (act.type === 'tnext') return st.phase === 'over' && !!st.tour;
     if (act.type === 'squad') {
       const ids = act.ids;
       return Array.isArray(ids) && ids.length === squadOf(st) && new Set(ids).size === ids.length && ids.every(id => (st.vflPool || []).includes(id));
@@ -343,7 +355,7 @@
     return false;
   }
   function apply(st0, s, act) {
-    const free = act && (act.type === 'team' || act.type === 'ready' || act.type === 'squad');
+    const free = act && (act.type === 'team' || act.type === 'ready' || act.type === 'squad' || act.type === 'tnext');
     if (free ? !validFree(st0, s, act) : !legal(st0, s).some(a => sameAct(a, act))) throw new Error('Unzulässiger Zug: ' + JSON.stringify(act));
     const st = structuredClone(st0);
     st.seq++;
@@ -364,6 +376,20 @@
         if (!st.pickOrder.length) startSetup(st);
         break;
       }
+      case 'tpick': {
+        const T = st.tour, o = other(s), k = isGk(act.id) ? 'g' : 'f';
+        if (T.market[o].includes(act.id)) { T.tokens[s]--; T.market[o] = T.market[o].filter(x => x !== act.id); if (T.deck.length) T.market[o].push(T.deck.shift()); }
+        else if (T.market[s].includes(act.id)) { T.market[s] = T.market[s].filter(x => x !== act.id); if (T.deck.length) T.market[s].push(T.deck.shift()); }
+        else T.gkMarket = T.gkMarket.filter(x => x !== act.id);
+        T.col[s][k].push(act.id); if (k === 'g') T.gkTaken[s]++;
+        T.picksLeft[s]--;
+        T.lastPick = { s, id: act.id };
+        log(st, `${st.names[s]} draftet ${card(act.id).name}.`, 'info');
+        tourAfterPick(st);
+        break;
+      }
+      case 'tsteal': tourSteal(st, s, act.id); break;
+      case 'tnext': tourNext(st); break;
       case 'squad': {
         // Vereinsduell: Heim hat seine 13 gewählt; Schalke steht schon
         st.teams.A.squad = act.ids.slice();
@@ -375,6 +401,8 @@
       case 'team': {
         const t = st.teams[s];
         t.name = String(act.name || '').trim().slice(0, 24) || (s === 'A' ? 'Heim' : 'Gast');
+        if (act.gk) t.gk = act.gk;
+        if (st.tour) st.tour.names[s] = t.name;
         st.names[s] = t.name;
         t.bench = act.bench.slice();
         t.lineup = t.squad.filter(id => !t.bench.includes(id));
@@ -849,23 +877,140 @@
     }
     st.minute++;
     const total = st.goals.A + st.goals.B;
-    if (st.half === 1 && ((st.minute >= 45 && turnover) || st.minute >= 50)) {
+    const H = halfOf(st), extra = Math.max(2, Math.round(H / 9));
+    if (st.half === 1 && ((st.minute >= H && turnover) || st.minute >= H + extra)) {
       log(st, `Halbzeitpfiff (${st.minute}. Minute). ${st.goals.A}:${st.goals.B}`, 'whistle');
       if (st.prev) st.prev.whistle = 'Halbzeit';
-      st.half = 2; st.minute = 45; st.poss = other(st.kickoff); st.ball = 'ZM'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.kerze = false; st.holder = null;
+      st.half = 2; st.minute = H; st.poss = other(st.kickoff); st.ball = 'ZM'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.kerze = false; st.holder = null;
       // Halbzeitpause: Statistik festhalten, beide können wechseln und melden sich dann bereit
       st.phase = 'half'; st.cur = null; st.ready = { A: false, B: false };
       st.halfStats = structuredClone(st.stats); st.halfPs = structuredClone(st.ps);
       return;
-    } else if (st.half === 2 && st.minute >= 90 + total && turnover) {
+    } else if (st.half === 2 && st.minute >= 2 * H + total && turnover) {
       st.phase = 'over'; st.cur = null;
       const r = st.goals.A === st.goals.B ? 'Unentschieden' : `Sieg ${st.names[st.goals.A > st.goals.B ? 'A' : 'B']}`;
       st.result = r;
       if (st.prev) st.prev.whistle = 'Abpfiff';
       log(st, `Abpfiff (${st.minute}. Minute). Endstand ${st.goals.A}:${st.goals.B}. ${r}.`, 'whistle');
+      if (st.tour) tourMatchOver(st);
       return;
     }
     beginTurn(st);
+  }
+
+  // ---------- Turnier (zwei Spielende, vier Spiele, Draft dazwischen) ----------
+  // Stufen: 5. Liga (Union Flutlicht, SV Ascheplatz), VfL, Nationalmannschaften (Männer und Frauen gemischt)
+  const tierOfClub = c => (c === 'flu' || c === 'asche') ? 't5' : (c === 'dfb' || c === 'dfbf') ? 'nat' : (!c || c === 'vfl') ? 'vfl' : 'x';
+  const tierOf = id => tierOfClub(byId[id] && byId[id].club);
+  const isGk = id => !!(byId[id] && byId[id].fields);
+  const tierIds = (tier, kind) => (kind === 'g' ? DATA.gks : DATA.players).filter(p => tierOfClub(p.club) === tier).map(p => p.id);
+  const TOUR_POINTS = [1, 2, 3, 4];
+  const TOUR_STATIONS = [
+    { lineup: 6, name: '7 gegen 7', rounds: [{ tier: 't5', picks: 7, gkMarket: true }] },
+    { lineup: 8, name: '9 gegen 9', rounds: [{ tier: 'vfl', picks: 3 }] },
+    { lineup: 10, name: '11 gegen 11', rounds: [{ tier: 'vfl', picks: 3 }] },
+    { lineup: 10, name: 'Finale', rounds: [{ tier: 'nat', picks: 2 }, { tier: 'vfl', picks: 2 }] },
+  ];
+  const TOUR_MARKET = 3;
+  const tourOwned = T => new Set([...T.col.A.f, ...T.col.A.g, ...T.col.B.f, ...T.col.B.g]);
+  function tourRound(st) {
+    const T = st.tour, R = TOUR_STATIONS[T.station].rounds[T.round], own = tourOwned(T);
+    // Stapel: Feldspieler der Stufe, ab Station 2 auch die Torhüter der Stufe; im ersten Draft liegen die Keeper in einem eigenen Markt
+    T.deck = shuffle([...tierIds(R.tier, 'f'), ...(R.gkMarket ? [] : tierIds(R.tier, 'g'))].filter(id => !own.has(id)));
+    T.market = { A: T.deck.splice(0, TOUR_MARKET), B: T.deck.splice(0, TOUR_MARKET) };
+    T.gkMarket = R.gkMarket ? shuffle(tierIds(R.tier, 'g').filter(id => !own.has(id))) : [];
+    T.picksLeft = { A: R.picks, B: R.picks };
+    T.toMove = T.start;
+    log(st, `Turnier, Station ${T.station + 1} (${TOUR_STATIONS[T.station].name}): Draft ${R.tier === 't5' ? 'Fünftligisten' : R.tier === 'vfl' ? 'VfL' : 'Nationalspieler'}, je ${R.picks} Karten. ${st.names[T.start]} zieht zuerst.`, 'info');
+  }
+  function tourStation(st, i, start) {
+    const T = st.tour;
+    T.station = i; T.round = 0; T.start = start; T.tokens = { A: 1, B: 1 }; T.gkTaken = { A: 0, B: 0 };
+    st.phase = 'tdraft'; st.cur = null;
+    tourRound(st);
+  }
+  function tourNew(st, opts) {
+    st.mode = 'tour'; st.opts = { mode: 'tour', chaseRule: opts.chaseRule === 'free' ? 'free' : 'pay' };
+    st.tour = { station: 0, round: 0, points: { A: 0, B: 0 }, goals: { A: 0, B: 0 }, results: [], names: { A: st.names.A, B: st.names.B },
+      col: { A: { f: [], g: [] }, B: { f: [], g: [] } }, tokens: { A: 1, B: 1 }, gkTaken: { A: 0, B: 0 }, deck: [], market: { A: [], B: [] }, gkMarket: [],
+      picksLeft: { A: 0, B: 0 }, toMove: 'A', start: 'A', steal: null, lastSteal: null };
+    st.teams.A.gk = st.teams.B.gk = null;
+    tourStation(st, 0, Math.random() < .5 ? 'A' : 'B');
+    return st;
+  }
+  // Aus dem eigenen Markt gratis, aus dem Markt des Gegners gegen einen Token, Keeper-Markt nur in Station 1.
+  // Höchstens ein Torhüter pro Station; in Station 1 muss jeder genau einen Keeper ziehen.
+  function tourPicks(st, s) {
+    const T = st.tour, o = other(s), acts = [];
+    if (T.toMove !== s || T.picksLeft[s] <= 0) return acts;
+    const gkOk = T.gkTaken[s] === 0;
+    const mustGk = T.gkMarket.length && gkOk && T.picksLeft[s] === 1;
+    const can = id => isGk(id) ? gkOk : !mustGk;
+    T.market[s].forEach(id => can(id) && acts.push({ type: 'tpick', id }));
+    if (T.tokens[s] > 0) T.market[o].forEach(id => can(id) && acts.push({ type: 'tpick', id }));
+    if (gkOk) T.gkMarket.forEach(id => acts.push({ type: 'tpick', id }));
+    return acts;
+  }
+  function tourStartMatch(st) {
+    const T = st.tour, S = TOUR_STATIONS[T.station];
+    const gsum = id => byId[id].fields.reduce((x, y) => x + y, 0);
+    st.phase = 'setup'; st.ready = { A: false, B: false };
+    st.lineupSize = S.lineup; st.halfLen = S.lineup * 9 / 2;
+    st.goals = { A: 0, B: 0 }; st.minute = 0; st.half = 1; st.turn = 0; st.cur = null; st.prev = null; st.scorers = []; st.result = null;
+    st.stats = { A: emptyStats(), B: emptyStats() }; st.track = []; st.ps = {}; st.halfStats = null; st.halfPs = null; st.lastShot = null; st.holder = null;
+    st.flank = false; st.through = null; st.presence = false; st.volley = false; st.kerze = false;
+    st.kickoff = Math.random() < .5 ? 'A' : 'B';
+    for (const s of ['A', 'B']) {
+      const t = st.teams[s] = emptyTeam();
+      t.squad = T.col[s].f.slice(); t.gks = T.col[s].g.slice();
+      t.gk = t.gks.slice().sort((x, y) => gsum(x) - gsum(y))[0] || null;
+      t.name = T.names[s] || ''; st.names[s] = T.names[s] || st.names[s];
+    }
+    st.squadSize = Math.max(st.teams.A.squad.length, st.teams.B.squad.length);
+    log(st, `Spiel ${T.station + 1} von 4: ${S.name}, ${S.lineup * 9} Minuten. Beide stellen auf.`, 'info');
+  }
+  function tourAfterPick(st) {
+    const T = st.tour, R = TOUR_STATIONS[T.station].rounds;
+    if (T.picksLeft.A > 0 || T.picksLeft.B > 0) { const o = other(T.toMove); if (T.picksLeft[o] > 0) T.toMove = o; return; }
+    if (T.round + 1 < R.length) { T.round++; tourRound(st); return; }
+    tourStartMatch(st);
+  }
+  // Spielende: Punkte (bei Unentschieden beide die volle Punktzahl) und Tordifferenz festhalten
+  function tourMatchOver(st) {
+    const T = st.tour, i = T.station, g = st.goals;
+    const w = g.A === g.B ? null : g.A > g.B ? 'A' : 'B';
+    for (const s of ['A', 'B']) { if (!w || w === s) T.points[s] += TOUR_POINTS[i]; T.goals[s] += g[s] - g[other(s)]; }
+    T.results.push({ station: i, name: TOUR_STATIONS[i].name, goals: [g.A, g.B], winner: w, pts: TOUR_POINTS[i] });
+    log(st, `Spiel ${i + 1}: ${w ? st.names[w] + ' gewinnt und bekommt ' + TOUR_POINTS[i] + (TOUR_POINTS[i] === 1 ? ' Punkt' : ' Punkte') : 'Unentschieden, beide bekommen ' + TOUR_POINTS[i] + (TOUR_POINTS[i] === 1 ? ' Punkt' : ' Punkte')}. Stand: ${T.points.A}:${T.points.B}.`, 'info');
+  }
+  function tourWinner(T) {
+    if (T.points.A !== T.points.B) return T.points.A > T.points.B ? 'A' : 'B';
+    const fin = T.results[3];
+    if (fin && fin.winner) return fin.winner;
+    if (T.goals.A !== T.goals.B) return T.goals.A > T.goals.B ? 'A' : 'B';
+    return null;
+  }
+  function tourNext(st) {
+    const T = st.tour, last = T.results[T.results.length - 1];
+    if (T.station >= TOUR_STATIONS.length - 1) {
+      st.phase = 'tover'; T.winner = tourWinner(T);
+      log(st, `Turnierende: ${T.winner ? st.names[T.winner] + ' gewinnt das Turnier' : 'Unentschieden'} (${T.points.A}:${T.points.B} Punkte).`, 'info');
+      return;
+    }
+    if (last && last.winner) { st.phase = 'tsteal'; T.steal = { by: last.winner, from: other(last.winner) }; return; }
+    tourStation(st, T.station + 1, other(T.start));   // Unentschieden: Reihenfolge wechselt
+  }
+  function tourSteal(st, s, id) {
+    const T = st.tour, o = T.steal.from, k = isGk(id) ? 'g' : 'f';
+    T.col[o][k] = T.col[o][k].filter(x => x !== id); T.col[s][k].push(id);
+    // Entschädigung: zufällige Karte derselben Stufe und Art aus dem Vorrat
+    const own = tourOwned(T), pool = tierIds(tierOf(id), k).filter(x => !own.has(x));
+    const comp = pool.length ? pool[rnd(pool.length)] : null;
+    if (comp) T.col[o][k].push(comp);
+    T.lastSteal = { by: s, from: o, id, comp };
+    log(st, `Beutezug: ${st.names[s]} holt ${card(id).name}. ${st.names[o]} bekommt als Entschädigung ${comp ? card(comp).name : 'niemanden (Vorrat leer)'}.`, 'info');
+    T.steal = null;
+    tourStation(st, T.station + 1, o);   // Verlierer zieht zuerst
   }
 
   // ---------- Bot ----------
@@ -888,10 +1033,13 @@
     const ph = st.phase;
     const pick = arr => arr[rnd(arr.length)];
     if (ph === 'draft') return pick(acts);
+    if (ph === 'tdraft') { const v = id => isGk(id) ? 40 - byId[id].fields.reduce((x, y) => x + y, 0) * 3 : power(id); const own = st.tour.market[s]; return acts.slice().sort((x, y) => (v(y.id) - (own.includes(y.id) || isGk(y.id) ? 0 : 3)) - (v(x.id) - (own.includes(x.id) || isGk(x.id) ? 0 : 3)))[0]; }
+    if (ph === 'tsteal') return acts.slice().sort((x, y) => (isGk(y.id) ? 0 : power(y.id)) - (isGk(x.id) ? 0 : power(x.id)))[0];
+    if (ph === 'over') return { type: 'tnext' };
     if (ph === 'scout') return { type: 'squad', ids: st.vflPool.slice().sort((x, y) => power(y) - power(x)).slice(0, squadOf(st)) };
     if (ph === 'setup') {
       const t = st.teams[s];
-      const bench = t.squad.slice().sort((x, y) => power(x) - power(y)).slice(0, benchOf(st));
+      const bench = t.squad.slice().sort((x, y) => power(x) - power(y)).slice(0, benchOf(st, s));
       return { type: 'team', name: st.mode === 'club' ? (s === 'A' ? 'VfL Osnabrück' : CLUB_NAMES[st.opp || 's04']) : 'Bot-Elf', bench };
     }
     if (ph === 'half') {
@@ -957,6 +1105,6 @@
     return pick(acts);
   }
 
-  const api = { CLUB_NAMES, ZONES, MIRROR, LATERAL, QUER, FORWARD, BACKWARD, DIAG, ZONE_NAME, CORNERS, SQUAD, LINEUP, MAX_SUBS, MARKET, squadOf, benchOf, setData, card, other, newGame, legal, apply, actor, zoneRow, canPay, botAct, shotGame, distOk, DEF_BEATS, duelText, grades };
+  const api = { TOUR_STATIONS, TOUR_POINTS, tierOf, isGk, lineupOf, halfOf, CLUB_NAMES, ZONES, MIRROR, LATERAL, QUER, FORWARD, BACKWARD, DIAG, ZONE_NAME, CORNERS, SQUAD, LINEUP, MAX_SUBS, MARKET, squadOf, benchOf, setData, card, other, newGame, legal, apply, actor, zoneRow, canPay, botAct, shotGame, distOk, DEF_BEATS, duelText, grades };
   if (typeof module !== 'undefined') module.exports = api; else root.FC = api;
 })(typeof window !== 'undefined' ? window : globalThis);
