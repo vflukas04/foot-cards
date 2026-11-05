@@ -197,3 +197,31 @@ Grün sicher war zu stark. Nur noch Otto Oldschool (Flutlicht) und Dieter Dampfw
 | Rudi Rumpelfuß (2) | rechts hinten | Kerze | Kerze / Befreiungsschlag (abfangbar) |
 
 Flutlicht – Ascheplatz bleibt ausgeglichen (wer den Kader wählt, gewinnt 44–45 %), VfL gewinnt gegen die 5. Liga weiter 89 %.
+
+## 05.11.2026: Torhüter-Eigenschaften
+
+Der pauschale Abzug −1 bei Fernschüssen entfällt. Jeder Torhüter hat jetzt vier Eigenschaften:
+
+- **Distanz** (1–4): wird bei Schüssen von außerhalb der Zone Mitte vorne von den Schusspunkten abgezogen.
+- **1 gegen 1** (0–3): wird bei Schüssen aus Mitte vorne abgezogen (auch Direktschuss).
+- **Strafraumbeherrschung** (0–3): wird bei Kopfbällen abgezogen.
+- **Ausstrahlung** (0–2): Bonus auf die Präsenz des eigenen Spielers in Präsenz-Duellen in der eigenen zentralen Abwehrzone (Zug-Beginn und Slapstick), egal ob die eigene Mannschaft dort angreift oder verteidigt.
+
+Damit weiterhin etwa 6 Tore pro Spiel fallen, sind die Feldwerte links und rechts bei allen Torhütern um 1 gestiegen (höherer Wert = Ecke leichter zu treffen).
+
+| Torhüter | Felder L/M/R | Distanz | 1 gegen 1 | Strafraum | Ausstrahlung |
+|---|---|---|---|---|---|
+| Philipp Kühn (VfL, vorher Keeper 1) | 5/2/4 | 2 | 1 | 1 | 1 |
+| Nils Körber (VfL, vorher Keeper 2) | 3/4/3 | 2 | 0 | 2 | 1 |
+| Karius (S04) | 3/3/3 | 2 | 2 | 1 | 1 |
+| ter Stegen (DFB) | 3/2/3 | 3 | 3 | 1 | 2 |
+| Atubolu (DFB) | 3/3/3 | 3 | 1 | 2 | 1 |
+| Berger (DFB Frauen) | 3/2/3 | 3 | 2 | 2 | 2 |
+| Johannes (DFB Frauen) | 3/3/3 | 2 | 2 | 1 | 1 |
+| Torlinie (Flutlicht) | 5/2/5 | 2 | 1 | 0 | 0 |
+| Platzwart Paule (Flutlicht) | 5/4/4 | 1 | 0 | 0 | 1 |
+| Butterhand (Ascheplatz) | 4/4/4 | 1 | 0 | 0 | 0 |
+| Hechtsprung (Ascheplatz) | 5/3/5 | 2 | 0 | 1 | 0 |
+
+Tore pro Spiel (Simulation): Draft 6,00 → 6,03 · Schalke-Duell 5,37 → 5,98 · Flutlicht 5,34 → 5,72. Ohne die Eckenanpassung wären es nur 4,5–4,8 gewesen.
+Abstufung bleibt: DFB–S04 86 %, DFB–VfL 98 %, S04–VfL 77 %, VfL–Flutlicht 91 %, Flutlicht–Ascheplatz ausgeglichen.
