@@ -131,3 +131,54 @@ Bot gegen Bot (Gegner mit den 13 stärksten Karten, 800 Spiele): gegen Schalke 8
 | Cora Zicai (24) | Flügel-Talent, Dribblerin | T 7 · P 2 · A 4 · K 2 · S 5 |
 | Melissa Kössler (25) | Schnelle Flügelstürmerin | T 7 · P 3 · A 3 · K 2 · S 5 |
 | Larissa Mühlhaus (26) | Junge Mittelstürmerin | T 5 · P 5 · A 2 · K 6 · S 6 |
+
+
+## Fünftligisten (neu, 05.11.2026): Union Flutlicht 05 und SV Ascheplatz
+
+Frei erfundene Vereine und Spieler (lizenzfrei). Je 16 Feldspieler und 2 Torhüter, Wertesumme im Schnitt 10,1 (VfL 13,6), kein Ballgewinn, viele „--“, Rückpass, Fehlpass, Ballverlust und die neuen Aktionen Kerze, Slapstick (nur Spieler mit Präsenz 1) und Befreiungsschlag (nur hinten, meist grün).
+
+Torhüter: Torsten Torlinie 4/2/4, Platzwart Paule 4/4/3 (Flutlicht); Bernd Butterhand 3/4/3, Harald Hechtsprung 4/3/4 (Ascheplatz).
+
+Bot gegen Bot (1000 Spiele): VfL – Fünftligist 90–95 % / 4–7 % / 1–3 %; Flutlicht – Ascheplatz ausgeglichen (wer den Kader wählt, gewinnt 42–44 %).
+
+### Union Flutlicht 05
+
+| Karte | Typ | Werte |
+|---|---|---|
+| Uwe Bauchmann (5) | Libero mit Bauch, kopfballstark | T 1 · P 3 · A 1 · K 5 · S 1 |
+| Bruno Blutgrätsche (4) | Blutgrätscher | T 2 · P 3 · A 0 · K 3 · S 1 |
+| Achim Abseitsfalle (3) | Abfangjäger, Abwehrchef | T 2 · P 4 · A 1 · K 2 · S 1 |
+| Otto Oldschool (16) | Libero alter Schule, Ausputzer | T 1 · P 3 · A 2 · K 3 · S 1 |
+| Jens Eigentor (2) | Pechvogel in der Abwehr | T 3 · P 2 · A 1 · K 2 · S 1 |
+| Bernd Bananenflanke (7) | Flankengott, sonst nichts | T 3 · P 1 · A 4 · K 1 · S 1 |
+| Detlef Dauerlauf (14) | Laufwunder ohne Technik | T 5 · P 2 · A 0 · K 1 · S 1 |
+| Querpass-Klaus (8) | Sicherheitspasser | T 2 · P 2 · A 2 · K 1 · S 1 |
+| Spielertrainer Schorsch (10) | Spielender Trainer, Antreiber | T 1 · P 4 · A 3 · K 2 · S 1 |
+| Willi Wimpel (6) | Kapitän seit 20 Jahren, Box-to-Box | T 3 · P 4 · A 2 · K 2 · S 2 |
+| Heinz Hacke (11) | Showmaker | T 3 · P 1 · A 3 · K 1 · S 2 |
+| Dribbelinho (17) | Dribbelkünstler | T 4 · P 1 · A 1 · K 1 · S 2 |
+| Erwin Erinnerung (13) | Ex-Profi, Mitte 40 | T 1 · P 1 · A 5 · K 1 · S 3 |
+| Benno Bankdrücker (20) | Joker | T 2 · P 1 · A 1 · K 2 · S 5 |
+| Pfosten-Paul (9) | Pech-Torjäger, Fernschütze | T 2 · P 1 · A 1 · K 2 · S 5 |
+| Abseits-Andi (19) | Abseitsstürmer | T 5 · P 1 · A 1 · K 1 · S 2 |
+
+### SV Ascheplatz
+
+| Karte | Typ | Werte |
+|---|---|---|
+| Holger Hammerhart (5) | Kopfballstarker Abwehrchef | T 2 · P 3 · A 0 · K 5 · S 1 |
+| Kevin Sensfuß (4) | Blutgrätscher | T 3 · P 3 · A 0 · K 2 · S 1 |
+| Sven Schienbein (3) | Manndecker | T 3 · P 3 · A 0 · K 3 · S 1 |
+| Dieter Dampfwalze (15) | Bulldozer, langsam | T 1 · P 4 · A 0 · K 4 · S 1 |
+| Rudi Rumpelfuß (2) | Technisch schwacher Verteidiger | T 3 · P 1 · A 1 · K 2 · S 1 |
+| Bodo Bogenlampe (7) | Flankengeber (hohe Bogenlampen) | T 3 · P 2 · A 3 · K 1 · S 1 |
+| Ronny Rennsemmel (11) | Laufwunder ohne Technik | T 6 · P 1 · A 0 · K 1 · S 1 |
+| Präsident Pröll (1) | Spielender Vereinspräsident, Antreiber | T 1 · P 4 · A 2 · K 2 · S 1 |
+| Kalle Kämpfer (8) | Kapitän, Box-to-Box | T 3 · P 3 · A 1 · K 3 · S 2 |
+| Lutz Luftloch (10) | Slapstick-Künstler | T 3 · P 1 · A 2 · K 1 · S 4 |
+| Schlackinho (17) | Dribbelkünstler der Asche | T 5 · P 1 · A 2 · K 1 · S 2 |
+| Marco Matschknie (6) | Grätscher ohne Gegner | T 3 · P 2 · A 0 · K 2 · S 1 |
+| Fabian Vorstandssohn (14) | Stammplatz-Garantie | T 2 · P 2 · A 1 · K 1 · S 1 |
+| Olli Ochsenkopf (9) | Kopfballungeheuer | T 1 · P 3 · A 0 · K 6 · S 3 |
+| Lothar Lattenknaller (16) | Fernschütze, trifft gern die Latte | T 2 · P 2 · A 1 · K 1 · S 5 |
+| Steffen Staubwolke (19) | Schneller Flügel | T 6 · P 1 · A 2 · K 1 · S 2 |

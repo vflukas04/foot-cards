@@ -52,7 +52,7 @@
   function emptyStats() { return { turns: 0, shots: 0, onTarget: 0, won: 0, lost: 0, passes: 0, yellow: 0, out: 0, duels: 0, xg: 0 }; }
   // Standard: alle 26 Karten → 13 pro Team (10 im Spiel + 3 Bank). Mit kleinerem Pool entsprechend weniger Bank.
   const SQUAD = 13, LINEUP = 10, MAX_SUBS = 3, MARKET = 5;
-  const CLUB_NAMES = { vfl: 'VfL Osnabrück', s04: 'FC Schalke 04', dfb: 'Deutschland', dfbf: 'Deutschland (Frauen)' };
+  const CLUB_NAMES = { vfl: 'VfL Osnabrück', s04: 'FC Schalke 04', dfb: 'Deutschland', dfbf: 'Deutschland (Frauen)', flu: 'Union Flutlicht 05', asche: 'SV Ascheplatz' };
   const squadOf = st => st.squadSize || SQUAD;
   const benchOf = st => Math.max(0, squadOf(st) - LINEUP);
   function setOut(st, k, text, extra) { if (st.cur) st.cur.out = Object.assign({ k, t: text }, st.cur.duel && st.cur.duel.kind !== 'Präsenz' ? { duel: st.cur.duel } : {}, extra || {}); }
@@ -190,6 +190,21 @@
       if (c.def) { c.def.action = null; c.def.zone = MIRROR[to]; c.def.open = true; }
       log(st, `Steilpass kommt an: ${card(id).name} ist schneller und macht seine Aktion in ${ZONE_NAME[to]}.`, 'ok');
       return;
+    }
+    // Kerze: Der Ball war hoch in der Luft. Die beiden neuen Karten springen zum Kopfball (Kopfball, bei Gleichstand
+    // Präsenz). Wer gewinnt, hat den Ball; die Karten sind verbraucht, danach beginnt ein neuer Zug.
+    if (st.kerze) {
+      const c = st.cur, defS = other(att), did = c.def && c.def.id;
+      st.kerze = false; c.kerze = true;
+      c.att.action = 'Kopfball nach Kerze'; if (c.def) c.def.action = 'Kopfball nach Kerze';
+      if (!id || !did) { setOut(st, 'keep', 'Der Ball kommt herunter – niemand geht hin'); return endTurn(st, false); }
+      const r = duel(id, did, 'kopf', 'praesenz');
+      c.duel = r; st.stats[r.win === 'def' ? defS : att].duels++;
+      log(st, `Kopfballduell nach der Kerze: ${duelText(r)}.`, 'duel');
+      if (r.win === 'att') { ratePt(st, id, .5); ratePt(st, did, -.5); } else if (r.win === 'def') { ratePt(st, did, .5); ratePt(st, id, -.5); }
+      if (r.win === 'def') return change(st, 'Kerze verloren', r);
+      setOut(st, 'keep', r.win === 'att' ? `${card(id).name} holt die Kerze herunter` : 'Gleichstand – der Ball bleibt', { duel: r });
+      return endTurn(st, false);
     }
     // Präsenz-Duell: die Abwehrkarte liegt offen, bevor der Angreifer wählt
     if (st.cur.presence) {
@@ -449,7 +464,7 @@
           log(st, `${role === 'def' ? 'Abwehr' : 'Angriff'} ${st.names[s]}: ${card(side.id).name} – ${side.action}${side.green ? ' (grün)' : ''}${how}.`, role);
         }
         if (role === 'att' && st.cur.volley) {
-          st.flank = false; st.through = null; st.presence = false; st.volley = false;
+          st.flank = false; st.through = null; st.presence = false; st.volley = false; st.kerze = false;
           if (!side.id) { setOut(st, 'keep', 'Keine Karte – kein Schuss'); endTurn(st, false); break; }
           startShot(st, 'Schuss');
         } else if (role === 'att') {
@@ -518,7 +533,7 @@
   function resolve(st) {
     const d = st.cur.def, a = st.cur.att;
     const defS = other(st.poss), attS = st.poss;
-    st.flank = false; st.through = null; st.presence = false; st.volley = false;
+    st.flank = false; st.through = null; st.presence = false; st.volley = false; st.kerze = false;
     // Tempo-Duell nach Steilpass: die nächsten beiden Karten laufen, ihre Aktionen entfallen
     if (st.cur.through && !st.cur.chase) {
       const to = st.cur.through.to;
@@ -573,6 +588,34 @@
       log(st, 'Steilpass gespielt. Im nächsten Zug entscheidet das Tempo der nächsten beiden Karten.', 'ok');
       setOut(st, 'ok', 'Steilpass gespielt – jetzt zählt das Tempo der nächsten Karten');
       return endTurn(st, false);
+    }
+    // Kerze: Ball hoch in die Luft, die Abwehraktion zählt nicht. Im nächsten Zug Kopfballduell der neuen Karten.
+    if (act === 'Kerze') {
+      st.kerze = true;
+      log(st, 'Kerze! Der Ball steigt hoch in die Luft. Im nächsten Zug entscheidet ein Kopfballduell der neuen Karten.', 'ok');
+      setOut(st, 'ok', 'Kerze – gleich kommt das Kopfballduell');
+      return endTurn(st, false);
+    }
+    // Befreiungsschlag: aus der Abwehr gerade nach vorn, danach hat immer der Gegner den Ball (tief in seiner Hälfte).
+    // Grün kommt er sicher an; sonst kann Passabfangen ihn direkt vor dem eigenen Tor abfangen.
+    if (act === 'Befreiungsschlag') {
+      if (da === 'Passabfangen' && !a.green) return change(st, 'Befreiungsschlag abgefangen');
+      st.ball = ({ LD: 'LO', ZD: 'ZO', RD: 'RO' })[z] || FORWARD[z] || z;
+      st.stats[attS].passes++;
+      log(st, `Befreiungsschlag nach ${ZONE_NAME[st.ball]}.`, 'ok');
+      return change(st, 'Befreiungsschlag');
+    }
+    // Slapstick: Der Ballführende stolpert sich durch. Die Abwehraktion zählt nicht; Präsenz-Duell der gespielten Karten
+    // (bei Gleichstand Tempo). Gewonnen: Ball eine Zone weiter (nicht stehen bleiben); verloren: Ballbesitzwechsel.
+    if (act === 'Slapstick') {
+      const targets = [...(FORWARD[z] ? [FORWARD[z]] : []), ...LATERAL[z]];
+      if (da === null || !d || !d.id) return offerMove(st, targets, 'Slapstick');
+      const r = duel(a.id, d.id, 'praesenz', 'tempo');
+      st.cur.duel = r; st.stats[r.win === 'def' ? defS : attS].duels++;
+      log(st, `Slapstick, Präsenz-Duell: ${duelText(r)}.`, 'duel');
+      if (r.win === 'def') return change(st, 'Slapstick misslungen', r);
+      if (r.win === 'tie') { setOut(st, 'keep', 'Slapstick – der Ball bleibt irgendwie liegen', { duel: r }); return endTurn(st, false); }
+      return offerMove(st, targets, 'Slapstick');
     }
     if (act === 'Sprint' && da !== null) {
       const r = duel(a.id, d.id, 'tempo', 'praesenz');
@@ -672,7 +715,7 @@
       st.stats[attS].onTarget++;
       log(st, `Richtige Ecke: Parade von ${gk.name}! Abstoß.`, 'change');
       setOut(st, 'save', `${gk.name} ist in der richtigen Ecke!`);
-      st.lastShot = sh; st.poss = defS; st.ball = 'ZD'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.holder = null;
+      st.lastShot = sh; st.poss = defS; st.ball = 'ZD'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.kerze = false; st.holder = null;
       return endTurn(st, true);
     }
     const need = sh.fields[aim];
@@ -686,19 +729,19 @@
       st.scorers.push({ id: sh.shooter, s: attS, m: st.minute + 1, assist: sh.assistId });
       log(st, `Würfel ${roll} < ${need}: TOR für ${st.names[attS]}! ${st.goals.A}:${st.goals.B}`, 'goal');
       setOut(st, 'goal', 'TOR!');
-      st.poss = defS; st.ball = 'ZM'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.holder = null;
+      st.poss = defS; st.ball = 'ZM'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.kerze = false; st.holder = null;
       return endTurn(st, true);
     }
     sh.outcome = 'vorbei';
     log(st, `Würfel ${roll}, gebraucht unter ${need}: daneben. Abstoß.`, 'change');
     setOut(st, 'miss', 'Daneben!');
-    st.poss = defS; st.ball = 'ZD'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.holder = null;
+    st.poss = defS; st.ball = 'ZD'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.kerze = false; st.holder = null;
     endTurn(st, true);
   }
 
   function offerMove(st, targets, label) {
     targets = [...new Set(targets)];
-    if (!['Dribbling', 'Sprint'].includes(label)) st.stats[st.poss].passes++;
+    if (!['Dribbling', 'Sprint', 'Slapstick'].includes(label)) st.stats[st.poss].passes++;
     if (targets.length === 1) {
       st.ball = targets[0];
       log(st, `${label} gelingt. Ball nach ${ZONE_NAME[st.ball]}.`, 'ok');
@@ -717,7 +760,7 @@
     else { st.stats[other(from)].won++; setOut(st, 'change', why + '!', duelRes ? { duel: duelRes } : null); }
     st.poss = other(from);
     st.ball = MIRROR[st.ball];
-    st.flank = false; st.through = null; st.presence = false; st.volley = false;
+    st.flank = false; st.through = null; st.presence = false; st.volley = false; st.kerze = false;
     st.holder = null;
     log(st, `${why}: Ballbesitz wechselt zu ${st.names[st.poss]}.`, 'change');
     endTurn(st, true);
@@ -809,7 +852,7 @@
     if (st.half === 1 && ((st.minute >= 45 && turnover) || st.minute >= 50)) {
       log(st, `Halbzeitpfiff (${st.minute}. Minute). ${st.goals.A}:${st.goals.B}`, 'whistle');
       if (st.prev) st.prev.whistle = 'Halbzeit';
-      st.half = 2; st.minute = 45; st.poss = other(st.kickoff); st.ball = 'ZM'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.holder = null;
+      st.half = 2; st.minute = 45; st.poss = other(st.kickoff); st.ball = 'ZM'; st.flank = false; st.through = null; st.presence = false; st.volley = false; st.kerze = false; st.holder = null;
       // Halbzeitpause: Statistik festhalten, beide können wechseln und melden sich dann bereit
       st.phase = 'half'; st.cur = null; st.ready = { A: false, B: false };
       st.halfStats = structuredClone(st.stats); st.halfPs = structuredClone(st.ps);
@@ -830,7 +873,8 @@
     if (aa === 'Ball sichern') return false;
     if (da === 'Gelb') return true;
     if (aa === 'Steilpass') return da === 'Passabfangen' && !green;
-    if (aa === 'Sprint') return false;
+    if (aa === 'Sprint' || aa === 'Kerze' || aa === 'Slapstick') return false;
+    if (aa === 'Befreiungsschlag') return da === 'Passabfangen' && !green;
     if (da === 'Ballgewinn') return !green;
     if (da === 'Passabfangen') return (PASSES.includes(aa) && !green) || NOTHING(aa);
     if (da === 'Tackling') return aa === 'Dribbling' || NOTHING(aa);
@@ -868,7 +912,7 @@
         const o = row.opts[a.opt];
         let val;
         if (ph === 'def') val = DEF_BEATS(o.a, st.cur.att.action, st.cur.att.green) ? 6 : 0;
-        else val = ({ 'Schuss': 5, 'Kopfball': 4, 'Vorlage': 4, 'Flanke': 3, 'Steilpass': 3, 'Sprint': 3, 'Dribbling': 3, 'Diagonalball': 3, 'Querpass': 2, 'Ball sichern': 2, 'Rückpass': 1, 'Fehlpass': -3, 'Ballverlust': -3 })[o.a] ?? 0;
+        else val = ({ 'Schuss': 5, 'Kopfball': 4, 'Vorlage': 4, 'Flanke': 3, 'Steilpass': 3, 'Sprint': 3, 'Dribbling': 3, 'Diagonalball': 3, 'Querpass': 2, 'Ball sichern': 2, 'Rückpass': 1, 'Slapstick': 1.5, 'Kerze': 1, 'Befreiungsschlag': .5, 'Fehlpass': -3, 'Ballverlust': -3 })[o.a] ?? 0;
         const cost = a.pay === 'exhaust' ? 1.5 : a.pay === 'token' ? 1 : a.pay === 'both' ? 2.5 : 0;
         return val + (o.g ? 1 : 0) - cost + Math.random();
       };
