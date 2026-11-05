@@ -156,6 +156,10 @@
       t.pile = shuffle(t.discard.filter(id => !t.out.includes(id)));
       t.discard = [];
       if (t.pile.length) log(st, `${st.names[s]}: Stapel durchgespielt, neu gemischt.`, 'info');
+      // Letztes Mischen der regulären Spielzeit: Der neue Stapel reicht bis zum Ende der zweiten Halbzeit
+      if (t.pile.length && st.half === 2 && !st.finalPhase && st.minute + t.pile.length >= 2 * halfOf(st)) {
+        st.finalPhase = true; log(st, 'Schlussphase: Die Stapel werden zum letzten Mal gemischt.', 'whistle');
+      }
     }
     return t.pile.shift() || null;
   }
@@ -895,6 +899,10 @@
       if (st.tour) tourMatchOver(st);
       return;
     }
+    // Reguläre Spielzeit vorbei, das Spiel läuft weiter: Nachspielzeit (nach Toren länger, Abpfiff erst bei Ballwechsel)
+    if (st.half === 2 && st.minute >= 2 * H && !st.stoppage) {
+      st.stoppage = true; log(st, `Nachspielzeit${total ? `: mindestens ${total} ${total === 1 ? 'Minute' : 'Minuten'} (eine pro Tor)` : ''}. Abgepfiffen wird beim nächsten Ballbesitzwechsel.`, 'whistle');
+    }
     beginTurn(st);
   }
 
@@ -958,7 +966,7 @@
     st.lineupSize = S.lineup; st.halfLen = S.lineup * 9 / 2;
     st.goals = { A: 0, B: 0 }; st.minute = 0; st.half = 1; st.turn = 0; st.cur = null; st.prev = null; st.scorers = []; st.result = null;
     st.stats = { A: emptyStats(), B: emptyStats() }; st.track = []; st.ps = {}; st.halfStats = null; st.halfPs = null; st.lastShot = null; st.holder = null;
-    st.flank = false; st.through = null; st.presence = false; st.volley = false; st.kerze = false;
+    st.flank = false; st.through = null; st.presence = false; st.volley = false; st.kerze = false; st.finalPhase = false; st.stoppage = false;
     st.kickoff = Math.random() < .5 ? 'A' : 'B';
     for (const s of ['A', 'B']) {
       const t = st.teams[s] = emptyTeam();

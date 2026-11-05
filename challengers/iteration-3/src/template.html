@@ -317,6 +317,11 @@ table.stats td:first-child{text-align:left;color:var(--muted)}
 .tlist li span:nth-child(2){flex:1;display:flex;flex-direction:column}.tlist li small{font-size:11.5px;color:var(--muted)}
 .ttok{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:999px;background:#d5e6ff;color:#123}.ttok.used{background:var(--surface2);color:var(--muted);text-decoration:line-through}
 .tpool{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.phasebanner{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:40;background:#0d0f12;color:#fff;border:3px solid var(--hl);border-radius:14px;padding:16px 28px;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.45);pointer-events:none;animation:pbin 2.9s ease both}
+.phasebanner b{display:block;font-family:var(--font-d);font-weight:800;font-size:clamp(26px,5vw,44px);text-transform:uppercase;letter-spacing:.06em}
+.phasebanner small{display:block;margin-top:4px;font-size:15px;color:#c9d1da}
+@keyframes pbin{0%{opacity:0;transform:translate(-50%,-50%) scale(.85)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.04)}20%{transform:translate(-50%,-50%) scale(1)}82%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion: reduce){.phasebanner{animation:none}}
 .scout{margin-top:16px;display:flex;flex-direction:column;gap:14px}
 .sc-report{background:#0d0f12;color:#fff;border:3px solid #111;border-radius:12px;padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .sc-report .sc-tag{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#9fd3ff}
@@ -1575,6 +1580,11 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 function setState(next){
   const old = app.st;
   try { tourSave(next); } catch(e){}
+  // Schlussphase und Nachspielzeit kurz einblenden (nach der laufenden Auflösung)
+  if (old && next && old.half === next.half && next.half === 2) {
+    if (next.finalPhase && !old.finalPhase) phaseBanner('Schlussphase läuft', 'Die Stapel werden zum letzten Mal gemischt');
+    if (next.stoppage && !old.stoppage) { const t = next.goals.A + next.goals.B; phaseBanner('Nachspielzeit läuft', t ? `mindestens ${t} ${t === 1 ? 'Minute' : 'Minuten'} · Abpfiff beim nächsten Ballbesitzwechsel` : 'Abpfiff beim nächsten Ballbesitzwechsel'); }
+  }
   app.st = next;
   try { cloudSave(next, next && (next.phase === 'over' || next.phase === 'half') && (!old || old.phase !== next.phase)); } catch(e) {}
   if (old && old.phase === 'half' && next.phase !== 'half' && next.phase !== 'over') {
@@ -1721,7 +1731,7 @@ function boardHtml(st){
   const g = { A: st.goals.A, B: st.goals.B };
   if (rp && rp.prev.out.k === 'goal' && rp.step < 2) g[rp.prev.possStart]--;
   const pulse = rp && rp.prev.out.k === 'goal' && rp.step >= 2;
-  const clock = st.phase==='tdraft' ? 'Turnier · Draft' : st.phase==='tsteal' ? 'Turnier · Beutezug' : st.phase==='tover' ? 'Turnierende' : st.phase==='over' && !rp ? 'Abpfiff' : st.phase==='draft' ? 'Draft' : st.phase==='scout' ? 'Scouting' : st.phase==='setup' ? 'Aufstellung' : (st.phase==='half' && !rp) || app.swap ? 'Halbzeitpause' : `${rp?rp.prev.minute+1:st.minute}. Minute · ${rp&&rp.prev.half?rp.prev.half:st.half}. Halbzeit`;
+  const clock = st.phase==='tdraft' ? 'Turnier · Draft' : st.phase==='tsteal' ? 'Turnier · Beutezug' : st.phase==='tover' ? 'Turnierende' : st.phase==='over' && !rp ? 'Abpfiff' : st.phase==='draft' ? 'Draft' : st.phase==='scout' ? 'Scouting' : st.phase==='setup' ? 'Aufstellung' : (st.phase==='half' && !rp) || app.swap ? 'Halbzeitpause' : `${rp?rp.prev.minute+1:st.minute}. Minute · ${st.stoppage && !rp ? 'Nachspielzeit' : st.finalPhase && !rp ? 'Schlussphase' : (rp&&rp.prev.half?rp.prev.half:st.half) + '. Halbzeit'}`;
   const possNow = rp ? (rp.step>=2?rp.prev.possEnd:rp.prev.possStart) : st.poss;
   const pd = s => possNow===s && !['draft','setup','scout','tdraft','tsteal','tover'].includes(st.phase) && !((st.phase==='over'||st.phase==='half')&&!rp) && !app.swap ? '<span class="possdot" title="Ballbesitz"></span>' : '';
   const vwarn = app.mode === 'p2p' && app.versionMismatch ? `<div class="notice vwarn" style="margin-top:12px"><b>Ihr spielt unterschiedliche Versionen</b> (du: ${esc(BUILD || '?')}, ${app.isHost ? 'dein Gegner' : 'Gastgeber'}: ${esc(app.versionMismatch)}). Das führt zu Fehlern. Bitte ${app.isHost ? 'deinen Gegner die Seite neu laden lassen' : 'die Seite neu laden'} (Strg+F5 bzw. Cmd+Shift+R) und neu beitreten. Die Version steht oben neben dem Titel.</div>` : '';
@@ -2783,6 +2793,18 @@ function runBot(){
       runBot();
     }, 900 * SPEEDS[speed()]);
   }
+}
+function phaseBanner(title, sub){
+  const show = () => {
+    if (app.replay) return setTimeout(show, 300);
+    const n = document.createElement('div');
+    n.className = 'phasebanner'; n.setAttribute('role', 'status');
+    n.innerHTML = `<b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}`;
+    document.body.appendChild(n);
+    SFX.play('swell', 0, 1.6);
+    setTimeout(() => n.remove(), reduceMotion() ? 2500 : 2900);
+  };
+  setTimeout(show, 200);
 }
 function flash(msg){
   const n = document.createElement('div');
