@@ -99,7 +99,7 @@
       // Stärkster Torhüter des Gegners steht im Tor (niedrigste Eckenwerte): Karius bzw. ter Stegen
       const gsum = id => byId[id].fields.reduce((x, y) => x + y, 0);
       B.gk = gs.length ? gs.slice().sort((x, y) => gsum(x) - gsum(y))[0] : gv[1];
-      st.opts = { mode: 'club', opp, pool: null, poolIds: null, chaseRule: opts.chaseRule === 'free' ? 'free' : 'pay' };
+      st.opts = { mode: 'club', opp, pool: null, poolIds: null, chaseRule: normChase(opts.chaseRule) };
       st.phase = 'scout';
       log(st, `Vereinsduell: Die Scouts erwarten ${B.name} mit ${B.lineup.map(id => card(id).name).join(', ')}. Bank: ${B.bench.map(id => card(id).name).join(', ')}.`, 'info');
       return st;
@@ -111,7 +111,7 @@
     const all = shuffle(custom && custom.length >= 2 * LINEUP ? custom : ids);
     const want = Math.max(2 * LINEUP, Math.min(all.length, opts.pool || all.length));
     const pool = all.slice(0, want - (want % 2));
-    st.opts = { mode: st.mode, pool: opts.pool || null, poolIds: custom && custom.length >= 2 * LINEUP ? custom : null, chaseRule: opts.chaseRule === 'free' ? 'free' : 'pay' };
+    st.opts = { mode: st.mode, pool: opts.pool || null, poolIds: custom && custom.length >= 2 * LINEUP ? custom : null, chaseRule: normChase(opts.chaseRule) };
     st.poolSize = pool.length; st.squadSize = Math.min(SQUAD, pool.length / 2);   // größerer Pool: Karten bleiben übrig
     // Torhüter: nur von Vereinen, deren Karten im Pool sind
     const gks = pickGks([...new Set(pool.map(clubOf))]);
@@ -267,6 +267,8 @@
     }
   }
   const chaseRule = st => (st.opts && st.opts.chaseRule) || 'pay';
+  // Testregel nach verlorenem Tempo-Duell: 'pay' = überlaufen (nur gegen Kosten), 'free' = normal, 'none' = Abwehr unmöglich
+  function normChase(r) { return r === 'free' || r === 'none' ? r : 'pay'; }
   function canPay(st, s, role, side) {
     const t = st.teams[s];
     return {
@@ -297,6 +299,8 @@
       if (st.cur.header || (st.cur.through && !st.cur.chase) || st.cur.volley) { acts.push({ type: 'choose', opt: 0 }); return acts; }
       // Abwehr nach verlorenem Tempo-Duell (Testregel „überlaufen“): nur gegen Kosten.
       // Option vor „/“: erschöpfen ODER blauer Token · Option hinter „/“: beides · sonst „nicht verteidigen“
+      // Testregel „Abwehr unmöglich“: nach verlorenem Tempo-Duell kann die Abwehr gar nicht eingreifen
+      if (ph === 'def' && st.cur.chase && chaseRule(st) === 'none') { acts.push({ type: 'nodef' }); return acts; }
       if (ph === 'def' && st.cur.chase && chaseRule(st) === 'pay') {
         acts.push({ type: 'nodef' });
         const row = zoneRow(side.id, side.zone, ph);
@@ -952,7 +956,7 @@
     tourRound(st);
   }
   function tourNew(st, opts) {
-    st.mode = 'tour'; st.opts = { mode: 'tour', chaseRule: opts.chaseRule === 'free' ? 'free' : 'pay' };
+    st.mode = 'tour'; st.opts = { mode: 'tour', chaseRule: normChase(opts.chaseRule) };
     st.tour = { station: 0, round: 0, points: { A: 0, B: 0 }, goals: { A: 0, B: 0 }, results: [], names: { A: st.names.A, B: st.names.B },
       col: { A: { f: [], g: [] }, B: { f: [], g: [] } }, tokens: { A: 1, B: 1 }, gkTaken: { A: 0, B: 0 }, deck: [], market: { A: [], B: [] }, gkMarket: [],
       picksLeft: { A: 0, B: 0 }, toMove: 'A', start: 'A', steal: null, lastSteal: null };
