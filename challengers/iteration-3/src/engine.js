@@ -951,9 +951,9 @@
   }
   function tourStation(st, i, start, bonus) {
     const T = st.tour;
-    T.station = i; T.round = 0; T.start = start; T.tokens = { A: 1, B: 1 };
-    if (bonus) T.tokens[bonus]++;
-    if (!bonus) T.lastSteal = null;   // kein Beutezug (Unentschieden): alte Meldung nicht wieder zeigen   // Beutezug: der Verlierer bekommt für die nächste Station einen zusätzlichen Draft-Token T.gkTaken = { A: 0, B: 0 };
+    T.station = i; T.round = 0; T.start = start; T.tokens = { A: 1, B: 1 }; T.gkTaken = { A: 0, B: 0 };
+    if (bonus) T.tokens[bonus]++;   // Beutezug: der Verlierer bekommt für die nächste Station einen zusätzlichen Draft-Token
+    if (!bonus) T.lastSteal = null;   // kein Beutezug (Unentschieden): alte Meldung nicht wieder zeigen
     st.phase = 'tdraft'; st.cur = null;
     tourRound(st);
   }
