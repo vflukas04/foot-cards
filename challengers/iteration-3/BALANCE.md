@@ -182,3 +182,18 @@ Bot gegen Bot (1000 Spiele): VfL – Fünftligist 90–95 % / 4–7 % / 1–3 %;
 | Olli Ochsenkopf (9) | Kopfballungeheuer | T 1 · P 3 · A 0 · K 6 · S 3 |
 | Lothar Lattenknaller (16) | Fernschütze, trifft gern die Latte | T 2 · P 2 · A 1 · K 1 · S 5 |
 | Steffen Staubwolke (19) | Schneller Flügel | T 6 · P 1 · A 2 · K 1 · S 2 |
+
+## 05.11.2026: Befreiungsschlag meist nicht grün
+
+Grün sicher war zu stark. Nur noch Otto Oldschool (Flutlicht) und Dieter Dampfwalze (Ascheplatz) haben ihn grün, zum Testen.
+
+| Karte | Zone | vorher | nachher |
+|---|---|---|---|
+| Uwe Bauchmann (5) | links/Mitte/rechts hinten | Befreiungsschlag grün | Befreiungsschlag (abfangbar) |
+| Bruno Blutgrätsche (4) | Mitte hinten | grün | abfangbar |
+| Holger Hammerhart (5) | Mitte hinten | grün | abfangbar |
+| Kevin Sensfuß (4) | Mitte hinten | grün | abfangbar |
+| Jens Eigentor (2) | links hinten | Querpass | Querpass / Befreiungsschlag (abfangbar) |
+| Rudi Rumpelfuß (2) | rechts hinten | Kerze | Kerze / Befreiungsschlag (abfangbar) |
+
+Flutlicht – Ascheplatz bleibt ausgeglichen (wer den Kader wählt, gewinnt 44–45 %), VfL gewinnt gegen die 5. Liga weiter 89 %.
