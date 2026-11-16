@@ -3052,7 +3052,7 @@ function poolCount(s){ const n = CLUBS.reduce((a, c) => a + clubCount(s, c.k), 0
 function settingsOk(s){ return s.mode === 'club' || poolCount(s) >= 2 * FC.LINEUP; }
 function shuffled(a){ a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function gameOpts(){
-  const s = settings(), base = { chaseRule: ['free','none'].includes(s.chase) ? s.chase : 'pay', names: { A: 'Heim', B: 'Gast' } };
+  const s = settings(), base = { chaseRule: ['free','none'].includes(s.chase) ? s.chase : 'pay', botLevel: s.bot === 'leicht' ? 'leicht' : 'normal', names: { A: 'Heim', B: 'Gast' } };
   if (s.mode === 'club') return Object.assign({ mode: 'club', opp: s.opp }, base);
   // Pool je Verein zusammenstellen: alle, zufällige Auswahl oder selbst abgehakt
   const ids = [];
@@ -3084,6 +3084,7 @@ function settingsHtml(){
     <div class="setgrid">
       <label><span class="label">Kader</span><select id="setMode">${opt('draft', s.mode, 'Kompletter Draft (alle Karten offen)')}${opt('market', s.mode, 'Offener Markt (5 Karten offen, Nachschub vom Stapel)')}${opt('random', s.mode, 'Zufällig verteilt (kein Draft)')}${opt('club', s.mode, 'Vereinsduell: VfL gegen einen Gegner deiner Wahl')}</select></label>
       ${club ? `<label><span class="label">Gegner</span><select id="setOpp">${opt('s04', s.opp, 'FC Schalke 04 (Bundesliga)')}${opt('dfb', s.opp, 'Deutschland (Nationalmannschaft)')}${opt('dfbf', s.opp, 'Deutschland (Frauen-Nationalmannschaft)')}${opt('flu', s.opp, 'Union Flutlicht 05 (5. Liga)')}${opt('asche', s.opp, 'SV Ascheplatz (5. Liga)')}</select></label>` : CLUBS.map(clubRow).join('')}
+      <label><span class="label">Bot-Stärke</span><select id="setBot">${opt('leicht', s.bot || 'normal', 'Leicht')}${opt('normal', s.bot || 'normal', 'Normal')}</select></label>
       <label><span class="label">Nach Steilpass, Tempo-Duell verloren (Test)</span><select id="setChase">${opt('pay', s.chase || 'pay', 'Abwehr überlaufen: Eingreifen nur gegen Kosten')}${opt('free', s.chase || 'pay', 'Abwehr normal')}${opt('none', s.chase || 'pay', 'Abwehr unmöglich: Aktion gelingt immer')}</select></label>
     </div>
     <div class="${settingsOk(s) ? 'muted' : 'notice vwarn'}" style="font-size:13.5px">${info} Online legt der Gastgeber die Einstellung fest.</div>
@@ -3103,6 +3104,7 @@ function bindSettings(){
   const save = f => { const n = settings(); f(n); saveSettings(n); render(); };
   const m = $('#setMode'); if (m) m.onchange = () => save(n => { n.mode = m.value; });
   const ch = $('#setChase'); if (ch) ch.onchange = () => save(n => { n.chase = ch.value; });
+  const bt = $('#setBot'); if (bt) bt.onchange = () => save(n => { n.bot = bt.value; });
   const op = $('#setOpp'); if (op) op.onchange = () => save(n => { n.opp = op.value; });
   document.querySelectorAll('[data-cpool]').forEach(el => el.onchange = () => save(n => { n.clubs[el.dataset.cpool].pool = el.value; }));
   document.querySelectorAll('[data-ccount]').forEach(el => el.onchange = () => save(n => { n.clubs[el.dataset.ccount].count = +el.value; }));
