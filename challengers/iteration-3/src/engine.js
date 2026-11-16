@@ -631,6 +631,7 @@
     // 4. Steilpass und Sprint: Tempo-Duell
     if (act === 'Steilpass') {
       if (da === 'Passabfangen' && !a.green) return change(st, 'Pass abgefangen');
+      if (da === 'Ballgewinn' && !a.green) return change(st, 'Ballgewinn');
       st.flank = false; st.through = { to: FORWARD[z] || z };
       log(st, 'Steilpass gespielt. Im nächsten Zug entscheidet das Tempo der nächsten beiden Karten.', 'ok');
       setOut(st, 'ok', 'Steilpass gespielt – jetzt zählt das Tempo der nächsten Karten');
@@ -1045,7 +1046,7 @@
   const DEF_BEATS = (da, aa, green) => {
     if (aa === 'Ball sichern') return false;
     if (da === 'Gelb') return true;
-    if (aa === 'Steilpass') return da === 'Passabfangen' && !green;
+    if (aa === 'Steilpass') return (da === 'Passabfangen' || da === 'Ballgewinn') && !green;
     if (aa === 'Sprint' || aa === 'Kerze' || aa === 'Slapstick') return false;
     if (aa === 'Befreiungsschlag') return da === 'Passabfangen' && !green;
     if (da === 'Ballgewinn') return !green;
