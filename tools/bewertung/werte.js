@@ -11,7 +11,14 @@ const w = Object.fromEntries(W.merkmale.map(m => [m.name, m.gelernt]));
 const wPrior = Object.fromEntries(W.merkmale.map(m => [m.name, m.startwertTore]));
 const val = (c, ww) => Object.entries(M.features(c)).reduce((s, [k, v]) => s + (ww[k] ?? 0) * v, 0);
 const club = c => c.club || 'vfl';
-const players = S.CARDS.players.map(c => ({ id: c.id, name: c.name, club: club(c), v: val(c, w), vPrior: val(c, wPrior) }));
+// Tauschtest-Ergebnisse (gegen die Vergleichskarte), falls vorhanden: genauer als die Formel. Formel × Eichfaktor für neue Karten.
+const EICH = +(process.env.EICH || 1.23);
+let tausch = {};
+try { for (const f of fs.readdirSync(__dirname + '/daten').filter(f => /^alle-\d+\.jsonl$/.test(f))) fs.readFileSync(__dirname + '/daten/' + f, 'utf8').trim().split('\n').forEach(l => { const t = JSON.parse(l); tausch[t.id] = t; }); } catch (e) { }
+const REF = process.env.REF || 'c25';
+const players = S.CARDS.players.map(c => ({ id: c.id, name: c.name, club: club(c), formel: EICH * val(c, w), vPrior: val(c, wPrior) }));
+const refF = players.find(p => p.id === REF).formel;
+players.forEach(p => { p.formel -= refF; p.v = tausch[p.id] ? tausch[p.id].delta : p.id === REF ? 0 : p.formel; p.quelle = tausch[p.id] || p.id === REF ? 'Tauschtest' : 'Formel'; });
 const sorted = players.map(p => p.v).sort((a, b) => a - b);
 const repl = sorted[Math.floor(sorted.length * 0.05)];   // Ersatzniveau: die schwächsten 5 %
 const vflAvg = players.filter(p => p.club === 'vfl').reduce((s, p) => s + p.v, 0) / players.filter(p => p.club === 'vfl').length;
@@ -29,7 +36,7 @@ try {
 } catch (e) { }
 fs.writeFileSync(__dirname + '/daten/marktwerte.json', JSON.stringify({ perGoal, repl, players: players.sort((a, b) => b.v - a.v), torhueter: gkOut }, null, 1));
 const fmt = x => x.toFixed(1).replace('.', ',');
-console.log('Rang  Karte                      Verein  Wert (Tore/Spiel)  Bauchgefühl  Mio. €');
+console.log('Rang  Karte                      Verein  Wert (Tore/Spiel)  Formel   Bauchgefühl  Mio. €');
 const replP = players.map(p => p.vPrior).sort((a, b) => a - b)[Math.floor(players.length * 0.05)];
-players.forEach((p, i) => console.log(String(i + 1).padStart(3), ' ', p.name.padEnd(26), p.club.padEnd(6), (p.v - repl).toFixed(2).padStart(8), (p.vPrior - replP).toFixed(2).padStart(12), fmt(p.mio).padStart(8)));
+players.forEach((p, i) => console.log(String(i + 1).padStart(3), ' ', p.name.padEnd(26), p.club.padEnd(6), (p.v - repl).toFixed(2).padStart(8), (p.formel - repl).toFixed(2).padStart(8), (p.vPrior - replP).toFixed(2).padStart(12), fmt(p.mio).padStart(8)));
 console.log('\nTorhüter'); gkOut.forEach(g => console.log(g.name.padEnd(26), g.fields.join('-'), g.tore.toFixed(2).padStart(6), fmt(g.mio).padStart(7)));

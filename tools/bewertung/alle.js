@@ -4,7 +4,8 @@ const S = require('./sim'); const fs = require('fs');
 const [wk, nw, nArg, outFile, refArg, lArg] = process.argv.slice(2);
 const n = +nArg, lineup = +(lArg || 5), REF = refArg || 'c25';
 const all = S.CARDS.players.map(p => p.id), gks = S.CARDS.gks.map(g => g.id);
-const mine = all.filter((_, i) => i % +nw === +wk && all[i] !== REF);
+const only = process.env.NUR ? JSON.parse(require('fs').readFileSync(process.env.NUR, 'utf8')) : null;
+const mine = all.filter((_, i) => i % +nw === +wk && all[i] !== REF && (!only || only.includes(all[i])));
 // Grundkader und Gegner: einmal festgelegt, für alle Karten gleich (ohne die getestete Karte und die Vergleichskarte)
 const setups = [];
 for (let i = 0; i < n; i++) {
