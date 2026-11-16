@@ -99,7 +99,7 @@
       // Stärkster Torhüter des Gegners steht im Tor (niedrigste Eckenwerte): Karius bzw. ter Stegen
       const gsum = id => byId[id].fields.reduce((x, y) => x + y, 0);
       B.gk = gs.length ? gs.slice().sort((x, y) => gsum(x) - gsum(y))[0] : gv[1];
-      st.opts = { mode: 'club', opp, pool: null, poolIds: null, chaseRule: normChase(opts.chaseRule) };
+      st.opts = { mode: 'club', opp, pool: null, poolIds: null, chaseRule: normChase(opts.chaseRule), botLevel: opts.botLevel || 'normal' };
       st.phase = 'scout';
       log(st, `Vereinsduell: Die Scouts erwarten ${B.name} mit ${B.lineup.map(id => card(id).name).join(', ')}. Bank: ${B.bench.map(id => card(id).name).join(', ')}.`, 'info');
       return st;
@@ -111,7 +111,7 @@
     const all = shuffle(custom && custom.length >= 2 * LINEUP ? custom : ids);
     const want = Math.max(2 * LINEUP, Math.min(all.length, opts.pool || all.length));
     const pool = all.slice(0, want - (want % 2));
-    st.opts = { mode: st.mode, pool: opts.pool || null, poolIds: custom && custom.length >= 2 * LINEUP ? custom : null, chaseRule: normChase(opts.chaseRule) };
+    st.opts = { mode: st.mode, pool: opts.pool || null, poolIds: custom && custom.length >= 2 * LINEUP ? custom : null, chaseRule: normChase(opts.chaseRule), botLevel: opts.botLevel || 'normal' };
     st.poolSize = pool.length; st.squadSize = Math.min(SQUAD, pool.length / 2);   // größerer Pool: Karten bleiben übrig
     // Torhüter: nur von Vereinen, deren Karten im Pool sind
     const gks = pickGks([...new Set(pool.map(clubOf))]);
@@ -959,7 +959,7 @@
     tourRound(st);
   }
   function tourNew(st, opts) {
-    st.mode = 'tour'; st.opts = { mode: 'tour', chaseRule: normChase(opts.chaseRule) };
+    st.mode = 'tour'; st.opts = { mode: 'tour', chaseRule: normChase(opts.chaseRule), botLevel: opts.botLevel || 'normal' };
     st.tour = { station: 0, round: 0, points: { A: 0, B: 0 }, goals: { A: 0, B: 0 }, results: [], names: { A: st.names.A, B: st.names.B },
       col: { A: { f: [], g: [] }, B: { f: [], g: [] } }, tokens: { A: 1, B: 1 }, gkTaken: { A: 0, B: 0 }, deck: [], market: { A: [], B: [] }, gkMarket: [],
       picksLeft: { A: 0, B: 0 }, toMove: 'A', start: 'A', steal: null, lastSteal: null };
@@ -1056,10 +1056,15 @@
     if (da === 'Schuss blocken') return aa === 'Schuss' || NOTHING(aa);
     return false;
   };
+  // Bot-Stufen: 'leicht' (trifft 40 % seiner Spielentscheidungen zufällig) und 'normal' (bisheriger Bot).
+  // Eine stärkere Stufe ist in tools/bot-training erprobt, bringt aber bisher keinen gesicherten Vorteil.
+  const botLevel = (st, s) => { const l = st.opts && st.opts.botLevel; return (l && typeof l === 'object' ? l[s] : l) || 'normal'; };
   function botAct(st, s) {
     const acts = legal(st, s);
     if (!acts.length) return null;
     const ph = st.phase;
+    const lvl = botLevel(st, s);
+    if (lvl === 'leicht' && (ph === 'att' || ph === 'def' || ph === 'move' || ph === 'gk' || ph === 'shot') && Math.random() < 0.4) return acts[rnd(acts.length)];
     const pick = arr => arr[rnd(arr.length)];
     if (ph === 'draft') return pick(acts);
     if (ph === 'tdraft') { const v = id => isGk(id) ? 40 - byId[id].fields.reduce((x, y) => x + y, 0) * 3 : power(id); const own = st.tour.market[s]; return acts.slice().sort((x, y) => (v(y.id) - (own.includes(y.id) || isGk(y.id) ? 0 : 3)) - (v(x.id) - (own.includes(x.id) || isGk(x.id) ? 0 : 3)))[0]; }
