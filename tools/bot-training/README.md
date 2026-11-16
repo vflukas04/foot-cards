@@ -16,3 +16,6 @@ Einstellbar unter „Spielmodus → Bot-Stärke“. Im Code: `FC.newGame({ botLe
 2. **Vorausschau** (`vorausschau.js`): pro Entscheidung 16 kurze Verläufe über 8 Züge mit neu gemischten Stapeln. Zwei Testreihen widersprechen sich (+0,22 ± 0,12 und −0,06 ± 0,11, je 300 Kaderpaare), zusammen etwa +0,07 ± 0,08. Kostet rund 1 Sekunde Rechenzeit pro Spiel.
 
 Deutung: Es gibt im Spiel wenige Entscheidungen, und Karten und Würfel streuen stark. Ein besserer Bot gewinnt deshalb nur knapp häufiger. Das passt zum Challengers-Grundsatz, macht es aber schwer, eine deutlich stärkere Stufe zu bauen. Naheliegende nächste Schritte: längere Vorausschau mit mehr Verläufen nur in Schlüsselmomenten (Abwehr bei Torgefahr), oder aus echten Partien im Spielarchiv lernen, wie ihr entscheidet.
+
+## Stapel berücksichtigen (17.11.)
+Der Bot schaut beim Weiterspielen (Querpass, Dribbling …) nicht auf seinen Stapel, die Zielzone folgt einer festen Rangfolge. Test (`stapel-test.js`): Zielzone zusätzlich danach wählen, wie gut die restlichen Stapelkarten in die Zone passen. Ergebnis mit λ = 1: +0,10 ± 0,08 und +0,02 ± 0,08 Tore pro Spiel (je 600 Kaderpaare), zusammen etwa +0,06 ± 0,06. Kleiner Vorteil, statistisch nicht gesichert.
