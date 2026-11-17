@@ -3028,12 +3028,12 @@ function lobbyHtml(){
 // ---------- Spieleinstellungen: Modus und Kartenpool (gilt für „anlegen“, „an einem Gerät“ und „gegen den Bot“) ----------
 const ALL_IDS = CARD_DATA.players.map(p => p.id);
 // Vereine: Karten ohne „club“ gehören zum VfL Osnabrück
-const CLUBS = [{ k: 'vfl', name: 'VfL Osnabrück', short: 'VfL' }, { k: 's04', name: 'FC Schalke 04', short: 'Schalke' }, { k: 'dfb', name: 'Deutschland', short: 'DFB' }, { k: 'dfbf', name: 'Deutschland (Frauen)', short: 'DFB-Frauen' }, { k: 'flu', name: 'Union Flutlicht 05', short: 'Flutlicht' }, { k: 'asche', name: 'SV Ascheplatz', short: 'Ascheplatz' }];
+const CLUBS = (CARD_DATA.clubs || []).map(c => ({ k: c.k, name: c.name, short: c.short || c.name, label: c.label || c.name }));   // Vereine aus den Kartendaten
 const clubOf = p => p.club || 'vfl';
 const CLUB_IDS = Object.fromEntries(CLUBS.map(c => [c.k, CARD_DATA.players.filter(p => clubOf(p) === c.k).map(p => p.id)]));
 function settings(){
   const raw = LS.get('fc3-settings') || {};
-  const s = { mode: raw.mode || 'draft', chase: raw.chase || 'pay', opp: ['dfb', 'dfbf', 'flu', 'asche'].includes(raw.opp) ? raw.opp : 's04', clubs: {} };
+  const s = { mode: raw.mode || 'draft', chase: raw.chase || 'pay', opp: CLUBS.some(c => c.k === raw.opp && c.k !== 'vfl') ? raw.opp : 's04', clubs: {} };
   for (const c of CLUBS) {
     const ids = CLUB_IDS[c.k];
     // Ältere Einstellungen (ein gemeinsamer Pool) gelten für den VfL; Schalke und Deutschland sind anfangs nicht dabei
@@ -3083,7 +3083,7 @@ function settingsHtml(){
   return `<div class="panel mode settings"><h2>Spielmodus</h2>
     <div class="setgrid">
       <label><span class="label">Kader</span><select id="setMode">${opt('draft', s.mode, 'Kompletter Draft (alle Karten offen)')}${opt('market', s.mode, 'Offener Markt (5 Karten offen, Nachschub vom Stapel)')}${opt('random', s.mode, 'Zufällig verteilt (kein Draft)')}${opt('club', s.mode, 'Vereinsduell: VfL gegen einen Gegner deiner Wahl')}</select></label>
-      ${club ? `<label><span class="label">Gegner</span><select id="setOpp">${opt('s04', s.opp, 'FC Schalke 04 (Bundesliga)')}${opt('dfb', s.opp, 'Deutschland (Nationalmannschaft)')}${opt('dfbf', s.opp, 'Deutschland (Frauen-Nationalmannschaft)')}${opt('flu', s.opp, 'Union Flutlicht 05 (5. Liga)')}${opt('asche', s.opp, 'SV Ascheplatz (5. Liga)')}</select></label>` : CLUBS.map(clubRow).join('')}
+      ${club ? `<label><span class="label">Gegner</span><select id="setOpp">${CLUBS.filter(c => c.k !== 'vfl').map(c => opt(c.k, s.opp, esc(c.label))).join('')}</select></label>` : CLUBS.map(clubRow).join('')}
       <label><span class="label">Bot-Stärke</span><select id="setBot">${opt('leicht', s.bot || 'normal', 'Leicht')}${opt('normal', s.bot || 'normal', 'Normal')}</select></label>
       <label><span class="label">Nach Steilpass, Tempo-Duell verloren (Test)</span><select id="setChase">${opt('pay', s.chase || 'pay', 'Abwehr überlaufen: Eingreifen nur gegen Kosten')}${opt('free', s.chase || 'pay', 'Abwehr normal')}${opt('none', s.chase || 'pay', 'Abwehr unmöglich: Aktion gelingt immer')}</select></label>
     </div>
