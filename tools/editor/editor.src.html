@@ -1,0 +1,654 @@
+<title>Foot Cards Editor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: Kopfleiste mit Reitern; darunter Mannschaften als Chips und die Karten als Raster; Bearbeiten in einem Seitenpanel */
+:root{
+  --bg:#eef1ea; --surface:#ffffff; --surface2:#f5f7f2; --line:#cfd6c8; --fg:#1d2a1f; --muted:#5d6b5f;
+  --att:#c04f15; --def:#215f9a; --grn:#196b24; --red:#c00000; --hl:#ffd84d;
+  --lila:#9b2f9a; --blau:#1f5f99; --board:#17321b; --board-fg:#eaf5e4; --chg:#d4730b;
+  --font-d:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --font-b:"Barlow","Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101611; --surface:#182019; --surface2:#1e281f; --line:#334036; --fg:#e7efe4; --muted:#9bab9d;
+  --att:#ff8a4c; --def:#6fb0ff; --grn:#6fd27a; --red:#ff6b6b; --hl:#7a6510;
+  --lila:#d07ad0; --blau:#6fb0ff; --board:#0b170d; --board-fg:#eaf5e4; --chg:#f0a040; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101611; --surface:#182019; --surface2:#1e281f; --line:#334036; --fg:#e7efe4; --muted:#9bab9d;
+  --att:#ff8a4c; --def:#6fb0ff; --grn:#6fd27a; --red:#ff6b6b; --hl:#7a6510;
+  --lila:#d07ad0; --blau:#6fb0ff; --board:#0b170d; --board-fg:#eaf5e4; --chg:#f0a040; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-b);font-size:15px;line-height:1.4;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+h1,h2,h3{font-family:var(--font-d);margin:0;text-wrap:balance;letter-spacing:.01em}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.cc:focus-visible,.pcard:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
+.muted{color:var(--muted)}
+.label{font-family:var(--font-d);text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted);font-weight:600}
+.btn{border:1.5px solid var(--fg);background:var(--surface);border-radius:7px;padding:6px 12px;font-weight:600}
+.btn:hover{background:var(--surface2)}
+.btn.pri{background:var(--board);color:var(--board-fg);border-color:var(--board)}
+.btn.pri:hover{filter:brightness(1.15)}
+.btn.warn{border-color:var(--red);color:var(--red)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{padding:3px 9px;font-size:13.5px}
+
+/* Kopfleiste */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--board);color:var(--board-fg);
+  margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));
+  padding:10px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--board)}
+.toprow{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap}
+.top h1{font-size:24px;font-weight:800;letter-spacing:.02em}
+.top .stand{font-size:13px;opacity:.75}
+.who{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:14px}
+.who button{background:transparent;border:1px solid color-mix(in srgb,var(--board-fg) 45%,transparent);color:var(--board-fg);border-radius:6px;padding:2px 9px}
+.tabs{display:flex;gap:2px;margin-top:8px;overflow-x:auto}
+.tabs button{background:transparent;border:none;color:var(--board-fg);opacity:.75;padding:8px 12px;font-family:var(--font-d);font-size:17px;font-weight:700;letter-spacing:.03em;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs button.on{opacity:1;border-bottom-color:var(--hl)}
+.badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:10px;background:var(--hl);color:#1d2a1f;font-size:13px;text-align:center;margin-left:4px;font-family:var(--font-b);font-weight:600}
+.badge.zero{background:transparent;color:inherit;opacity:.6}
+.notice{margin:12px 0 0;padding:10px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--line);font-size:14px}
+.notice.err{border-color:var(--red)}
+
+/* Mannschaften */
+.clubs{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 12px}
+.club{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;text-align:left}
+.club.on{border-color:var(--fg);box-shadow:inset 0 -3px 0 var(--hl)}
+.club small{display:block;color:var(--muted);font-size:12px}
+.club b{font-family:var(--font-d);font-size:17px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-bottom:12px}
+.toolbar input[type=search]{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:6px 10px;min-width:0;flex:1 1 200px;max-width:320px}
+.teamhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin:4px 0 10px}
+.teamhead h2{font-size:26px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.slot{display:flex;flex-direction:column;gap:5px;min-width:0}
+.slot .meta{display:flex;justify-content:space-between;gap:6px;font-size:12.5px;color:var(--muted);min-height:20px;align-items:center}
+.pill{display:inline-block;border-radius:10px;padding:0 8px;font-size:12px;font-weight:600;border:1px solid currentColor;white-space:nowrap}
+.pill.offen{color:var(--chg)}.pill.bestaetigt{color:var(--grn)}.pill.abgelehnt{color:var(--red)}.pill.zurueckgezogen{color:var(--muted)}
+.pill.angefordert{color:var(--def)}.pill.exportiert{color:var(--grn);background:color-mix(in srgb,var(--grn) 12%,transparent)}
+.mio{font-family:var(--font-d);font-weight:700;color:var(--fg);font-variant-numeric:tabular-nums}
+.slot .pcard{cursor:pointer;transition:transform .12s}
+.slot .pcard:hover{transform:translateY(-2px)}
+
+/* Karte wie im Spiel */
+.pcard{background:var(--surface);border:1.5px solid var(--fg);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;position:relative}
+.pcard .head{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.pcard .pname{font-family:var(--font-d);font-weight:700;font-size:17px;line-height:1.1}
+.shirt{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:26px;padding:0 5px;border-radius:5px 5px 7px 7px;color:#fff;font-family:var(--font-d);font-weight:800;font-size:15px;clip-path:polygon(18% 0,82% 0,100% 22%,86% 36%,86% 100%,14% 100%,14% 36%,0 22%)}
+.shirt.lila{background:var(--lila)}.shirt.blau{background:var(--blau)}.shirt.weiss{background:linear-gradient(#fff 0 70%,#111 70% 80%,#d00 80% 90%,#ffce00 90%);color:#111}.shirt.gelb{background:linear-gradient(#f2c200 0 62%,#1c1c1c 62%);color:#111}.shirt.asche{background:#b4502e}
+.attrs{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12.5px;color:var(--muted)}
+.attrs b{font-family:var(--font-d);font-size:15px;color:var(--fg)}
+.attrs .sw{border:1.5px solid var(--fg);border-radius:5px;padding:0 6px;color:var(--fg)}
+.cgrid{display:grid;grid-template-columns:1fr 1.25fr 1fr;grid-template-rows:repeat(6,minmax(18px,auto));border:1px solid var(--fg);font-size:11.5px;line-height:1.15;text-align:center}
+.cc{border:1px solid var(--line);padding:3px 2px;display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:0;overflow-wrap:anywhere}
+.cc.LO{grid-area:1/1/4/2}.cc.LD{grid-area:4/1/7/2}.cc.ZO{grid-area:1/2/3/3}.cc.ZM{grid-area:3/2/5/3}.cc.ZD{grid-area:5/2/7/3}.cc.RO{grid-area:1/3/4/4}.cc.RD{grid-area:4/3/7/4}
+.ra{color:var(--att);font-weight:600}.rd{color:var(--def);font-weight:600}
+.g{color:var(--grn)}.bad{color:var(--red);font-style:italic}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:3px;vertical-align:middle;border:1px solid rgba(0,0,0,.35)}
+.dot.R{background:#e9712f}.dot.G{background:#4ea72e}.dot.B{background:#0f9ed5}
+.gktraits{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:6px;font-size:12.5px;color:var(--muted)}.gktraits b{color:var(--fg);font-size:14px}
+.gkgoal{display:grid;grid-template-columns:repeat(3,1fr);border:4px solid var(--fg);border-bottom:none;border-radius:4px 4px 0 0}
+.gkfield{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-right:1px dashed var(--line)}
+.gkfield:last-child{border-right:none}
+.gkfield b{font-family:var(--font-d);font-size:28px;line-height:1}
+.typ{font-size:12px;color:var(--muted);margin-top:-2px}
+/* Editor-Markierungen auf der Karte */
+.cc.chg{box-shadow:inset 0 0 0 2px var(--chg)}
+.attrs .chg b,.gktraits .chg b,.gkfield.chg b{color:var(--chg)}
+.edit .cc{cursor:pointer}
+.edit .cc:hover{background:color-mix(in srgb,var(--hl) 30%,transparent)}
+.edit .cc.sel{background:color-mix(in srgb,var(--hl) 60%,transparent);outline:2px solid var(--fg);outline-offset:-2px;z-index:1}
+
+/* Bearbeiten-Panel */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:30}
+.panel{position:fixed;top:0;right:0;bottom:0;width:min(980px,100%);background:var(--bg);z-index:31;overflow-y:auto;
+  padding:calc(14px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) 18px;
+  box-shadow:-8px 0 30px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:14px}
+.phead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.phead h2{font-size:26px;flex:1 1 auto;min-width:0}
+.cols{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:760px){.cols{grid-template-columns:minmax(0,1fr)}}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.box h3{font-size:18px}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px 12px}
+.fld{display:flex;flex-direction:column;gap:3px;min-width:0}
+.fld input,.fld select,textarea{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:5px 8px;min-width:0;width:100%}
+.step{display:flex;align-items:center;gap:6px}
+.step button{width:30px;height:30px;border:1.5px solid var(--fg);border-radius:6px;background:var(--surface);font-weight:700;line-height:1}
+.step output{font-family:var(--font-d);font-size:22px;font-weight:700;min-width:22px;text-align:center;font-variant-numeric:tabular-nums}
+.step.chg output{color:var(--chg)}
+.zed{display:flex;flex-direction:column;gap:12px}
+.zrole{display:flex;flex-direction:column;gap:6px;border-left:4px solid var(--att);padding-left:10px}
+.zrole.d{border-left-color:var(--def)}
+.zrole h4{margin:0;font-family:var(--font-d);font-size:16px}
+.optrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.optrow select{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:4px 6px;min-width:150px}
+.optrow .sep{font-family:var(--font-d);font-weight:800;font-size:18px;color:var(--muted)}
+.tok{display:inline-flex;gap:4px}
+.tok button{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);background:var(--surface);font-size:11px;font-weight:700;color:var(--muted)}
+.tok button.on.R{background:#e9712f;border-color:#e9712f;color:#fff}.tok button.on.G{background:#4ea72e;border-color:#4ea72e;color:#fff}.tok button.on.B{background:#0f9ed5;border-color:#0f9ed5;color:#fff}
+.chk{display:inline-flex;align-items:center;gap:4px;font-size:14px}
+.warns{margin:0;padding-left:18px;color:var(--chg);font-size:14px}
+.warns li.err{color:var(--red)}
+.diff{margin:0;padding-left:18px;font-size:14px}
+.diff li{margin:2px 0}
+.cmp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:560px){.cmp{grid-template-columns:minmax(0,1fr)}}
+.thread{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.thread li{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px}
+.thread li .when{color:var(--muted);font-size:12.5px}
+.thread li .note{white-space:pre-wrap}
+.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+textarea{min-height:56px;resize:vertical}
+.lock{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;background:color-mix(in srgb,var(--lila) 12%,var(--surface));border:1px solid var(--lila);border-radius:8px;padding:8px 10px;font-size:14px}
+
+/* Listen (Postfach, Vorschläge, Export) */
+.list{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:start}
+.item h3{font-size:18px}
+.item .sub{font-size:13.5px;color:var(--muted)}
+.item ul{margin:2px 0 0;padding-left:18px;font-size:14px}
+.item .right{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+@media (max-width:560px){.item{grid-template-columns:minmax(0,1fr)}.item .right{align-items:flex-start;flex-direction:row;flex-wrap:wrap}}
+.empty{padding:24px;text-align:center;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:10px;margin-top:16px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.filters button{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:3px 12px;font-size:14px}
+.filters button.on{border-color:var(--fg);font-weight:600}
+.pick{max-width:520px;margin:40px auto;display:flex;flex-direction:column;gap:14px;text-align:center}
+.pick .acts{justify-content:center}
+.pick .btn{font-size:18px;padding:10px 26px}
+@media (prefers-reduced-motion:reduce){.slot .pcard{transition:none}}
+</style>
+
+<div id="app"></div>
+
+<script>
+const DATA = /*DATA*/null;
+const VALUE = /*VALUE*/null;
+const STAND = /*STAND*/null;
+</script>
+<script>
+(function(){
+'use strict';
+// ---------- Grundlagen ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+const ZONES = ['LO','ZO','RO','ZM','LD','ZD','RD'];
+const ZONE_NAME = { LO:'links vorne', ZO:'Mitte vorne', RO:'rechts vorne', ZM:'Mittelfeld', LD:'links hinten', ZD:'Mitte hinten', RD:'rechts hinten' };
+const ATT_ACTIONS = ['--','Querpass','Rückpass','Steilpass','Flanke','Vorlage','Diagonalball','Dribbling','Sprint','Schuss','Ball sichern','Kerze','Slapstick','Befreiungsschlag','Ballverlust','Fehlpass','-- und erschöpft'];
+const DEF_ACTIONS = ['--','Tackling','Passabfangen','Ballgewinn','Block','Schuss blocken','Gelb','-- und Regeneriert'];
+const STATS = [['tempo','Tempo'],['praesenz','Präsenz'],['assist','Assist'],['kopf','Kopfball'],['schuss','Schuss']];
+const GK_TRAITS = [['dist','Distanz',1],['ovo','1 gegen 1',0],['box','Strafraum',0],['aura','Ausstrahlung',0]];
+const CORNERS = ['Links','Mitte','Rechts'];
+const COLS = [['lila','Lila'],['blau','Blau'],['weiss','Weiß (DFB)'],['gelb','Gelb-Schwarz'],['asche','Ziegelrot']];
+const TIERS = [['t5','5. Liga'],['vfl','VfL-Niveau'],['bl','Bundesliga'],['nat','Nationalteam']];
+const PEOPLE = { simon:'Simon', lukas:'Lukas' };
+const otherOf = r => r === 'simon' ? 'lukas' : 'simon';
+const STATUS_TXT = { offen:'offen', bestaetigt:'bestätigt', abgelehnt:'abgelehnt', zurueckgezogen:'zurückgezogen' };
+const ACTION_TXT = { vorschlag:'hat vorgeschlagen', geaendert:'hat geändert', bestaetigt:'hat bestätigt', abgelehnt:'hat abgelehnt', kommentar:'hat kommentiert', zurueckgezogen:'hat zurückgezogen', export:'hat den Export angefordert', gesehen:'hat es gesehen', exportiert:'Im Spiel eingebaut' };
+
+const BASE = {}; DATA.players.forEach(p => BASE[p.id] = p); DATA.gks.forEach(g => BASE[g.id] = g);
+const BASE_CLUBS = DATA.clubs.slice();
+const clubOf = c => c.club || 'vfl';
+const isGkCard = c => !!c.fields;
+
+// ---------- Marktwert (wie tools/bewertung) ----------
+const CLS = { LO:'OA', RO:'OA', ZO:'ZO', ZM:'ZM', LD:'DA', RD:'DA', ZD:'ZD' };
+function optTok(list, per, rowTok, i){ if (Array.isArray(per)) return per[i] || ''; if (!rowTok) return ''; return i === list.length - 1 ? rowTok : ''; }
+function features(c){
+  const f = {}, add = (k, v = 1) => { f[k] = (f[k] || 0) + v; };
+  let nShot = 0, nSpeed = 0;
+  for (const [z, r] of Object.entries(c.z)) {
+    const k = CLS[z];
+    r.a.forEach(([a, g], i) => { if (a !== '--') add(`A|${k}|${i}|${a}`); if (g) add(`grün|${i}`); if (a === 'Schuss') nShot++; if (a === 'Steilpass' || a === 'Sprint') nSpeed++; for (const t of optTok(r.a, r.ato, r.at, i)) add(`Token|${t}`); });
+    r.d.forEach((a, i) => { if (a !== '--') add(`D|${k}|${i}|${a}`); for (const t of optTok(r.d, r.dto, r.dt, i)) add(`Token|${t}`); });
+  }
+  for (const s of ['tempo','praesenz','assist','kopf','schuss']) add(`Wert|${s}`, c[s]);
+  add('Zusammenspiel|schuss×Schuss-Optionen', c.schuss * nShot);
+  add('Zusammenspiel|tempo×Tempo-Optionen', c.tempo * nSpeed);
+  return f;
+}
+const rawVal = c => Object.entries(features(c)).reduce((s, [k, v]) => s + (VALUE.w[k] || 0) * v, 0);
+const toMio = t => Math.max(0.5, 0.5 + VALUE.perGoal * t);
+// Marktwert in Mio. €; null, wenn er sich nicht berechnen lässt (geänderter oder neuer Torhüter)
+function mio(c){
+  if (!c) return null;
+  if (isGkCard(c)) { const b = BASE[c.id]; return b && VALUE.gks[c.id] != null && sameCard(b, c) ? VALUE.gks[c.id] : null; }
+  const b = BASE[c.id];
+  if (b && VALUE.players[c.id] != null) return toMio(VALUE.players[c.id] + VALUE.a * (rawVal(c) - rawVal(b)));
+  return toMio(VALUE.a * rawVal(c) + VALUE.b);
+}
+const fmtMio = v => v == null ? '–' : v.toFixed(1).replace('.', ',') + ' Mio.';
+function sameCard(a, b){ return JSON.stringify(norm(a)) === JSON.stringify(norm(b)); }
+function norm(c){ const o = clone(c); if (o.z) for (const z of ZONES) { const r = o.z[z]; if (!r.ato || !r.ato.some(Boolean)) { delete r.ato; r.at = ''; } if (!r.dto || !r.dto.some(Boolean)) { delete r.dto; r.dt = ''; } }
+  return Object.keys(o).sort().reduce((x, k) => (x[k] = o[k], x), {}); }
+
+// ---------- Zustand ----------
+const LS = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
+const app = {
+  me: LS.get('fce-role'), tab: 'teams', club: LS.get('fce-club') || 'vfl', q: '', filter: 'alle',
+  props: {},             // Vorschläge aus der Datenbank: docId -> Daten
+  db: null, user: null, dbState: 'loading', canWrite: true, dbMsg: '',
+  open: null,            // { kind:'card'|'club', id, draft, isNew, zone, unlocked, note, compare }
+  unlocked: new Set(),
+};
+const pid = id => 'v-' + id;
+const pidClub = k => 'v-club-' + k;
+function liveProp(docId){ const p = app.props[docId]; return p && !['abgelehnt','zurueckgezogen'].includes(p.status) ? p : null; }
+// Aktueller Stand einer Karte: offener/bestätigter Vorschlag, sonst das Original
+function eff(id){ const p = liveProp(pid(id)); return p ? JSON.parse(p.json) : BASE[id] || null; }
+function allClubs(){
+  const out = BASE_CLUBS.map(c => ({ ...c, base: true }));
+  for (const p of Object.values(app.props)) if (p.kind === 'club' && !['abgelehnt','zurueckgezogen'].includes(p.status) && !out.some(c => c.k === p.target)) out.push({ ...JSON.parse(p.json), base: false });
+  return out;
+}
+const clubName = k => (allClubs().find(c => c.k === k) || { name: k }).name;
+function cardsOfClub(k){
+  const ids = new Set([...DATA.players, ...DATA.gks].filter(c => clubOf(c) === k).map(c => c.id));
+  for (const p of Object.values(app.props)) if ((p.kind === 'player' || p.kind === 'gk') && p.club === k && liveProp(pid(p.target))) ids.add(p.target);
+  return [...ids].map(eff).filter(Boolean);
+}
+
+// ---------- Karten zeichnen (wie im Spiel) ----------
+function shirt(p){ return `<span class="shirt ${esc(p.col)}">${esc(p.nr)}</span>`; }
+function dots(t){ return (t || '').split('').map(k => `<span class="dot ${k}" title="${({R:'roter',G:'grüner',B:'blauer'})[k]} Token"></span>`).join(''); }
+function optHtml(o, green, cls){ const bad = o === 'Ballverlust' || o === 'Gelbe Karte' || o === 'Fehlpass'; return `<span class="${bad ? 'bad' : green ? 'g' : cls}">${esc(o)}</span>`; }
+function rowHtml(z, role){
+  if (role === 'att') return `<span class="ra">${z.a.map(([a,g],i) => optHtml(a,g,'ra') + dots(optTok(z.a,z.ato,z.at,i))).join(' / ')}</span>`;
+  return `<span class="rd">${z.d.map((a,i) => optHtml(a,0,'rd') + dots(optTok(z.d,z.dto,z.dt,i))).join(' / ')}</span>`;
+}
+const zoneKey = r => JSON.stringify([r.a, r.d, r.a.map((_, i) => optTok(r.a, r.ato, r.at, i)), r.d.map((_, i) => optTok(r.d, r.dto, r.dt, i))]);
+function cardHtml(p, o){
+  o = o || {};
+  if (isGkCard(p)) return gkHtml(p, o);
+  const b = o.base;
+  const cells = ZONES.map(zn => {
+    const z = p.z[zn], chg = b && zoneKey(b.z[zn]) !== zoneKey(z);
+    return `<div class="cc ${zn}${chg ? ' chg' : ''}${o.zone === zn ? ' sel' : ''}"${o.edit ? ` data-zone="${zn}" tabindex="0" role="button" aria-label="Zone ${ZONE_NAME[zn]} bearbeiten"` : ''}><div>${rowHtml(z,'att')}</div><div>${rowHtml(z,'def')}</div></div>`;
+  }).join('');
+  const st = STATS.map(([k, n]) => `<span class="${k === 'schuss' ? 'sw' : ''}${b && b[k] !== p[k] ? ' chg' : ''}" title="${n}">${n} <b>${esc(p[k])}</b></span>`).join('');
+  return `<div class="pcard${o.edit ? ' edit' : ''}"${o.attrs || ''}>
+    <div class="head"><div><div class="pname">${esc(p.name || 'Ohne Namen')}</div>${p.typ ? `<div class="typ">${esc(p.typ)}</div>` : ''}</div>${shirt(p)}</div>
+    <div class="attrs">${st}</div>
+    <div class="cgrid">${cells}</div></div>`;
+}
+function gkHtml(p, o){
+  const b = o.base;
+  const boxes = p.fields.map((v, i) => `<div class="gkfield${b && b.fields[i] !== v ? ' chg' : ''}"><span class="label">${CORNERS[i]}</span><b>${esc(v)}</b></div>`).join('');
+  const tr = GK_TRAITS.map(([k, n, d]) => { const v = p[k] == null ? d : p[k], bv = b ? (b[k] == null ? d : b[k]) : v; return `<span class="${bv !== v ? 'chg' : ''}">${n} <b>${esc(v)}</b></span>`; }).join('');
+  return `<div class="pcard gk"${o.attrs || ''}><div class="head"><div class="pname">${esc(p.name || 'Ohne Namen')} <span class="muted" style="font-size:13px">Tor</span></div>${shirt(p)}</div><span class="muted" style="font-size:12.5px">Würfel muss unter dem Wert liegen</span><div class="gkgoal">${boxes}</div><div class="gktraits">${tr}</div></div>`;
+}
+
+// ---------- Unterschiede und Prüfungen ----------
+const rowTxt = (r, role) => role === 'a' ? r.a.map(([a, g], i) => a + (g ? ' (grün)' : '') + tokTxt(optTok(r.a, r.ato, r.at, i))).join(' / ') : r.d.map((a, i) => a + tokTxt(optTok(r.d, r.dto, r.dt, i))).join(' / ');
+const tokTxt = t => t ? ' [' + t.split('').map(k => ({R:'rot',G:'grün',B:'blau'})[k]).join(', ') + 'er Token]' : '';
+function diffList(b, c){
+  if (!b) return [isGkCard(c) ? 'Neuer Torhüter' : 'Neuer Spieler'];
+  const out = [];
+  for (const [k, n] of [['name','Name'],['nr','Nummer'],['col','Trikot'],['typ','Spielertyp']]) if ((b[k] || '') !== (c[k] || '')) out.push(`${n}: ${b[k] || '–'} → ${c[k] || '–'}`);
+  if (isGkCard(c)) {
+    c.fields.forEach((v, i) => { if (b.fields[i] !== v) out.push(`Feld ${CORNERS[i]}: ${b.fields[i]} → ${v}`); });
+    for (const [k, n, d] of GK_TRAITS) { const x = b[k] == null ? d : b[k], y = c[k] == null ? d : c[k]; if (x !== y) out.push(`${n}: ${x} → ${y}`); }
+    return out;
+  }
+  for (const [k, n] of STATS) if (b[k] !== c[k]) out.push(`${n}: ${b[k]} → ${c[k]}`);
+  for (const z of ZONES) for (const r of ['a','d']) { const x = rowTxt(b.z[z], r), y = rowTxt(c.z[z], r); if (x !== y) out.push(`${z} ${r === 'a' ? 'mit Ball' : 'ohne Ball'}: ${x} → ${y}`); }
+  return out;
+}
+function checks(c, isNew){
+  const w = [];
+  if (!String(c.name || '').trim()) w.push({ err: true, t: 'Der Name fehlt.' });
+  if (!(c.nr >= 1 && c.nr <= 99)) w.push({ err: true, t: 'Die Rückennummer muss zwischen 1 und 99 liegen.' });
+  const mates = cardsOfClub(clubOf(c)).filter(x => x.id !== c.id && x.nr === c.nr);
+  if (mates.length) w.push({ t: `Die Nummer ${c.nr} trägt schon ${mates.map(m => m.name).join(', ')}.` });
+  if (isGkCard(c)) {
+    c.fields.forEach((v, i) => { if (v < 1 || v > 6) w.push({ t: `Feld ${CORNERS[i]} ist ${v}; üblich sind Werte von 1 bis 6.` }); });
+    if ((c.dist == null ? 1 : c.dist) < 1) w.push({ t: 'Distanz ist mindestens 1 (Absprache Torhüter).' });
+    return w;
+  }
+  for (const [k, n] of STATS) if (c[k] < 0 || c[k] > 9) w.push({ t: `${n} ${c[k]} liegt außerhalb von 0 bis 9.` });
+  for (const z of ZONES) {
+    const r = c.z[z];
+    r.a.forEach(([a, g]) => {
+      if (a === 'Befreiungsschlag' && !['LD','ZD','RD'].includes(z)) w.push({ t: `${z}: Befreiungsschlag gibt es nur in den hinteren Zonen.` });
+      if (a === 'Slapstick' && c.praesenz > 1) w.push({ t: `${z}: Slapstick ist für Spieler mit Präsenz 1 gedacht.` });
+      if (g && a.startsWith('--')) w.push({ t: `${z}: „--“ in Grün hat keine Wirkung.` });
+    });
+    if (r.a.length === 2 && r.a[0][0] === r.a[1][0]) w.push({ t: `${z} mit Ball: zweimal dieselbe Aktion.` });
+    if (r.d.length === 2 && r.d[0] === r.d[1]) w.push({ t: `${z} ohne Ball: zweimal dieselbe Aktion.` });
+  }
+  return w;
+}
+
+// ---------- Datenbank ----------
+let unsub = null, loadTimer = null;
+async function connect(){
+  try {
+    const db = await window.claude?.use?.('db');
+    app.user = await window.claude?.use?.('user');
+    if (!db) { app.dbState = 'off'; render(); return; }
+    app.db = db;
+    if (app.user) { const w = await app.user.can('data.write'); if (w === false) app.canWrite = false; }
+    loadTimer = setTimeout(() => { if (app.dbState === 'loading') { app.dbState = 'slow'; render(); } }, 10000);
+    unsub = db.collection('vorschlaege').onSnapshot(snap => {
+      const p = {}; snap.docs.forEach(d => { if (d.exists) p[d.id] = d.data(); });
+      app.props = p;
+      if (!snap.metadata.fromCache) { app.dbState = 'ok'; clearTimeout(loadTimer); }
+      render();
+    }, e => { app.dbState = 'error'; app.dbMsg = e && e.code; clearTimeout(loadTimer); render(); });
+  } catch (e) { app.dbState = 'off'; render(); }
+}
+async function save(docId, data){
+  if (!app.db) { toast('Keine Verbindung zur gemeinsamen Datenbank – nichts gespeichert.'); return false; }
+  const before = app.props[docId];
+  app.props = { ...app.props, [docId]: data };   // sofort anzeigen, die Datenbank bestätigt gleich
+  try { await app.db.collection('vorschlaege').doc(docId).set(data); return true; }
+  catch (e) {
+    const p = { ...app.props }; if (before) p[docId] = before; else delete p[docId]; app.props = p;
+    if (e && e.code === 'invalid_argument' && !app.canWrite) toast('Du kannst den Editor nur ansehen, nicht ändern.');
+    else if (e && e.code === 'invalid_argument') { app.canWrite = false; toast('Speichern nicht erlaubt: Du hast für diesen Editor nur Leserechte.'); render(); }
+    else toast('Speichern hat nicht geklappt (' + (e && e.code || 'Fehler') + '). Bitte gleich noch einmal versuchen.');
+    return false;
+  }
+}
+const now = () => Date.now();
+const hist = (action, note, extra) => ({ by: app.me, at: now(), action, note: note || '', ...(extra || {}) });
+
+// Vorschlag senden (neu oder geändert)
+async function sendCard(){
+  const o = app.open, c = norm(o.draft), docId = pid(c.id), prev = app.props[docId];
+  const base = BASE[c.id] || null;
+  const errs = checks(c).filter(x => x.err); if (errs.length) { toast(errs[0].t); return; }
+  if (base && sameCard(base, c) && !prev) { toast('Es gibt noch keine Änderung.'); return; }
+  const h = (prev && prev.history) ? prev.history.slice() : [];
+  h.push(hist(prev && liveProp(docId) ? 'geaendert' : 'vorschlag', o.note, { json: JSON.stringify(c) }));
+  const data = { kind: isGkCard(c) ? 'gk' : 'player', target: c.id, club: clubOf(c), isNew: !base, json: JSON.stringify(c), baseJson: base ? JSON.stringify(base) : '',
+    status: 'offen', lastBy: app.me, waitingFor: otherOf(app.me), exportState: prev ? prev.exportState || '' : '', exportJson: prev ? prev.exportJson || '' : '', exportStand: prev ? prev.exportStand || '' : '',
+    history: h, createdAt: prev ? prev.createdAt : now(), updatedAt: now() };
+  if (await save(docId, data)) { o.note = ''; o.isNew = false; toast(`Vorschlag an ${PEOPLE[otherOf(app.me)]} gesendet.`); render(); }
+}
+async function act(docId, action, note){
+  const p = app.props[docId]; if (!p) return;
+  if (action === 'kommentar' && !String(note || '').trim()) { toast('Schreib zuerst eine Nachricht.'); return; }
+  const d = clone(p); d.history = (d.history || []).concat([hist(action, note)]); d.updatedAt = now(); d.lastBy = app.me;
+  if (action === 'bestaetigt') { d.status = 'bestaetigt'; d.waitingFor = otherOf(app.me); }
+  if (action === 'abgelehnt') { d.status = 'abgelehnt'; d.waitingFor = otherOf(app.me); }
+  if (action === 'zurueckgezogen') { d.status = 'zurueckgezogen'; d.waitingFor = otherOf(app.me); }
+  if (action === 'kommentar') d.waitingFor = otherOf(app.me);
+  if (action === 'gesehen') { d.waitingFor = ''; d.history.pop(); d.lastBy = p.lastBy; }
+  if (action === 'export') { d.exportState = 'angefordert'; d.exportJson = d.json; d.waitingFor = otherOf(app.me); }
+  if (await save(docId, d)) { if (app.open) app.open.note = ''; toast(({ bestaetigt:'Bestätigt.', abgelehnt:'Abgelehnt.', zurueckgezogen:'Zurückgezogen.', kommentar:'Kommentar gesendet.', gesehen:'Als gesehen markiert.', export:'Export angefordert. Sag Claude im Chat „Export“.' })[action]); render(); }
+}
+async function sendClub(){
+  const o = app.open, c = o.draft;
+  if (!c.name.trim() || !c.short.trim()) { toast('Name und Kurzname fehlen.'); return; }
+  c.label = c.name + ' (' + (TIERS.find(t => t[0] === c.tier) || ['', ''])[1] + ')';
+  const docId = pidClub(c.k), prev = app.props[docId];
+  const h = (prev && prev.history) ? prev.history.slice() : []; h.push(hist(prev ? 'geaendert' : 'vorschlag', o.note, { json: JSON.stringify(c) }));
+  const data = { kind: 'club', target: c.k, club: c.k, isNew: true, json: JSON.stringify(c), baseJson: '', status: 'offen', lastBy: app.me, waitingFor: otherOf(app.me),
+    exportState: prev ? prev.exportState || '' : '', exportJson: prev ? prev.exportJson || '' : '', exportStand: prev ? prev.exportStand || '' : '', history: h, createdAt: prev ? prev.createdAt : now(), updatedAt: now() };
+  if (await save(docId, data)) { app.club = c.k; LS.set('fce-club', c.k); app.open = null; toast(`Mannschaft angelegt und an ${PEOPLE[otherOf(app.me)]} gemeldet.`); render(); }
+}
+// Ganze neue Mannschaft exportieren: Verein und alle ihre Karten
+function teamReady(k){ const cs = cardsOfClub(k); const f = cs.filter(c => !isGkCard(c)).length, g = cs.filter(isGkCard).length; return { f, g, ok: f >= 16 && g >= 2 }; }
+async function exportTeam(k){
+  const r = teamReady(k); if (!r.ok) { toast(`Für den Export fehlen noch ${Math.max(0, 16 - r.f)} Feldspieler und ${Math.max(0, 2 - r.g)} Torhüter.`); return; }
+  const ids = [pidClub(k), ...Object.keys(app.props).filter(id => { const p = app.props[id]; return p.kind !== 'club' && p.club === k && liveProp(id) && (p.exportState !== 'exportiert' || p.exportJson !== p.json); })];
+  for (const id of ids) { const p = app.props[id]; if (p && (p.exportState !== 'angefordert' || p.exportJson !== p.json)) await act(id, 'export', id === pidClub(k) ? 'ganze Mannschaft' : ''); }
+}
+
+// ---------- Darstellung ----------
+let toastTimer = null;
+function toast(t){ app.toast = t; clearTimeout(toastTimer); toastTimer = setTimeout(() => { app.toast = ''; render(); }, 4200); render(); }
+const ago = t => { const s = Math.round((now() - t) / 1000); if (s < 60) return 'gerade eben'; if (s < 3600) return `vor ${Math.round(s/60)} Min.`; if (s < 86400) return `vor ${Math.round(s/3600)} Std.`; const d = new Date(t); return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' }) + ' ' + d.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }); };
+const inbox = () => Object.entries(app.props).filter(([, p]) => p.waitingFor === app.me).sort((a, b) => b[1].updatedAt - a[1].updatedAt);
+const exportPill = p => p.exportState === 'exportiert' ? (p.exportJson === p.json ? `<span class="pill exportiert" title="Seit Stand ${esc(p.exportStand)} im Spiel">im Spiel</span>` : `<span class="pill angefordert">seit Export geändert</span>`) : p.exportState === 'angefordert' ? (p.exportJson === p.json ? `<span class="pill angefordert">Export angefordert</span>` : `<span class="pill angefordert">Export angefordert, danach geändert</span>`) : '';
+const statusPill = p => `<span class="pill ${p.status}">${STATUS_TXT[p.status] || p.status}</span>`;
+
+function render(){
+  const root = $('#app'), keepScroll = document.querySelector('.panel') ? document.querySelector('.panel').scrollTop : 0;
+  if (!app.me) { root.innerHTML = pickHtml(); bindPick(); return; }
+  const n = inbox().length, exp = Object.values(app.props).filter(p => p.exportState === 'angefordert').length;
+  root.innerHTML = `<header class="top"><div class="toprow"><h1>Foot Cards Editor</h1><span class="stand">Iteration 3 · Kartenstand ${esc(STAND)}</span>
+      <div class="who">Du bist <b>${PEOPLE[app.me]}</b> <button type="button" id="switchMe">wechseln</button></div></div>
+    <nav class="tabs" aria-label="Bereiche">${[['teams','Mannschaften'],['inbox',`Postfach<span class="badge${n ? '' : ' zero'}">${n}</span>`],['all','Alle Vorschläge'],['export',`Export<span class="badge${exp ? '' : ' zero'}">${exp}</span>`]].map(([k, t]) => `<button type="button" data-tab="${k}" class="${app.tab === k ? 'on' : ''}">${t}</button>`).join('')}</nav></header>
+    ${dbNotice()}
+    <main>${app.tab === 'teams' ? teamsHtml() : app.tab === 'inbox' ? inboxHtml() : app.tab === 'all' ? allHtml() : exportHtml()}</main>
+    ${app.open ? `<div class="scrim" data-close="1"></div><aside class="panel" role="dialog" aria-modal="true" aria-label="Karte bearbeiten">${app.open.kind === 'club' ? clubPanelHtml() : panelHtml()}</aside>` : ''}
+    ${app.toast ? `<div class="notice" role="status" style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:min(560px,calc(100% - 32px))">${esc(app.toast)}</div>` : ''}`;
+  bind();
+  const pn = document.querySelector('.panel'); if (pn) pn.scrollTop = keepScroll;
+}
+function dbNotice(){
+  if (app.dbState === 'off') return `<div class="notice err">Die gemeinsame Datenbank ist in dieser Ansicht nicht verfügbar. Du kannst Karten ansehen und ausprobieren, aber keine Vorschläge senden. Öffne den Editor angemeldet in Claude.</div>`;
+  if (app.dbState === 'error') return `<div class="notice err">Die Verbindung zur gemeinsamen Datenbank ist abgebrochen (${esc(app.dbMsg || 'Fehler')}). Bitte die Seite neu laden.</div>`;
+  if (app.dbState === 'slow') return `<div class="notice">Die Vorschläge lassen sich gerade nicht laden. Die Anzeige kann veraltet sein.</div>`;
+  if (!app.canWrite) return `<div class="notice">Du hast für diesen Editor nur Leserechte. Bitte Simon, dich als Bearbeiter einzuladen.</div>`;
+  return '';
+}
+function pickHtml(){
+  return `<div class="pick"><h1 style="font-size:34px">Foot Cards Editor</h1><p>Wer arbeitet hier? Damit landen deine Vorschläge im Postfach des anderen.</p>
+    <div class="acts"><button type="button" class="btn pri" data-me="simon">Ich bin Simon</button><button type="button" class="btn pri" data-me="lukas">Ich bin Lukas</button></div>
+    <p class="muted" style="font-size:14px">Die Auswahl merkt sich dieser Browser. Du kannst sie oben jederzeit wechseln.</p></div>`;
+}
+function bindPick(){ document.querySelectorAll('[data-me]').forEach(b => b.onclick = () => { app.me = b.dataset.me; LS.set('fce-role', app.me); render(); }); }
+
+function teamsHtml(){
+  const clubs = allClubs();
+  const c = clubs.find(x => x.k === app.club) || clubs[0];
+  if (c.k !== app.club && app.dbState === 'ok') app.club = c.k;
+  const cs = cardsOfClub(c.k).filter(x => !app.q || x.name.toLowerCase().includes(app.q.toLowerCase()));
+  const gks = cs.filter(isGkCard).sort((a, b) => a.nr - b.nr), fs = cs.filter(x => !isGkCard(x)).sort((a, b) => a.nr - b.nr);
+  const chips = clubs.map(k => { const all = cardsOfClub(k.k), open = all.filter(x => { const p = liveProp(pid(x.id)); return p && p.status === 'offen'; }).length;
+    return `<button type="button" class="club${k.k === app.club ? ' on' : ''}" data-club="${esc(k.k)}"><span class="shirt ${esc(k.col)}">${all.filter(x => !isGkCard(x)).length}</span><span><b>${esc(k.short || k.name)}</b><small>${esc((TIERS.find(t => t[0] === k.tier) || ['', ''])[1])}${k.base ? '' : ' · neu'}${open ? ` · ${open} offen` : ''}</small></span></button>`; }).join('');
+  const slot = p => { const pr = app.props[pid(p.id)], m = mio(p), bm = BASE[p.id] ? mio(BASE[p.id]) : null;
+    return `<div class="slot"><div class="meta"><span>${pr ? statusPill(pr) + ' ' + exportPill(pr) : ''}</span><span class="mio" title="Marktwert (Bewertungssystem)">${fmtMio(m)}${bm != null && m != null && Math.abs(m - bm) >= 0.05 ? ` <span class="muted" style="font-weight:500">(vorher ${fmtMio(bm)})</span>` : ''}</span></div>
+      ${cardHtml(p, { base: BASE[p.id], attrs: ` data-card="${esc(p.id)}" tabindex="0" role="button" aria-label="${esc(p.name)} bearbeiten"` })}</div>`; };
+  const rd = c.base ? null : teamReady(c.k), cp = app.props[pidClub(c.k)];
+  return `<div class="clubs" role="tablist" aria-label="Mannschaften">${chips}<button type="button" class="club" id="newClub"><span class="shirt lila">+</span><span><b>Neue Mannschaft</b><small>frei anlegen</small></span></button></div>
+    <div class="teamhead"><h2>${esc(c.name)}</h2><span class="muted">${fs.length} Feldspieler · ${gks.length} Torhüter${c.k === 'vfl' ? ' · handgemacht, Bearbeiten nur nach Entsperren' : ''}</span>
+      ${!c.base ? `${cp ? statusPill(cp) + ' ' + exportPill(cp) : ''} <button type="button" class="btn sm" id="editClub">Mannschaft bearbeiten</button> <button type="button" class="btn sm${rd.ok ? ' pri' : ''}" id="exportTeam" ${rd.ok && app.canWrite ? '' : 'disabled'} title="${rd.ok ? 'Mannschaft mit allen Karten ins Spiel exportieren' : `Noch ${Math.max(0, 16 - rd.f)} Feldspieler und ${Math.max(0, 2 - rd.g)} Torhüter`}">Mannschaft ins Spiel exportieren</button>` : ''}</div>
+    ${!c.base && !rd.ok ? `<div class="notice">Für den Export braucht die Mannschaft mindestens 16 Feldspieler und 2 Torhüter. Es fehlen noch ${Math.max(0, 16 - rd.f)} Feldspieler und ${Math.max(0, 2 - rd.g)} Torhüter.</div>` : ''}
+    <div class="toolbar"><input type="search" id="q" placeholder="Spieler suchen" value="${esc(app.q)}" aria-label="Spieler suchen">
+      <button type="button" class="btn" id="newPlayer">+ Neuer Spieler</button><button type="button" class="btn" id="newGk">+ Neuer Torhüter</button></div>
+    <h3 class="label" style="margin:14px 0 8px">Torhüter</h3>
+    ${gks.length ? `<div class="grid">${gks.map(slot).join('')}</div>` : `<div class="empty">Noch kein Torhüter. Lege mit „+ Neuer Torhüter“ den ersten an.</div>`}
+    <h3 class="label" style="margin:20px 0 8px">Feldspieler</h3>
+    ${fs.length ? `<div class="grid">${fs.map(slot).join('')}</div>` : `<div class="empty">${app.q ? 'Kein Spieler passt zur Suche.' : 'Noch keine Feldspieler. Lege mit „+ Neuer Spieler“ den ersten an, leer oder als Kopie.'}</div>`}`;
+}
+
+function panelHtml(){
+  const o = app.open, c = o.draft, base = BASE[c.id] || null, docId = pid(c.id), pr = app.props[docId];
+  const locked = clubOf(c) === 'vfl' && base && !app.unlocked.has(c.id);
+  const editable = !locked && app.canWrite;
+  const dirty = !pr ? !base || !sameCard(base, c) : !sameCard(JSON.parse(pr.json), c);
+  const m = mio(c), bm = base ? mio(base) : null;
+  const dl = diffList(base, c), warns = checks(c);
+  const mine = pr && pr.lastBy === app.me;
+  const gk = isGkCard(c);
+  const fields = `<div class="fields">
+      <label class="fld"><span class="label">Name</span><input id="fName" value="${esc(c.name)}" ${editable ? '' : 'disabled'}></label>
+      <label class="fld"><span class="label">Rückennummer</span><input id="fNr" type="number" min="1" max="99" value="${esc(c.nr)}" ${editable ? '' : 'disabled'}></label>
+      <label class="fld"><span class="label">Trikot</span><select id="fCol" ${editable ? '' : 'disabled'}>${COLS.map(([k, n]) => `<option value="${k}"${c.col === k ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+      ${gk ? '' : `<label class="fld" style="grid-column:1/-1"><span class="label">Spielertyp (optional)</span><input id="fTyp" value="${esc(c.typ || '')}" placeholder="z. B. Schneller Flügel" ${editable ? '' : 'disabled'}></label>`}</div>`;
+  const stepper = (k, n, v, bv, min, max) => `<div class="fld"><span class="label">${n}</span><div class="step${bv != null && bv !== v ? ' chg' : ''}"><button type="button" data-step="${k}" data-d="-1" ${editable && v > min ? '' : 'disabled'} aria-label="${n} verringern">−</button><output>${v}</output><button type="button" data-step="${k}" data-d="1" ${editable && v < max ? '' : 'disabled'} aria-label="${n} erhöhen">+</button></div></div>`;
+  const values = gk
+    ? `<div class="fields">${c.fields.map((v, i) => stepper('f' + i, 'Feld ' + CORNERS[i], v, base ? base.fields[i] : null, 0, 9)).join('')}${GK_TRAITS.map(([k, n, d]) => stepper(k, n, c[k] == null ? d : c[k], base ? (base[k] == null ? d : base[k]) : null, 0, 4)).join('')}</div>`
+    : `<div class="fields">${STATS.map(([k, n]) => stepper(k, n, c[k], base ? base[k] : null, 0, 9)).join('')}</div>`;
+  const thread = pr && pr.history ? `<ul class="thread">${pr.history.map(h => `<li><b>${PEOPLE[h.by] || 'Claude'}</b> ${ACTION_TXT[h.action] || h.action} <span class="when">${ago(h.at)}</span>${h.note ? `<div class="note">${esc(h.note)}</div>` : ''}</li>`).join('')}</ul>` : '';
+  const cmp = o.compare && base ? `<div class="cmp"><div><div class="label" style="margin-bottom:4px">Original (Spielstand ${esc(STAND)})</div>${cardHtml(base, {})}</div><div><div class="label" style="margin-bottom:4px">Mit Änderungen</div>${cardHtml(c, { base })}</div></div>` : '';
+  return `<div class="phead"><h2>${esc(c.name || (gk ? 'Neuer Torhüter' : 'Neuer Spieler'))}</h2><span class="muted">${esc(clubName(clubOf(c)))}</span>
+      <span class="mio" title="Marktwert aus dem Bewertungssystem">${base && bm != null && m != null && Math.abs(m - bm) >= 0.05 ? `${fmtMio(bm)} → ${fmtMio(m)}` : fmtMio(m)}</span>${pr ? statusPill(pr) + exportPill(pr) : ''}
+      ${base || app.props[pid(c.id)] ? `<button type="button" class="btn" id="copyCard" ${app.canWrite ? '' : 'disabled'} title="Neue Karte mit denselben Werten für ${esc(clubName(app.club))}">Als Kopie neu anlegen</button>` : ''}<button type="button" class="btn" data-close="1">Schließen</button></div>
+    ${locked ? `<div class="lock"><span>VfL-Karten sind handgemacht und deshalb gesperrt.</span><button type="button" class="btn sm" id="unlock">Diese Karte entsperren</button></div>` : ''}
+    ${gk && m == null ? `<p class="muted" style="margin:0;font-size:13.5px">Den Marktwert geänderter oder neuer Torhüter berechnet das Bewertungssystem noch nicht.</p>` : ''}
+    <div class="cols">
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        ${cardHtml(c, { base, edit: editable && !gk, zone: o.zone })}
+        ${!gk && editable ? `<p class="muted" style="margin:0;font-size:13.5px">Tippe auf ein Feld der Karte, um dessen Aktionen zu ändern. Orange umrandet: geändert.</p>` : ''}
+        ${base ? `<button type="button" class="btn sm" id="compare">${o.compare ? 'Vergleich ausblenden' : 'Mit Original vergleichen'}</button>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        ${!gk && o.zone ? zoneEditorHtml(c, o.zone, base, editable) : ''}
+        <section class="box"><h3>Spieler</h3>${fields}</section>
+        <section class="box"><h3>${gk ? 'Felder und Eigenschaften' : 'Werte'}</h3>${values}</section>
+      </div>
+    </div>
+    ${cmp}
+    <section class="box"><h3>Änderungen</h3>${dl.length ? `<ul class="diff">${dl.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : `<p class="muted" style="margin:0">Noch keine Änderung gegenüber dem Spielstand.</p>`}
+      ${warns.length ? `<ul class="warns">${warns.map(x => `<li class="${x.err ? 'err' : ''}">${esc(x.t)}</li>`).join('')}</ul>` : ''}</section>
+    <section class="box"><h3>Vorschlag${pr ? '' : ' senden'}</h3>
+      ${thread}
+      ${app.canWrite ? `<label class="fld"><span class="label">Nachricht an ${PEOPLE[otherOf(app.me)]} (optional)</span><textarea id="note" placeholder="Warum diese Änderung?">${esc(o.note || '')}</textarea></label>
+      <div class="acts">
+        ${dirty && editable ? `<button type="button" class="btn pri" id="send">${pr && liveProp(docId) ? (mine ? 'Änderung senden' : 'Gegenvorschlag senden') : 'Als Vorschlag senden'}</button>` : ''}
+        ${pr && liveProp(docId) && !mine && pr.status === 'offen' && !dirty ? `<button type="button" class="btn pri" data-act="bestaetigt">Bestätigen</button><button type="button" class="btn warn" data-act="abgelehnt">Ablehnen</button>` : ''}
+        ${pr && liveProp(docId) && mine && pr.status === 'offen' && !dirty ? `<button type="button" class="btn warn" data-act="zurueckgezogen">Zurückziehen</button>` : ''}
+        ${pr && !dirty ? `<button type="button" class="btn" data-act="kommentar">Nur Nachricht senden</button>` : ''}
+        ${pr && liveProp(docId) && !dirty && (pr.exportState !== 'angefordert' || pr.exportJson !== pr.json) && (pr.exportState !== 'exportiert' || pr.exportJson !== pr.json) ? `<button type="button" class="btn" data-act="export" title="Fordert den Einbau ins Spiel an, auch ohne Bestätigung">Ins Spiel exportieren</button>` : ''}
+        ${dirty && pr ? `<button type="button" class="btn" id="reset">Meine Änderungen verwerfen</button>` : ''}
+      </div>
+      ${pr && pr.exportState === 'angefordert' ? `<p class="muted" style="margin:0;font-size:13.5px">Export ist angefordert. Sag Claude im Chat „Export“, dann kommt die Änderung ins Spiel.</p>` : ''}
+      ${!pr && !dirty ? `<p class="muted" style="margin:0;font-size:13.5px">Ändere die Karte, dann kannst du sie als Vorschlag an ${PEOPLE[otherOf(app.me)]} senden.</p>` : ''}` : ''}
+    </section>`;
+}
+function zoneEditorHtml(c, zn, base, editable){
+  const r = c.z[zn];
+  const tokBtns = (role, i, t) => `<span class="tok" role="group" aria-label="Token">${['R','G','B'].map(k => `<button type="button" class="${k}${t.includes(k) ? ' on' : ''}" data-tok="${role}|${i}|${k}" ${editable ? '' : 'disabled'} title="${({R:'roter',G:'grüner',B:'blauer'})[k]} Token" aria-pressed="${t.includes(k)}">${k}</button>`).join('')}</span>`;
+  const attRows = r.a.map(([a, g], i) => `<div class="optrow">${i ? '<span class="sep">/</span>' : ''}<select data-opt="a|${i}" aria-label="Aktion ${i ? 'hinter' : 'vor'} dem Schrägstrich" ${editable ? '' : 'disabled'}>${ATT_ACTIONS.concat(ATT_ACTIONS.includes(a) ? [] : [a]).map(x => `<option${x === a ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select>
+      <label class="chk"><input type="checkbox" data-green="${i}" ${g ? 'checked' : ''} ${editable ? '' : 'disabled'}> grün</label>${tokBtns('a', i, optTok(r.a, r.ato, r.at, i))}
+      ${r.a.length === 2 ? `<button type="button" class="btn sm" data-del="a|${i}" ${editable ? '' : 'disabled'}>entfernen</button>` : ''}</div>`).join('');
+  const defRows = r.d.map((a, i) => `<div class="optrow">${i ? '<span class="sep">/</span>' : ''}<select data-opt="d|${i}" aria-label="Abwehraktion ${i ? 'hinter' : 'vor'} dem Schrägstrich" ${editable ? '' : 'disabled'}>${DEF_ACTIONS.concat(DEF_ACTIONS.includes(a) ? [] : [a]).map(x => `<option${x === a ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select>
+      ${tokBtns('d', i, optTok(r.d, r.dto, r.dt, i))}${r.d.length === 2 ? `<button type="button" class="btn sm" data-del="d|${i}" ${editable ? '' : 'disabled'}>entfernen</button>` : ''}</div>`).join('');
+  const bz = base && base.z[zn];
+  return `<section class="box zed"><h3>${zn} · ${ZONE_NAME[zn]}</h3>
+    <div class="zrole"><h4 class="ra">Mit Ball (Angriff)</h4>${attRows}${r.a.length < 2 ? `<div><button type="button" class="btn sm" data-add="a" ${editable ? '' : 'disabled'}>+ Option hinter „/“</button></div>` : ''}</div>
+    <div class="zrole d"><h4 class="rd">Ohne Ball (Abwehr)</h4>${defRows}${r.d.length < 2 ? `<div><button type="button" class="btn sm" data-add="d" ${editable ? '' : 'disabled'}>+ Option hinter „/“</button></div>` : ''}</div>
+    ${bz && zoneKey(bz) !== zoneKey(r) ? `<div class="acts"><span class="muted" style="font-size:13.5px">Original: <span class="ra">${esc(rowTxt(bz,'a'))}</span> · <span class="rd">${esc(rowTxt(bz,'d'))}</span></span><button type="button" class="btn sm" id="zoneReset" ${editable ? '' : 'disabled'}>Zone zurücksetzen</button></div>` : ''}</section>`;
+}
+function clubPanelHtml(){
+  const c = app.open.draft;
+  return `<div class="phead"><h2>${app.open.isNew ? 'Neue Mannschaft' : esc(c.name)}</h2><button type="button" class="btn" data-close="1">Schließen</button></div>
+    <section class="box"><div class="fields">
+      <label class="fld" style="grid-column:1/-1"><span class="label">Name</span><input id="cName" value="${esc(c.name)}" placeholder="z. B. FC Rasenmäher 09"></label>
+      <label class="fld"><span class="label">Kurzname</span><input id="cShort" value="${esc(c.short)}" placeholder="z. B. Rasenmäher"></label>
+      <label class="fld"><span class="label">Stufe</span><select id="cTier">${TIERS.map(([k, n]) => `<option value="${k}"${c.tier === k ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+      <label class="fld"><span class="label">Trikot</span><select id="cCol">${COLS.map(([k, n]) => `<option value="${k}"${c.col === k ? ' selected' : ''}>${n}</option>`).join('')}</select></label></div>
+      <p class="muted" style="margin:0;font-size:13.5px">Die Stufe hat im Spiel erst einmal keine Wirkung. Sie zeigt Claude später, in welchen Turniermarkt die Mannschaft gehört.</p></section>
+    <section class="box"><label class="fld"><span class="label">Nachricht an ${PEOPLE[otherOf(app.me)]} (optional)</span><textarea id="note">${esc(app.open.note || '')}</textarea></label>
+      <div class="acts"><button type="button" class="btn pri" id="sendClub" ${app.canWrite ? '' : 'disabled'}>${app.open.isNew ? 'Mannschaft anlegen' : 'Änderung senden'}</button></div></section>`;
+}
+function itemHtml(id, p, opts){
+  const c = JSON.parse(p.json), b = p.baseJson ? JSON.parse(p.baseJson) : null;
+  const last = (p.history || [])[p.history.length - 1] || {};
+  const changes = p.kind === 'club' ? [`Neue Mannschaft: ${c.name} (${(TIERS.find(t => t[0] === c.tier) || ['', ''])[1]})`] : diffList(b, c);
+  return `<article class="item"><div><h3>${esc(c.name)} <span class="muted" style="font-size:14px;font-family:var(--font-b);font-weight:500">${p.kind === 'club' ? 'Mannschaft' : esc(clubName(p.club))}</span></h3>
+      <div class="sub"><b>${PEOPLE[last.by] || 'Claude'}</b> ${ACTION_TXT[last.action] || ''} · ${ago(p.updatedAt)}</div>
+      ${last.note ? `<div style="font-size:14px;margin-top:4px;white-space:pre-wrap">„${esc(last.note)}“</div>` : ''}
+      <ul>${changes.slice(0, 5).map(t => `<li>${esc(t)}</li>`).join('')}${changes.length > 5 ? `<li class="muted">und ${changes.length - 5} weitere</li>` : ''}</ul></div>
+    <div class="right">${statusPill(p)}${exportPill(p)}<div class="acts"><button type="button" class="btn sm pri" data-openprop="${esc(id)}">Öffnen</button>${opts && opts.seen ? `<button type="button" class="btn sm" data-seen="${esc(id)}">Gesehen</button>` : ''}</div></div></article>`;
+}
+function inboxHtml(){
+  const l = inbox();
+  return l.length ? `<p class="muted" style="margin:16px 0 0">Hier landet alles, was ${PEOPLE[otherOf(app.me)]} vorgeschlagen, geändert oder kommentiert hat. Öffnen, um zu bestätigen, weiter zu ändern oder abzulehnen. „Gesehen“ nimmt einen Eintrag ohne Antwort aus dem Postfach.</p><div class="list">${l.map(([id, p]) => itemHtml(id, p, { seen: true })).join('')}</div>`
+    : `<div class="empty">Dein Postfach ist leer. Sobald ${PEOPLE[otherOf(app.me)]} etwas vorschlägt oder auf deinen Vorschlag antwortet, steht es hier.</div>`;
+}
+function allHtml(){
+  const fl = [['alle','Alle'],['offen','Offen'],['bestaetigt','Bestätigt'],['abgelehnt','Abgelehnt'],['zurueckgezogen','Zurückgezogen']];
+  const l = Object.entries(app.props).filter(([, p]) => app.filter === 'alle' || p.status === app.filter).sort((a, b) => b[1].updatedAt - a[1].updatedAt);
+  return `<div class="filters">${fl.map(([k, n]) => `<button type="button" data-filter="${k}" class="${app.filter === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+    ${l.length ? `<div class="list">${l.map(([id, p]) => itemHtml(id, p)).join('')}</div>` : `<div class="empty">Noch keine Vorschläge${app.filter === 'alle' ? '' : ' mit diesem Status'}. Öffne unter „Mannschaften“ eine Karte und ändere sie.</div>`}`;
+}
+function exportHtml(){
+  const req = Object.entries(app.props).filter(([, p]) => p.exportState === 'angefordert'), done = Object.entries(app.props).filter(([, p]) => p.exportState === 'exportiert').sort((a, b) => b[1].updatedAt - a[1].updatedAt);
+  return `<div class="notice">So kommen Änderungen ins Spiel: Bei einem Vorschlag auf „Ins Spiel exportieren“ tippen (bei neuen Mannschaften oben „Mannschaft ins Spiel exportieren“), dann Claude im Chat „Export“ schreiben. Claude baut alle angeforderten Vorschläge ein und meldet die neue Stand-Nummer.</div>
+    <h3 class="label" style="margin:18px 0 0">Angefordert (${req.length})</h3>${req.length ? `<div class="list">${req.map(([id, p]) => itemHtml(id, p)).join('')}</div>` : `<div class="empty">Gerade ist nichts zum Export angefordert.</div>`}
+    <h3 class="label" style="margin:22px 0 0">Schon im Spiel (${done.length})</h3>${done.length ? `<div class="list">${done.map(([id, p]) => itemHtml(id, p)).join('')}</div>` : `<div class="empty">Noch nichts aus dem Editor im Spiel.</div>`}`;
+}
+
+// ---------- Bedienung ----------
+function openCard(id){ const c = eff(id); if (!c) return; app.open = { kind: 'card', draft: clone(c), zone: null, note: '', compare: false }; render(); }
+function newId(prefix){ return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+function nextNr(k){ const used = new Set(cardsOfClub(k).map(c => c.nr)); for (let n = 2; n < 100; n++) if (!used.has(n)) return n; return 99; }
+function clubCol(k){ return (allClubs().find(c => c.k === k) || {}).col || 'lila'; }
+function newPlayer(copyOf, srcCard){
+  const k = app.club, src = srcCard || (copyOf ? eff(copyOf) : null);
+  const z = {}; for (const zn of ZONES) z[zn] = { a: [['--', 0]], at: '', d: ['--'], dt: '' };
+  if (src && isGkCard(src)) { const g = { ...clone(src), id: newId('k'), name: src.name + ' (Kopie)', nr: nextNr(k), col: clubCol(k), club: k }; if (k === 'vfl') delete g.club; app.open = { kind: 'card', draft: g, note: '', isNew: true }; render(); return; }
+  const c = src ? { ...clone(src), id: newId('e'), name: src.name + ' (Kopie)', nr: nextNr(k), col: clubCol(k), club: k } : { id: newId('e'), name: '', nr: nextNr(k), col: clubCol(k), tempo: 2, praesenz: 2, assist: 1, kopf: 2, schuss: 1, z, club: k };
+  if (k === 'vfl') delete c.club;
+  app.open = { kind: 'card', draft: c, zone: 'ZM', note: '', isNew: true }; render();
+}
+function newGk(){
+  const k = app.club, c = { id: newId('k'), name: '', pos: 'TW', nr: k === 'vfl' ? 30 : 1, col: clubCol(k), fields: [4, 3, 4], dist: 1, ovo: 0, box: 0, aura: 0, club: k };
+  if (k === 'vfl') delete c.club;
+  if (cardsOfClub(k).some(x => x.nr === c.nr)) c.nr = nextNr(k);
+  app.open = { kind: 'card', draft: c, note: '', isNew: true }; render();
+}
+function slug(s){ return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ß/g, 'ss').replace(/[^a-z0-9]+/g, '').slice(0, 10) || 'team'; }
+function setTok(r, role, i, k){
+  const list = role === 'a' ? r.a : r.d, key = role === 'a' ? 'ato' : 'dto', rowKey = role === 'a' ? 'at' : 'dt';
+  const per = list.map((_, j) => optTok(list, r[key], r[rowKey], j));
+  per[i] = per[i].includes(k) ? per[i].replace(k, '') : ['R','G','B'].filter(x => x === k || per[i].includes(x)).join('');
+  if (per.some(Boolean)) { r[key] = per; r[rowKey] = per.join(''); } else { delete r[key]; r[rowKey] = ''; }
+}
+function fixToks(r, role){ const list = role === 'a' ? r.a : r.d, key = role === 'a' ? 'ato' : 'dto', rowKey = role === 'a' ? 'at' : 'dt';
+  if (Array.isArray(r[key])) { r[key] = list.map((_, i) => r[key][i] || ''); if (!r[key].some(Boolean)) { delete r[key]; r[rowKey] = ''; } else r[rowKey] = r[key].join(''); }
+  else if (r[rowKey]) { r[key] = list.map((_, i) => i === list.length - 1 ? r[rowKey] : ''); } }
+
+function bind(){
+  document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { app.tab = b.dataset.tab; render(); });
+  const sw = $('#switchMe'); if (sw) sw.onclick = () => { app.me = null; LS.set('fce-role', null); render(); };
+  document.querySelectorAll('[data-club]').forEach(b => b.onclick = () => { app.club = b.dataset.club; LS.set('fce-club', app.club); app.q = ''; render(); });
+  const q = $('#q'); if (q) q.oninput = () => { app.q = q.value; const pos = q.selectionStart; render(); const q2 = $('#q'); q2.focus(); q2.setSelectionRange(pos, pos); };
+  document.querySelectorAll('[data-card]').forEach(el => { el.onclick = () => openCard(el.dataset.card); el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCard(el.dataset.card); } }; });
+  const np = $('#newPlayer'); if (np) np.onclick = () => newPlayer(null);
+  const ng = $('#newGk'); if (ng) ng.onclick = newGk;
+  const nc = $('#newClub'); if (nc) nc.onclick = () => { app.open = { kind: 'club', isNew: true, draft: { k: '', name: '', short: '', tier: 't5', col: 'gelb' }, note: '' }; render(); };
+  const ec = $('#editClub'); if (ec) ec.onclick = () => { const c = allClubs().find(x => x.k === app.club); app.open = { kind: 'club', isNew: false, draft: { k: c.k, name: c.name, short: c.short, tier: c.tier, col: c.col }, note: '' }; render(); };
+  const et = $('#exportTeam'); if (et) et.onclick = () => exportTeam(app.club);
+  document.querySelectorAll('[data-filter]').forEach(b => b.onclick = () => { app.filter = b.dataset.filter; render(); });
+  document.querySelectorAll('[data-openprop]').forEach(b => b.onclick = () => { const p = app.props[b.dataset.openprop]; if (!p) return; if (p.kind === 'club') { app.tab = 'teams'; app.club = p.target; render(); return; } app.open = { kind: 'card', draft: JSON.parse(p.json), zone: null, note: '', compare: !!p.baseJson }; render(); });
+  document.querySelectorAll('[data-seen]').forEach(b => b.onclick = () => act(b.dataset.seen, 'gesehen'));
+  document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { app.open = null; render(); });
+  if (!app.open) return;
+  const o = app.open, c = o.draft;
+  const note = $('#note'); if (note) note.oninput = () => { o.note = note.value; };
+  if (o.kind === 'club') {
+    const upd = () => { c.name = $('#cName').value; c.short = $('#cShort').value; c.tier = $('#cTier').value; c.col = $('#cCol').value; if (o.isNew) { let k = slug(c.short || c.name), n = 2; const base = k; while (allClubs().some(x => x.k === k)) k = base + (n++); c.k = k; } };
+    ['#cName','#cShort','#cTier','#cCol'].forEach(s => { const el = $(s); el.oninput = upd; el.onchange = upd; });
+    $('#sendClub').onclick = () => { upd(); sendClub(); };
+    return;
+  }
+  const cp = $('#copyCard'); if (cp) cp.onclick = () => { const src = clone(c); app.open = null; newPlayer(null, src); };
+  const ul = $('#unlock'); if (ul) ul.onclick = () => { app.unlocked.add(c.id); render(); };
+  const cmpB = $('#compare'); if (cmpB) cmpB.onclick = () => { o.compare = !o.compare; render(); };
+  const rs = $('#reset'); if (rs) rs.onclick = () => { const p = app.props[pid(c.id)]; o.draft = p ? JSON.parse(p.json) : clone(BASE[c.id]); render(); };
+  document.querySelectorAll('.panel [data-zone]').forEach(el => { const go = () => { o.zone = el.dataset.zone; render(); }; el.onclick = go; el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } }; });
+  const bindText = (sel, key, f) => { const el = $(sel); if (el) el.onchange = () => { c[key] = f ? f(el.value) : el.value; if (key === 'typ' && !c.typ) delete c.typ; render(); }; };
+  bindText('#fName', 'name', v => v.trim()); bindText('#fNr', 'nr', v => parseInt(v, 10) || 0); bindText('#fCol', 'col'); bindText('#fTyp', 'typ', v => v.trim());
+  document.querySelectorAll('.panel [data-step]').forEach(b => b.onclick = () => { const k = b.dataset.step, d = +b.dataset.d; if (k[0] === 'f' && k.length === 2) c.fields[+k[1]] += d; else { const def = (GK_TRAITS.find(t => t[0] === k) || [0, 0, 0])[2]; c[k] = (c[k] == null ? def : c[k]) + d; } render(); });
+  if (o.zone && c.z) {
+    const r = c.z[o.zone];
+    document.querySelectorAll('.panel [data-opt]').forEach(s => s.onchange = () => { const [role, i] = s.dataset.opt.split('|'); if (role === 'a') r.a[+i][0] = s.value; else r.d[+i] = s.value; render(); });
+    document.querySelectorAll('.panel [data-green]').forEach(x => x.onchange = () => { r.a[+x.dataset.green][1] = x.checked ? 1 : 0; render(); });
+    document.querySelectorAll('.panel [data-tok]').forEach(b => b.onclick = () => { const [role, i, k] = b.dataset.tok.split('|'); setTok(r, role, +i, k); render(); });
+    document.querySelectorAll('.panel [data-add]').forEach(b => b.onclick = () => { const role = b.dataset.add; if (role === 'a') r.a.push(['--', 0]); else r.d.push('--'); fixToks(r, role); render(); });
+    document.querySelectorAll('.panel [data-del]').forEach(b => b.onclick = () => { const [role, i] = b.dataset.del.split('|'); const key = role === 'a' ? 'ato' : 'dto';
+      const per = (role === 'a' ? r.a : r.d).map((_, j) => optTok(role === 'a' ? r.a : r.d, r[key], r[role === 'a' ? 'at' : 'dt'], j)); per.splice(+i, 1);
+      (role === 'a' ? r.a : r.d).splice(+i, 1); if (per.some(Boolean)) { r[key] = per; r[role === 'a' ? 'at' : 'dt'] = per.join(''); } else { delete r[key]; r[role === 'a' ? 'at' : 'dt'] = ''; } render(); });
+    const zr = $('#zoneReset'); if (zr) zr.onclick = () => { c.z[o.zone] = clone(BASE[c.id].z[o.zone]); render(); };
+  }
+  const sd = $('#send'); if (sd) sd.onclick = sendCard;
+  document.querySelectorAll('.panel [data-act]').forEach(b => b.onclick = () => act(pid(c.id), b.dataset.act, o.note));
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && app.open) { app.open = null; render(); } });
+
+render();
+connect();
+})();
+</script>
