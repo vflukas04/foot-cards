@@ -35,6 +35,8 @@
     byId = {};
     d.players.forEach(p => (byId[p.id] = p));
     d.gks.forEach(p => (byId[p.id] = p));
+    // Vereine aus den Kartendaten (neue Mannschaften aus dem Editor erscheinen so automatisch)
+    if (Array.isArray(d.clubs)) d.clubs.forEach(c => { CLUB_NAMES[c.k] = c.name; });
   }
   const card = id => byId[id];
   const power = id => { const c = byId[id]; return c.tempo + c.praesenz + c.assist + c.kopf + c.schuss; };
