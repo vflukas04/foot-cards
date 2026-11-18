@@ -8,16 +8,17 @@
   --bg:#eef1ea; --surface:#ffffff; --surface2:#f5f7f2; --line:#cfd6c8; --fg:#1d2a1f; --muted:#5d6b5f;
   --att:#c04f15; --def:#215f9a; --grn:#196b24; --red:#c00000; --hl:#ffd84d;
   --lila:#9b2f9a; --blau:#1f5f99; --board:#17321b; --board-fg:#eaf5e4; --chg:#d4730b;
+  --pdef:#1f5fa8; --pmid:#2b8a3e; --patt:#c62828;
   --font-d:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --font-b:"Barlow","Segoe UI",Arial,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#101611; --surface:#182019; --surface2:#1e281f; --line:#334036; --fg:#e7efe4; --muted:#9bab9d;
   --att:#ff8a4c; --def:#6fb0ff; --grn:#6fd27a; --red:#ff6b6b; --hl:#7a6510;
-  --lila:#d07ad0; --blau:#6fb0ff; --board:#0b170d; --board-fg:#eaf5e4; --chg:#f0a040; color-scheme:dark}}
+  --lila:#d07ad0; --blau:#6fb0ff; --board:#0b170d; --board-fg:#eaf5e4; --chg:#f0a040; --pdef:#3b7fd0; --pmid:#36a050; --patt:#e04848; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#101611; --surface:#182019; --surface2:#1e281f; --line:#334036; --fg:#e7efe4; --muted:#9bab9d;
   --att:#ff8a4c; --def:#6fb0ff; --grn:#6fd27a; --red:#ff6b6b; --hl:#7a6510;
-  --lila:#d07ad0; --blau:#6fb0ff; --board:#0b170d; --board-fg:#eaf5e4; --chg:#f0a040; color-scheme:dark}
+  --lila:#d07ad0; --blau:#6fb0ff; --board:#0b170d; --board-fg:#eaf5e4; --chg:#f0a040; --pdef:#3b7fd0; --pmid:#36a050; --patt:#e04848; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--font-b);font-size:15px;line-height:1.4;margin:0;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
@@ -95,6 +96,17 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .gkfield:last-child{border-right:none}
 .gkfield b{font-family:var(--font-d);font-size:28px;line-height:1}
 .typ{font-size:12px;color:var(--muted);margin-top:-2px}
+/* Positionen: Abwehr blau, Mittelfeld grün, Sturm rot, Tor neutral */
+.poschip{display:inline-block;min-width:26px;padding:0 5px;border-radius:5px;font-family:var(--font-d);font-weight:800;font-size:13px;line-height:18px;text-align:center;color:#fff;vertical-align:2px;margin-right:6px;border:1.5px solid transparent}
+.poschip.p-def{background:var(--pdef)}.poschip.p-mid{background:var(--pmid)}.poschip.p-att{background:var(--patt)}.poschip.p-tw{background:var(--muted)}
+.poschip.guess{background:transparent;border-style:dashed}
+.poschip.guess.p-def{color:var(--pdef);border-color:var(--pdef)}.poschip.guess.p-mid{color:var(--pmid);border-color:var(--pmid)}.poschip.guess.p-att{color:var(--patt);border-color:var(--patt)}
+.poschip.none{background:transparent;color:var(--muted);border-color:var(--line);border-style:dashed}
+.posbar{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin:2px 0 12px;font-size:13.5px}
+.posbar .pb{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:2px 8px 2px 3px}
+.posbar .pb b{font-variant-numeric:tabular-nums}
+.posbar .pb.miss{border-color:var(--red);color:var(--red)}
+.posbar .grp{font-family:var(--font-d);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:12.5px;color:var(--muted);margin-left:6px}
 /* Editor-Markierungen auf der Karte */
 .cc.chg{box-shadow:inset 0 0 0 2px var(--chg)}
 .attrs .chg b,.gktraits .chg b,.gkfield.chg b{color:var(--chg)}
@@ -169,6 +181,7 @@ textarea{min-height:56px;resize:vertical}
 const DATA = /*DATA*/null;
 const VALUE = /*VALUE*/null;
 const STAND = /*STAND*/null;
+const POS_GUESS = /*POS*/null;
 </script>
 <script>
 (function(){
@@ -186,6 +199,13 @@ const GK_TRAITS = [['dist','Distanz',1],['ovo','1 gegen 1',0],['box','Strafraum'
 const CORNERS = ['Links','Mitte','Rechts'];
 const COLS = [['lila','Lila'],['blau','Blau'],['weiss','Weiß (DFB)'],['gelb','Gelb-Schwarz'],['asche','Ziegelrot']];
 const TIERS = [['t5','5. Liga'],['vfl','VfL-Niveau'],['bl','Bundesliga'],['nat','Nationalteam']];
+const POSITIONS = [['IV','Innenverteidiger','def'],['LV','Linker Verteidiger','def'],['RV','Rechter Verteidiger','def'],['6','Sechser','mid'],['ZM','Zentrales Mittelfeld','mid'],['10','Offensives Mittelfeld','mid'],['LF','Linker Flügel','mid'],['RF','Rechter Flügel','mid'],['ST','Stürmer','att']];
+const POS_IDX = Object.fromEntries(POSITIONS.map((p, i) => [p[0], i]));
+const GROUPS = [['def','Abwehr'],['mid','Mittelfeld'],['att','Sturm']];
+// Position eines Feldspielers: eingetragen, sonst Claudes Vorschlag (gestrichelt)
+function posOf(c){ if (isGkCard(c)) return { p: 'TW', guess: false }; if (c.pos) return { p: c.pos, guess: false }; const g = POS_GUESS[c.id]; return g ? { p: g, guess: true } : { p: '', guess: false }; }
+function posChip(c){ const { p, guess } = posOf(c); if (p === 'TW') return ''; if (!p) return `<span class="poschip none" title="Noch keine Position">?</span>`;
+  const d = POSITIONS[POS_IDX[p]]; return `<span class="poschip p-${d[2]}${guess ? ' guess' : ''}" title="${esc(d[1])}${guess ? ' (Vorschlag von Claude, noch nicht bestätigt)' : ''}">${esc(p)}</span>`; }
 const PEOPLE = { simon:'Simon', lukas:'Lukas' };
 const otherOf = r => r === 'simon' ? 'lukas' : 'simon';
 const STATUS_TXT = { offen:'offen', bestaetigt:'bestätigt', abgelehnt:'abgelehnt', zurueckgezogen:'zurückgezogen' };
@@ -272,7 +292,7 @@ function cardHtml(p, o){
   }).join('');
   const st = STATS.map(([k, n]) => `<span class="${k === 'schuss' ? 'sw' : ''}${b && b[k] !== p[k] ? ' chg' : ''}" title="${n}">${n} <b>${esc(p[k])}</b></span>`).join('');
   return `<div class="pcard${o.edit ? ' edit' : ''}"${o.attrs || ''}>
-    <div class="head"><div><div class="pname">${esc(p.name || 'Ohne Namen')}</div>${p.typ ? `<div class="typ">${esc(p.typ)}</div>` : ''}</div>${shirt(p)}</div>
+    <div class="head"><div><div class="pname">${posChip(p)}${esc(p.name || 'Ohne Namen')}</div>${p.typ ? `<div class="typ">${esc(p.typ)}</div>` : ''}</div>${shirt(p)}</div>
     <div class="attrs">${st}</div>
     <div class="cgrid">${cells}</div></div>`;
 }
@@ -290,6 +310,7 @@ function diffList(b, c){
   if (!b) return [isGkCard(c) ? 'Neuer Torhüter' : 'Neuer Spieler'];
   const out = [];
   for (const [k, n] of [['name','Name'],['nr','Nummer'],['col','Trikot'],['typ','Spielertyp']]) if ((b[k] || '') !== (c[k] || '')) out.push(`${n}: ${b[k] || '–'} → ${c[k] || '–'}`);
+  if (!isGkCard(c) && (b.pos || '') !== (c.pos || '')) out.push(`Position: ${b.pos || (POS_GUESS[b.id] ? POS_GUESS[b.id] + ' (Vorschlag)' : '–')} → ${c.pos || '–'}`);
   if (isGkCard(c)) {
     c.fields.forEach((v, i) => { if (b.fields[i] !== v) out.push(`Feld ${CORNERS[i]}: ${b.fields[i]} → ${v}`); });
     for (const [k, n, d] of GK_TRAITS) { const x = b[k] == null ? d : b[k], y = c[k] == null ? d : c[k]; if (x !== y) out.push(`${n}: ${x} → ${y}`); }
@@ -310,6 +331,7 @@ function checks(c, isNew){
     if ((c.dist == null ? 1 : c.dist) < 1) w.push({ t: 'Distanz ist mindestens 1 (Absprache Torhüter).' });
     return w;
   }
+  if (!posOf(c).p) w.push({ t: 'Die Position fehlt.' });
   for (const [k, n] of STATS) if (c[k] < 0 || c[k] > 9) w.push({ t: `${n} ${c[k]} liegt außerhalb von 0 bis 9.` });
   for (const z of ZONES) {
     const r = c.z[z];
@@ -442,7 +464,7 @@ function teamsHtml(){
   const c = clubs.find(x => x.k === app.club) || clubs[0];
   if (c.k !== app.club && app.dbState === 'ok') app.club = c.k;
   const cs = cardsOfClub(c.k).filter(x => !app.q || x.name.toLowerCase().includes(app.q.toLowerCase()));
-  const gks = cs.filter(isGkCard).sort((a, b) => a.nr - b.nr), fs = cs.filter(x => !isGkCard(x)).sort((a, b) => a.nr - b.nr);
+  const gks = cs.filter(isGkCard).sort((a, b) => a.nr - b.nr), fs = cs.filter(x => !isGkCard(x)).sort((a, b) => ((POS_IDX[posOf(a).p] ?? 99) - (POS_IDX[posOf(b).p] ?? 99)) || a.nr - b.nr);
   const chips = clubs.map(k => { const all = cardsOfClub(k.k), open = all.filter(x => { const p = liveProp(pid(x.id)); return p && p.status === 'offen'; }).length;
     return `<button type="button" class="club${k.k === app.club ? ' on' : ''}" data-club="${esc(k.k)}"><span class="shirt ${esc(k.col)}">${all.filter(x => !isGkCard(x)).length}</span><span><b>${esc(k.short || k.name)}</b><small>${esc((TIERS.find(t => t[0] === k.tier) || ['', ''])[1])}${k.base ? '' : ' · neu'}${open ? ` · ${open} offen` : ''}</small></span></button>`; }).join('');
   const slot = p => { const pr = app.props[pid(p.id)], m = mio(p), bm = BASE[p.id] ? mio(BASE[p.id]) : null;
@@ -457,10 +479,17 @@ function teamsHtml(){
       <button type="button" class="btn" id="newPlayer">+ Neuer Spieler</button><button type="button" class="btn" id="newGk">+ Neuer Torhüter</button></div>
     <h3 class="label" style="margin:14px 0 8px">Torhüter</h3>
     ${gks.length ? `<div class="grid">${gks.map(slot).join('')}</div>` : `<div class="empty">Noch kein Torhüter. Lege mit „+ Neuer Torhüter“ den ersten an.</div>`}
-    <h3 class="label" style="margin:20px 0 8px">Feldspieler</h3>
+    <h3 class="label" style="margin:20px 0 8px">Feldspieler</h3>${posBar(cardsOfClub(c.k))}
     ${fs.length ? `<div class="grid">${fs.map(slot).join('')}</div>` : `<div class="empty">${app.q ? 'Kein Spieler passt zur Suche.' : 'Noch keine Feldspieler. Lege mit „+ Neuer Spieler“ den ersten an, leer oder als Kopie.'}</div>`}`;
 }
 
+function posBar(cs){
+  const n = {}; let guess = 0, none = 0; for (const x of cs) { if (isGkCard(x)) continue; const { p, guess: g } = posOf(x); if (!p) { none++; continue; } n[p] = (n[p] || 0) + 1; if (g) guess++; }
+  const tw = cs.filter(isGkCard).length;
+  const pill = (k, label, grp) => `<span class="pb${n[k] ? '' : ' miss'}" title="${esc(label)}"><span class="poschip p-${grp}">${esc(k)}</span><b>${n[k] || 0}</b></span>`;
+  return `<div class="posbar" aria-label="Positionen im Kader"><span class="pb${tw ? '' : ' miss'}"><span class="poschip p-tw">TW</span><b>${tw}</b></span>${GROUPS.map(([g, gn]) => `<span class="grp">${gn}</span>` + POSITIONS.filter(x => x[2] === g).map(x => pill(x[0], x[1], g)).join('')).join('')}
+    ${none ? `<span class="pb miss">ohne Position <b>${none}</b></span>` : ''}${guess ? `<span class="muted">${guess} Position${guess === 1 ? '' : 'en'} nur von Claude vorgeschlagen (gestrichelt)</span>` : ''}</div>`;
+}
 function panelHtml(){
   const o = app.open, c = o.draft, base = BASE[c.id] || null, docId = pid(c.id), pr = app.props[docId];
   const locked = clubOf(c) === 'vfl' && base && !app.unlocked.has(c.id);
@@ -474,6 +503,7 @@ function panelHtml(){
       <label class="fld"><span class="label">Name</span><input id="fName" value="${esc(c.name)}" ${editable ? '' : 'disabled'}></label>
       <label class="fld"><span class="label">Rückennummer</span><input id="fNr" type="number" min="1" max="99" value="${esc(c.nr)}" ${editable ? '' : 'disabled'}></label>
       <label class="fld"><span class="label">Trikot</span><select id="fCol" ${editable ? '' : 'disabled'}>${COLS.map(([k, n]) => `<option value="${k}"${c.col === k ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+      ${gk ? '' : `<label class="fld"><span class="label">Position</span><select id="fPos" ${editable ? '' : 'disabled'}>${posOf(c).p ? '' : '<option value="" selected>bitte wählen</option>'}${POSITIONS.map(([k, n]) => `<option value="${k}"${posOf(c).p === k ? ' selected' : ''}>${k} · ${n}${posOf(c).guess && posOf(c).p === k ? ' (Vorschlag)' : ''}</option>`).join('')}</select>${posOf(c).guess && editable ? `<button type="button" class="btn sm" id="posOk" style="margin-top:4px">Vorschlag ${esc(posOf(c).p)} übernehmen</button>` : ''}</label>`}
       ${gk ? '' : `<label class="fld" style="grid-column:1/-1"><span class="label">Spielertyp (optional)</span><input id="fTyp" value="${esc(c.typ || '')}" placeholder="z. B. Schneller Flügel" ${editable ? '' : 'disabled'}></label>`}</div>`;
   const stepper = (k, n, v, bv, min, max) => `<div class="fld"><span class="label">${n}</span><div class="step${bv != null && bv !== v ? ' chg' : ''}"><button type="button" data-step="${k}" data-d="-1" ${editable && v > min ? '' : 'disabled'} aria-label="${n} verringern">−</button><output>${v}</output><button type="button" data-step="${k}" data-d="1" ${editable && v < max ? '' : 'disabled'} aria-label="${n} erhöhen">+</button></div></div>`;
   const values = gk
@@ -630,6 +660,7 @@ function bind(){
   const rs = $('#reset'); if (rs) rs.onclick = () => { const p = app.props[pid(c.id)]; o.draft = p ? JSON.parse(p.json) : clone(BASE[c.id]); render(); };
   document.querySelectorAll('.panel [data-zone]').forEach(el => { const go = () => { o.zone = el.dataset.zone; render(); }; el.onclick = go; el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } }; });
   const bindText = (sel, key, f) => { const el = $(sel); if (el) el.onchange = () => { c[key] = f ? f(el.value) : el.value; if (key === 'typ' && !c.typ) delete c.typ; render(); }; };
+  bindText('#fPos', 'pos'); const po = $('#posOk'); if (po) po.onclick = () => { c.pos = posOf(c).p; render(); };
   bindText('#fName', 'name', v => v.trim()); bindText('#fNr', 'nr', v => parseInt(v, 10) || 0); bindText('#fCol', 'col'); bindText('#fTyp', 'typ', v => v.trim());
   document.querySelectorAll('.panel [data-step]').forEach(b => b.onclick = () => { const k = b.dataset.step, d = +b.dataset.d; if (k[0] === 'f' && k.length === 2) c.fields[+k[1]] += d; else { const def = (GK_TRAITS.find(t => t[0] === k) || [0, 0, 0])[2]; c[k] = (c[k] == null ? def : c[k]) + d; } render(); });
   if (o.zone && c.z) {

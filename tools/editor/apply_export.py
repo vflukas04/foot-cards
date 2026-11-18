@@ -35,7 +35,7 @@ def row_txt(r, role):
 
 def diff(b, c):
     out = []
-    for k, n in (('name', 'Name'), ('nr', 'Nummer'), ('col', 'Trikot'), ('typ', 'Spielertyp')):
+    for k, n in (('name', 'Name'), ('nr', 'Nummer'), ('col', 'Trikot'), ('typ', 'Spielertyp'), ('pos', 'Position')):
         if (b.get(k) or '') != (c.get(k) or ''):
             out.append(f'{n}: {b.get(k) or "–"} → {c.get(k) or "–"}')
     if 'fields' in c:
