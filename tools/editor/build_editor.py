@@ -92,6 +92,7 @@ value = {'w': weights, 'a': a, 'b': b, 'perGoal': per_goal, 'players': players, 
 src = (Path(__file__).parent / 'editor.src.html').read_text(encoding='utf-8')
 html = (src.replace('/*DATA*/null', json.dumps(cards, ensure_ascii=False, separators=(',', ':')))
            .replace('/*VALUE*/null', json.dumps(value, ensure_ascii=False, separators=(',', ':')))
-           .replace('/*STAND*/null', json.dumps(stand)))
+           .replace('/*STAND*/null', json.dumps(stand))
+           .replace('/*POS*/null', (Path(__file__).parent / 'positionen.json').read_text(encoding='utf-8')))
 out.write_text(html, encoding='utf-8')
 print(f'gebaut: {out} (Stand {stand}, {len(cards["players"])} Feldspieler, {len(cards["gks"])} Torhüter, Eichung a={a:.5f} b={b:.3f}, {per_goal:.2f} Mio./Tor)')
