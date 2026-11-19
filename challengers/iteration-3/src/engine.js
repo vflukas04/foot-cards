@@ -178,8 +178,8 @@
     };
     st.phase = 'att';
     // Die Abwehr zieht ihre Karte gleich zu Beginn und sieht sie schon, während der Angriff überlegt.
-    // Beim Direktschuss nach Vorlage deckt die Abwehr keine Karte auf.
-    if (!st.cur.volley) {
+    // Seit 19.11. (Issue #44) auch beim Direktschuss nach Vorlage: Die Abwehr kann ihn wie jeden Schuss stoppen.
+    {
       const defS = other(att);
       const did = draw(st, defS);
       st.cur.def = { id: did, alt: null, opt: null, pay: null, fresh: false, zone: MIRROR[st.ball], open: !!st.cur.presence };
@@ -304,7 +304,7 @@
       const side = st.cur[ph];
       const t = st.teams[s];
       if (!side.id) { acts.push({ type: 'choose', opt: 0 }); return acts; }
-      if (st.cur.header || (st.cur.through && !st.cur.chase) || st.cur.volley) { acts.push({ type: 'choose', opt: 0 }); return acts; }
+      if (st.cur.header || (st.cur.through && !st.cur.chase) || (st.cur.volley && ph === 'att')) { acts.push({ type: 'choose', opt: 0 }); return acts; }
       // Abwehr nach verlorenem Tempo-Duell (Testregel „überlaufen“): nur gegen Kosten.
       // Option vor „/“: erschöpfen ODER blauer Token · Option hinter „/“: beides · sonst „nicht verteidigen“
       // Testregel „Abwehr unmöglich“: nach verlorenem Tempo-Duell kann die Abwehr gar nicht eingreifen
@@ -489,7 +489,7 @@
         side.gotTok = [];
         side.tired = !!side.id && t.exhausted.includes(side.id);   // spielt außer Atem (für Geräusch und Anzeige)
         if (!side.id) { side.action = '--'; side.green = false; }
-        else if (st.cur.volley) {
+        else if (st.cur.volley && role === 'att') {
           side.action = 'Direktschuss'; side.green = false;
           log(st, `Angriff ${st.names[s]}: ${card(side.id).name} schießt direkt nach der Vorlage (Schusswert ${card(side.id).schuss}).`, role);
         }
@@ -513,10 +513,9 @@
           const how = act.pay === 'exhaust' ? ' (erschöpft)' : act.pay === 'token' ? ' (Token)' : '';
           log(st, `${role === 'def' ? 'Abwehr' : 'Angriff'} ${st.names[s]}: ${card(side.id).name} – ${side.action}${side.green ? ' (grün)' : ''}${how}.`, role);
         }
-        if (role === 'att' && st.cur.volley) {
+        if (role === 'att' && st.cur.volley && !side.id) {
           st.flank = false; st.through = null; st.presence = false; st.volley = false; st.kerze = false;
-          if (!side.id) { setOut(st, 'keep', 'Keine Karte – kein Schuss'); endTurn(st, false); break; }
-          startShot(st, 'Schuss');
+          setOut(st, 'keep', 'Keine Karte – kein Schuss'); endTurn(st, false); break;
         } else if (role === 'att') {
           if (!st.cur.def) {
             const defS = other(st.poss);
@@ -638,6 +637,12 @@
         setOut(st, 'yellow', `Foul: Gelbe Karte für ${card(d.id).name}`);
       }
       return endTurn(st, false);
+    }
+    // Direktschuss nach Vorlage: wie ein Schuss zu verteidigen (Block, Schuss blocken, Ballgewinn; Gelb s. o.)
+    if (act === 'Direktschuss') {
+      if (da === 'Block' || da === 'Schuss blocken') return change(st, 'Direktschuss geblockt');
+      if (da === 'Ballgewinn') return change(st, 'Ballgewinn');
+      return startShot(st, 'Schuss');
     }
     // 3. Ball sichern
     if (act === 'Ball sichern') { log(st, 'Ball gesichert.', 'ok'); setOut(st, 'keep', 'Ball gesichert'); return endTurn(st, false); }
@@ -838,7 +843,7 @@
     const a = c.att, d = c.def, out = c.out || { k: 'keep' }, k = out.k;
     const aId = a && a.id, dId = d && d.id;
     if (aId) psOf(st, aId).n++;
-    if (dId && !c.volley) psOf(st, dId).n++;
+    if (dId) psOf(st, dId).n++;
     const aa = a ? (a.eff || a.action || '--') : '--', da = d ? (d.action || '--') : '--';
     const active = x => x && !/^--/.test(x) && x !== 'Präsenz-Duell';
     const sh = c.shotDone ? c.shot : null;
@@ -1298,6 +1303,7 @@
 
   // ---------- Bot ----------
   const DEF_BEATS = (da, aa, green) => {
+    if (aa === 'Direktschuss') aa = 'Schuss';
     if (aa === 'Ball sichern') return false;
     if (da === 'Gelb') return true;
     if (aa === 'Steilpass') return (da === 'Passabfangen' || da === 'Ballgewinn') && !green;
