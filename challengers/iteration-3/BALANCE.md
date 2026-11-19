@@ -239,3 +239,9 @@ David Blacha (18), Zone Mitte, Angriff: Querpass (grün) erzeugt keinen grünen 
 ## 05.11.2026: Turnier – Draft-Token für den Beutezug-Verlierer
 
 Wer im Beutezug eine Karte abgeben muss, bekommt zusätzlich zur zufälligen Ersatzkarte einen zweiten Draft-Token für die nächste Station (2 statt 1, verfällt wie gehabt am Ende der Station). Bei Unentschieden gibt es keinen Beutezug und keinen Extra-Token.
+
+## 19.11.2026: Direktschuss nach Vorlage ist blockbar (Issue #44)
+
+Entscheidung Simon auf Lukas' Frage: Nach einer Vorlage deckt die Abwehr wie gewohnt eine Karte auf. Der Direktschuss wird wie ein Schuss verteidigt: Block und Schuss blocken blocken ihn, Ballgewinn erobert den Ball, Gelb ist ein Foul (Angriff bleibt am Ball). Bisher (seit Iteration 2) deckte die Abwehr keine Karte auf.
+
+Simulation Draft, 300 Spiele: etwa 3,7 Direktschüsse pro Spiel, davon werden rund 16 % gestoppt. Tore pro Spiel bleiben bei etwa 5,6.

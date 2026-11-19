@@ -658,7 +658,7 @@ button.gv-ar:hover{background:var(--att);color:#fff}
       <li>Abwehr: Passabfangen schlägt Querpass, Rückpass, Steilpass, Flanke, Vorlage, Diagonalball und <b>neu in Version 3 auch „--“, aber keine grünen Pässe</b>. Tackling schlägt Dribbling und „--“. Block schlägt Schuss und Kopfball, Schuss blocken den Schuss und <b>neu in Version 3 auch „--“</b>. Ballgewinn schlägt alles außer grüne Aktionen. Ball sichern ist nicht zu erobern.</li>
       <li>Steilpass: Spielt die Abwehr Passabfangen oder Ballgewinn (nicht gegen grüne Pässe), ist der Ball weg. Sonst folgt im nächsten Zug sofort ein Tempo-Duell: Beide decken ihre nächste Karte auf, es zählt das Tempo (bei Gleichstand die Präsenz). Gewinnt die Abwehr, erobert sie den Ball in der Zielzone. Gleichstand: Ball bleibt, ohne Bewegung. <b>Neu in Version 3:</b> Gewinnt der Angreifer, kommt der Ball in der Zone davor an, und <b>dieselbe Karte macht sofort ihre Aktion</b> (keine neue Karte). <b>Testregel „Abwehr überlaufen“</b> (im Spielmodus umschaltbar): Die Abwehr kann nur eingreifen, wenn sie bezahlt, Option vor „/“ Erschöpfen oder blauer Token, Option hinter „/“ beides; sonst gelingt die Aktion (eigene Fehler wie Fehlpass ausgenommen). Weitere Testregeln: „Abwehr normal“ (Abwehr wählt ganz normal) und „Abwehr unmöglich“ (Abwehr kann gar nicht eingreifen, die Aktion gelingt immer, eigene Fehler ausgenommen). Sprint: Tempo-Duell der Karten, die gerade gespielt werden, danach wie Dribbling.</li>
       <li>„--“ gegen „--“: Der Ball ist frei. Im nächsten Zug decken beide sofort eine neue Karte auf, es zählt deren Präsenz (bei Gleichstand das Tempo, ist auch das gleich, bleibt der Ballführende am Ball). <b>Neu in Version 3:</b> Der Gewinner spielt mit seiner Karte ganz normal den Angriff, auch wenn es vorher die Abwehr war, und sieht dabei schon die Karte des Verlierers. Der Verlierer reagiert mit seiner Abwehraktion. Erst danach ist der Zug vorbei. Für Halbzeit und Abpfiff zählt ein Ballbesitzwechsel, wenn der Ball am Ende des Zuges bei der anderen Mannschaft ist als vor dem Duell.</li>
-      <li>Vorlage: Kommt sie an, schießt im nächsten Zug die nächste Karte des Angreifers direkt (Schusswert plus Assist des Vorlagengebers). Die Abwehr deckt dabei keine Karte auf.</li>
+      <li>Vorlage: Kommt sie an, schießt im nächsten Zug die nächste Karte des Angreifers direkt (Schusswert plus Assist des Vorlagengebers). <b>Seit 19.11.:</b> Die Abwehr deckt dabei wie gewohnt eine Karte auf und kann den Direktschuss wie jeden Schuss stoppen (Block, Schuss blocken, Ballgewinn; Gelb ist ein Foul).</li>
       <li>Gelbe Karte: Foul, der Angreifer bleibt am Ball, seine Aktion wird nicht ausgeführt. Zweite Gelbe: Der Spieler ist raus. „Gelb OOO“ bringt alle drei Token. Fehlpass: Ball sofort weg.</li>
       <li>Querpass seitlich, aber nicht ins ZO. Dribbling vorwärts, seitlich oder auf der Stelle, Steilpass direkt vorwärts, Rückpass direkt rückwärts, Diagonalball auf den anderen Flügel nach vorn, Flanke und Vorlage nach ZO.</li>
       <li>Nach einer gelungenen Flanke folgt sofort ein Kopfballduell: Beide decken auf, verglichen werden nur die Kopfballwerte (bei Gleichstand die Präsenz). Die Aktionen auf den Karten werden nicht ausgeführt. <b>Kopfbälle gibt es nur so</b>: Eine eigene Aktion „Kopfball“ oder „Kopfball blocken“ auf der Karte gibt es nicht (Stand 03.11.). Gewinnt der Angreifer, folgt der Kopfball aufs Tor mit seinem Kopfballwert plus Assist, sonst klärt die Abwehr und bekommt den Ball.</li>
@@ -1887,13 +1887,13 @@ function scheduleAuto(st){
   }, (sp ? 2300 : 1700) * SPEEDS[speed()]);
 }
 // Sondersituation, in der die Karten nur verglichen werden (nach gewonnenem Tempo-Duell spielt man wieder normal)
-const special = c => !!(c && (c.header || (c.through && !c.chase) || c.volley));
+const special = c => !!(c && (c.header || (c.through && !c.chase) || (c.volley && !(c.att && c.att.action))));   // Direktschuss: nur der Angriff ist festgelegt, die Abwehr wählt normal
 const chasePay = st => !!(st.cur && st.cur.chase && (!st.opts || !['free','none'].includes(st.opts.chaseRule)));
 const chaseNone = st => !!(st.cur && st.cur.chase && st.opts && st.opts.chaseRule === 'none');
 function choiceLabel(st, ph, x){
   const c = st.cur, side = c[ph];
   if (!side.id) return { a: 'Keine Karte mehr', g: 0 };
-  if (c.volley) return { a: 'Direktschuss', g: 0 };
+  if (c.volley && ph === 'att') return { a: 'Direktschuss', g: 0 };
   if (c.through && !c.chase) return { a: ph==='att' ? 'Dem Steilpass hinterherlaufen' : 'Hinterherlaufen', g: 0 };
   if (c.header) return { a: ph==='att' ? 'Kopfball' : 'Zum Kopfball hochspringen', g: 0 };
   return FC.zoneRow(side.id, side.zone, ph).opts[x.opt];
@@ -1955,7 +1955,7 @@ function situationHtml(st){
     const pts = sh ? sh.schuss + (as ? as.assist : 0) : null;
     const gk = card(st.teams[defS].gk);
     const vs = `<div class="sit-vs"><div class="sit-s a"><small>Schütze · ${esc(sh?sh.name:'keine Karte')}</small><b>${pts==null?'–':pts}</b><span class="tb">Schuss ${sh?sh.schuss:'–'}${as?` + Assist ${as.assist} (${esc(as.name)})`:''}</span></div><div class="sit-x">→</div><div class="sit-s d"><small>Keeper · ${esc(gk.name)}</small><b>${gk.fields.join('·')}</b><span class="tb">Felder links · Mitte · rechts</span></div></div>`;
-    return sitHtml('Direktschuss', 'nach Vorlage', vs, 'Die nächste Karte schießt direkt. Die Abwehr deckt keine Karte auf.', 'Kommt eine Vorlage an, schießt im nächsten Zug die nächste Karte des Angreifers direkt aufs Tor: Schusswert plus Assist des Vorlagengebers. Danach werden die Punkte wie bei jedem Torschuss auf die Keeperfelder verteilt.');
+    return sitHtml('Direktschuss', 'nach Vorlage', vs, 'Die nächste Karte schießt direkt. Die Abwehr kann ihn wie jeden Schuss stoppen: Block, Schuss blocken oder Ballgewinn.', 'Kommt eine Vorlage an, schießt im nächsten Zug die nächste Karte des Angreifers direkt aufs Tor: Schusswert plus Assist des Vorlagengebers. Danach werden die Punkte wie bei jedem Torschuss auf die Keeperfelder verteilt.');
   }
   if (c.through && c.chase && c.duel) {
     return sitHtml('Steilpass kommt an', `Tempo-Duell gewonnen · Zone ${st.ball}`, vsHtml(c.duel, a&&a.id, d&&d.id, attS, defS),
