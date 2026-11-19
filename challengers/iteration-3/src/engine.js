@@ -60,7 +60,7 @@
   const lineupOf = st => st.lineupSize || LINEUP;
   const halfOf = st => st.halfLen || 45;
   // Im Turnier hat jede Mannschaft ihren eigenen Kader: Bank = Kader minus Aufstellung
-  const benchOf = (st, s) => Math.max(0, (s && st.mode === 'tour' ? st.teams[s].squad.length : squadOf(st)) - lineupOf(st));
+  const benchOf = (st, s) => Math.max(0, (s && (st.mode === 'tour' || st.mode === 'mwt') ? st.teams[s].squad.length : squadOf(st)) - lineupOf(st));
   function setOut(st, k, text, extra) { if (st.cur) st.cur.out = Object.assign({ k, t: text }, st.cur.duel && st.cur.duel.kind !== 'Präsenz' ? { duel: st.cur.duel } : {}, extra || {}); }
 
   function newGame(opts) {
@@ -82,6 +82,7 @@
       return shuffle(pool.length >= 2 ? pool : DATA.gks.map(g => g.id));
     };
     if (opts.mode === 'tour') return tourNew(st, opts);
+    if (opts.mode === 'mwt') return mwtNew(st, opts);
     if (opts.mode === 'club') {
       // Vereinsduell: Die Scouts kennen den Kader des Gegners (Schalke oder Deutschland; 13 zufällige Karten, Startelf und Bank stehen fest).
       // Danach wählt Heim seine 13 aus allen VfL-Karten (Phase „scout“), dann Name und Bank wie gewohnt.
@@ -262,6 +263,8 @@
       case 'scout': return 'A';
       case 'tdraft': return st.tour.toMove;
       case 'tsteal': return st.tour.steal.by;
+      case 'mmarket': return st.mwt.step === 'sell' ? other(st.mwt.buyer) : st.mwt.step === 'name' ? st.mwt.active : st.mwt.buyer;
+      case 'mfinal': return !st.mwt.ready.A ? 'A' : !st.mwt.ready.B ? 'B' : null;
       case 'setup': case 'half': return !st.ready.A ? 'A' : !st.ready.B ? 'B' : null;
       case 'def': case 'def_pick2': case 'gk': return other(st.poss);
       case 'att': case 'move': case 'dist': case 'shot': return st.poss;
@@ -290,6 +293,9 @@
     if (st.phase === 'tdraft') return tourPicks(st, s);
     if (st.phase === 'tsteal') { const T = st.tour; return T.steal.by === s ? [...T.col[T.steal.from].f, ...T.col[T.steal.from].g].map(id => ({ type: 'tsteal', id })) : []; }
     if (st.phase === 'over' && st.tour) return [{ type: 'tnext' }];
+    if (st.phase === 'mmarket') return mwtLegal(st, s);
+    if (st.phase === 'mfinal') return st.mwt.ready[s] ? [] : [{ type: 'mfinal' }];
+    if (st.phase === 'over' && st.mwt) return [{ type: 'mnext' }];
     if (actor(st) !== s) return [];
     const acts = [];
     const ph = st.phase;
@@ -351,6 +357,8 @@
         && (act.gk == null || (t.gks || []).includes(act.gk));
     }
     if (act.type === 'tnext') return st.phase === 'over' && !!st.tour;
+    if (act.type === 'mnext') return st.phase === 'over' && !!st.mwt;
+    if (act.type === 'mfinal') return st.phase === 'mfinal' && mwtFinalOk(st, s, act);
     if (act.type === 'squad') {
       const ids = act.ids;
       return Array.isArray(ids) && ids.length === squadOf(st) && new Set(ids).size === ids.length && ids.every(id => (st.vflPool || []).includes(id));
@@ -365,7 +373,7 @@
     return false;
   }
   function apply(st0, s, act) {
-    const free = act && (act.type === 'team' || act.type === 'ready' || act.type === 'squad' || act.type === 'tnext');
+    const free = act && (act.type === 'team' || act.type === 'ready' || act.type === 'squad' || act.type === 'tnext' || act.type === 'mnext' || act.type === 'mfinal');
     if (free ? !validFree(st0, s, act) : !legal(st0, s).some(a => sameAct(a, act))) throw new Error('Unzulässiger Zug: ' + JSON.stringify(act));
     const st = structuredClone(st0);
     st.seq++;
@@ -400,6 +408,9 @@
       }
       case 'tsteal': tourSteal(st, s, act.id); break;
       case 'tnext': tourNext(st); break;
+      case 'mstack': case 'mbuy': case 'msell': mwtApply(st, s, act); break;
+      case 'mnext': mwtNext(st); break;
+      case 'mfinal': mwtFinalPick(st, s, act); break;
       case 'squad': {
         // Vereinsduell: Heim hat seine 13 gewählt; Schalke steht schon
         st.teams.A.squad = act.ids.slice();
@@ -413,6 +424,7 @@
         t.name = String(act.name || '').trim().slice(0, 24) || (s === 'A' ? 'Heim' : 'Gast');
         if (act.gk) t.gk = act.gk;
         if (st.tour) st.tour.names[s] = t.name;
+        if (st.mwt) st.mwt.names[s] = t.name;
         st.names[s] = t.name;
         t.bench = act.bench.slice();
         t.lineup = t.squad.filter(id => !t.bench.includes(id));
@@ -911,13 +923,15 @@
       st.phase = 'half'; st.cur = null; st.ready = { A: false, B: false };
       st.halfStats = structuredClone(st.stats); st.halfPs = structuredClone(st.ps);
       return;
-    } else if (st.half === 2 && st.minute >= 2 * H + total && turnover) {
+    // Sicherung: Bleibt der Ball endlos bei einer Mannschaft (z. B. nur „--“ gegen „--“ bei kleinen Kadern), wird 10 Minuten nach der Mindest-Nachspielzeit abgepfiffen
+    } else if (st.half === 2 && st.minute >= 2 * H + total && (turnover || st.minute >= 2 * H + total + 10)) {
       st.phase = 'over'; st.cur = null;
       const r = st.goals.A === st.goals.B ? 'Unentschieden' : `Sieg ${st.names[st.goals.A > st.goals.B ? 'A' : 'B']}`;
       st.result = r;
       if (st.prev) st.prev.whistle = 'Abpfiff';
       log(st, `Abpfiff (${st.minute}. Minute). Endstand ${st.goals.A}:${st.goals.B}. ${r}.`, 'whistle');
       if (st.tour) tourMatchOver(st);
+      if (st.mwt) mwtMatchOver(st);
       return;
     }
     // Reguläre Spielzeit vorbei, das Spiel läuft weiter: Nachspielzeit (nach Toren länger, Abpfiff erst bei Ballwechsel)
@@ -1044,6 +1058,244 @@
     tourStation(st, T.station + 1, o, o);   // Verlierer zieht zuerst und bekommt einen zusätzlichen Draft-Token
   }
 
+  // ---------- Marktwert-Turnier (Lukas, Regeln: challengers/iteration-3/TURNIER-MW.md) ----------
+  // Drei Vorrunden mit jeweils neuem Kader (4, 6, 8 Feldspieler plus Torhüter), Kauf zum Marktwert, Finale 11 gegen 11 aus allen drei Kadern.
+  // Geld in Zehntel-Millionen (ganze Zahlen), damit nichts durch Rundung verloren geht.
+  let MWV = {};
+  function setMarketValues(m) { MWV = {}; if (m) for (const [id, v] of Object.entries(m)) MWV[id] = Math.round(v * 10); }
+  const mwOf = id => MWV[id] != null ? MWV[id] : 50;
+  const MWT_GROUPS = { t5: ['flu', 'asche'], ver: ['vfl', 's04'], nat: ['dfb', 'dfbf'] };
+  const MWT_GROUP_NAME = { t5: 'Fünftligisten', ver: 'Vereinsstapel', nat: 'Nationalmannschaften' };
+  // budget: Geld pro Spieler in dieser Runde; bonus: Siegerbonus für die nächste Runde (nach Runde 3 für das Finale)
+  const MWT_ROUNDS = [
+    { group: 't5', field: 4, budget: 180, bonus: 15 },
+    { group: 'ver', field: 6, budget: 480, bonus: 23 },
+    { group: 'nat', field: 8, budget: 800, bonus: 20 },
+  ];
+  const MWT_FINAL = { field: 10, budget: 850 };
+  const MWT_OPEN = 3, MWT_REVEAL = 3;
+  const mwtGroupOf = id => { const c = (byId[id] && byId[id].club) || 'vfl'; return Object.keys(MWT_GROUPS).find(g => MWT_GROUPS[g].includes(c)) || null; };
+  const mwtIds = (g, kind) => (kind === 'g' ? DATA.gks : DATA.players).filter(p => mwtGroupOf(p.id) === g).map(p => p.id);
+  const mwtOwned = M => new Set(M.teams.flatMap(t => [...t.A.f, ...t.B.f, t.A.g, t.B.g].filter(Boolean)));
+  function mwtNew(st, opts) {
+    st.mode = 'mwt'; st.opts = { mode: 'mwt', chaseRule: normChase(opts.chaseRule), botLevel: opts.botLevel || 'normal' };
+    st.mwt = { round: 0, final: false, names: { A: st.names.A, B: st.names.B }, teams: [], results: [], budget: { A: 0, B: 0 }, bonus: { A: 0, B: 0 },
+      decks: { t5: [], ver: [], nat: [] }, display: [], gkDisplay: [], active: 'A', start: 'A', step: 'name', buyer: 'A', need: 1, noRebuy: [], sellK: 0,
+      pick: { A: null, B: null }, ready: { A: false, B: false }, last: null, winner: null };
+    st.teams.A.gk = st.teams.B.gk = null;
+    mwtRound(st, 0, Math.random() < .5 ? 'A' : 'B');
+    return st;
+  }
+  function mwtRound(st, r, start) {
+    const M = st.mwt, R = MWT_ROUNDS[r];
+    M.round = r; M.start = M.active = start; M.teams[r] = { A: { f: [], g: null }, B: { f: [], g: null } };
+    // Restgeld verfällt, Schulden (nur nach einem Notkauf) werden abgezogen
+    for (const s of ['A', 'B']) { M.budget[s] = R.budget + (M.bonus[s] || 0) + (r > 0 ? Math.min(0, M.budget[s]) : 0); M.bonus[s] = 0; }
+    const own = mwtOwned(M);
+    for (const g of Object.keys(MWT_GROUPS)) M.decks[g] = shuffle(mwtIds(g, 'f').filter(id => !own.has(id)));
+    M.display = M.decks[R.group].splice(0, MWT_OPEN);
+    M.gkDisplay = mwtIds(R.group, 'g').filter(id => !own.has(id)).sort((x, y) => mwOf(y) - mwOf(x));
+    M.step = 'name'; M.buyer = start; M.need = 1; M.noRebuy = []; M.sellK = 0; M.last = null;
+    st.phase = 'mmarket'; st.cur = null; mwtClearBoard(st);
+    log(st, `Marktwert-Turnier, Runde ${r + 1}: je ${R.field} Feldspieler und ein Torhüter, Budget ${mwtFmt(M.budget.A)} / ${mwtFmt(M.budget.B)}. Offen liegen 3 ${MWT_GROUP_NAME[R.group]}. ${st.names[start]} nennt zuerst einen Stapel.`, 'info');
+  }
+  // Anzeigetafel zwischen den Spielen leeren (sonst steht dort noch das letzte Ergebnis)
+  function mwtClearBoard(st) { st.goals = { A: 0, B: 0 }; st.minute = 0; st.half = 1; st.stoppage = false; st.finalPhase = false; st.prev = null; }
+  const mwtFmt = v => (v / 10).toFixed(1).replace('.', ',') + ' Mio.';
+  const mwtTeam = (st, s) => st.mwt.teams[st.mwt.round][s];
+  const mwtSlots = (st, s) => { const t = mwtTeam(st, s); return { f: MWT_ROUNDS[st.mwt.round].field - t.f.length, g: t.g ? 0 : 1 }; };
+  // Kann s noch m Käufe machen (billigste Kombination, Platz im Kader beachtet)? excl: Karten, die s gerade verkauft hat
+  function mwtCheapest(st, s, m, budget, extra) {
+    const M = st.mwt, sl = mwtSlots(st, s);
+    if (extra) { sl.f -= extra.f || 0; sl.g -= extra.g || 0; }
+    if (m <= 0) return 0;
+    const ex = new Set([...(M.noRebuy || []), ...((extra && extra.gone) || [])]);
+    const fs = M.display.filter(id => !ex.has(id)).map(mwOf).sort((a, b) => a - b);
+    const gs = M.gkDisplay.filter(id => !ex.has(id)).map(mwOf).sort((a, b) => a - b);
+    let best = Infinity;
+    if (m <= sl.f && fs.length >= m) best = Math.min(best, fs.slice(0, m).reduce((a, b) => a + b, 0));
+    if (sl.g > 0 && gs.length && m - 1 <= sl.f && fs.length >= m - 1) best = Math.min(best, gs[0] + fs.slice(0, m - 1).reduce((a, b) => a + b, 0));
+    return best;
+  }
+  const mwtFeasible = (st, s, m, budget, extra) => mwtCheapest(st, s, m, budget, extra) <= budget;
+  function mwtBuys(st, s) {
+    const M = st.mwt, sl = mwtSlots(st, s), out = [];
+    const ok = (id, isG) => {
+      const c = mwOf(id);
+      if (c > M.budget[s] || (M.noRebuy || []).includes(id)) return false;
+      return mwtFeasible(st, s, M.need - 1, M.budget[s] - c, { f: isG ? 0 : 1, g: isG ? 1 : 0, gone: [id] });
+    };
+    if (sl.f > 0) M.display.forEach(id => ok(id, false) && out.push({ type: 'mbuy', id }));
+    if (sl.g > 0) M.gkDisplay.forEach(id => ok(id, true) && out.push({ type: 'mbuy', id }));
+    return out;
+  }
+  // Zwangsverkauf: kleinste Zahl k von Feldspielern, deren Verkauf reicht; der Gegner wählt unter allen ausreichenden k-Gruppen
+  function mwtSellOptions(st, s) {
+    const M = st.mwt, t = mwtTeam(st, s), f = t.f;
+    const combos = (arr, k, i = 0, cur = [], out = []) => { if (cur.length === k) { out.push(cur.slice()); return out; } for (let j = i; j < arr.length; j++) { cur.push(arr[j]); combos(arr, k, j + 1, cur, out); cur.pop(); } return out; };
+    for (let k = 1; k <= f.length; k++) {
+      const good = combos(f, k).filter(S => {
+        const gain = S.reduce((a, id) => a + mwOf(id), 0);
+        const save = { d: M.display, nr: M.noRebuy, f: t.f };
+        M.display = [...M.display, ...S]; M.noRebuy = [...S]; t.f = f.filter(x => !S.includes(x));
+        const okk = mwtFeasible(st, s, k + 1, M.budget[s] + gain);
+        M.display = save.d; M.noRebuy = save.nr; t.f = save.f;
+        return okk;
+      });
+      if (good.length) return { k, opts: good.map(S => S.slice().sort().join(',')) };
+    }
+    return { k: 0, opts: [] };
+  }
+  // Käufer an der Reihe: kann er nichts bezahlen, beginnt der Zwangsverkauf (der Gegner wählt)
+  function mwtEnterBuy(st, s, need) {
+    const M = st.mwt; M.buyer = s; M.need = need; M.step = 'buy';
+    const sl = mwtSlots(st, s);
+    if (sl.f + sl.g <= 0) { mwtAfterBuyer(st); return; }
+    if (mwtBuys(st, s).length) return;
+    const so = mwtSellOptions(st, s);
+    if (so.k) { M.step = 'sell'; M.sellK = so.k; M.sellOpts = so.opts; log(st, `${st.names[s]} kann sich keine Karte leisten: Zwangsverkauf. ${st.names[other(s)]} wählt ${so.k === 1 ? 'einen Spieler' : so.k + ' Spieler'} aus, die zum Marktwert auf den Markt gehen.`, 'info'); return; }
+    // Kein Torhüter bezahlbar, auch nicht nach Verkäufen: Platzwart Paule (billigster Torhüter) springt ein, für höchstens 0,5 Mio.
+    if (sl.g > 0) {
+      const paule = DATA.gks.map(g => g.id).sort((x, y) => mwOf(x) - mwOf(y))[0], c = Math.min(mwOf(paule), Math.max(0, M.budget[s]));
+      const t = mwtTeam(st, s); t.g = paule; M.budget[s] -= c; M.gkDisplay = M.gkDisplay.filter(x => x !== paule); M.last = { kind: 'paule', s, id: paule };
+      log(st, `${st.names[s]} kann sich keinen Torhüter leisten: ${card(paule).name} springt ein (${mwtFmt(c)}).`, 'info');
+      M.need--; if (M.need > 0) mwtEnterBuy(st, s, M.need); else mwtAfterBuyer(st);
+      return;
+    }
+    // Notfall (sollte mit den Budgets nicht vorkommen): billigste passende Karte trotzdem, Budget wird negativ
+    const cand = [...(sl.f > 0 ? M.display : []), ...(sl.g > 0 ? M.gkDisplay : [])].sort((x, y) => mwOf(x) - mwOf(y));
+    if (cand.length) { log(st, `${st.names[s]} kann auch mit Verkäufen nichts bezahlen und kauft ${card(cand[0]).name} auf Schulden. Das Minus wird vom nächsten Budget abgezogen.`, 'info'); mwtDoBuy(st, s, cand[0]); }
+    else mwtAfterBuyer(st);
+  }
+  function mwtDoBuy(st, s, id) {
+    const M = st.mwt, t = mwtTeam(st, s), g = isGk(id);
+    M.budget[s] -= mwOf(id);
+    if (g) { t.g = id; M.gkDisplay = M.gkDisplay.filter(x => x !== id); } else { t.f.push(id); M.display = M.display.filter(x => x !== id); }
+    M.last = { kind: 'buy', s, id };
+    log(st, `${st.names[s]} kauft ${card(id).name} für ${mwtFmt(mwOf(id))} (Rest ${mwtFmt(M.budget[s])}).`, 'info');
+    M.need--;
+    if (M.need > 0) { if (!mwtBuys(st, s).length) mwtEnterBuy(st, s, M.need); return; }
+    mwtAfterBuyer(st);
+  }
+  function mwtAfterBuyer(st) {
+    const M = st.mwt;
+    M.noRebuy = [];
+    if (M.buyer === M.active) { mwtEnterBuy(st, other(M.active), 1); return; }
+    // Zugende: Älteste Karten kommen unter ihren Stapel, bis 3 offen liegen
+    const drop = M.display.slice(0, Math.max(0, M.display.length - MWT_OPEN));
+    M.display = M.display.slice(drop.length);
+    drop.forEach(id => { const g = mwtGroupOf(id); if (g) M.decks[g].push(id); });
+    if (drop.length) log(st, `Vom Markt (unter den Stapel): ${drop.map(id => card(id).name).join(', ')}.`, 'info');
+    const full = s => { const sl = mwtSlots(st, s); return sl.f + sl.g <= 0; };
+    if (full('A') && full('B')) { mwtStartMatch(st); return; }
+    M.active = other(M.active); M.step = 'name'; M.buyer = M.active; M.need = 1;
+  }
+  function mwtLegal(st, s) {
+    const M = st.mwt;
+    if (M.step === 'name') return M.active === s ? Object.keys(MWT_GROUPS).filter(g => M.decks[g].length).map(g => ({ type: 'mstack', id: g })) : [];
+    if (M.step === 'buy') return M.buyer === s ? mwtBuys(st, s) : [];
+    if (M.step === 'sell') return other(M.buyer) === s ? M.sellOpts.map(k => ({ type: 'msell', id: k })) : [];
+    return [];
+  }
+  function mwtApply(st, s, act) {
+    const M = st.mwt;
+    if (act.type === 'mstack') {
+      const shown = M.decks[act.id].splice(0, MWT_REVEAL);
+      M.display.push(...shown); M.last = { kind: 'reveal', s, g: act.id, ids: shown };
+      log(st, `${st.names[s]} nennt ${MWT_GROUP_NAME[act.id]}: ${shown.map(id => card(id).name + ' (' + mwtFmt(mwOf(id)) + ')').join(', ')}.`, 'info');
+      mwtEnterBuy(st, s, 1);
+    } else if (act.type === 'mbuy') mwtDoBuy(st, s, act.id);
+    else if (act.type === 'msell') {
+      const v = M.buyer, t = mwtTeam(st, v), ids = act.id.split(','), gain = ids.reduce((a, id) => a + mwOf(id), 0);
+      t.f = t.f.filter(x => !ids.includes(x)); M.budget[v] += gain; M.display.push(...ids); M.noRebuy = ids.slice();
+      M.last = { kind: 'sell', s, v, ids };
+      log(st, `Zwangsverkauf: ${st.names[s]} schickt ${ids.map(id => card(id).name).join(' und ')} von ${st.names[v]} auf den Markt (+${mwtFmt(gain)}). ${st.names[v]} kauft jetzt ${ids.length + 1} Karten.`, 'info');
+      M.step = 'buy'; M.need = ids.length + 1;
+    }
+  }
+  function mwtStartMatch(st) {
+    const M = st.mwt, fin = M.final, n = fin ? MWT_FINAL.field : MWT_ROUNDS[M.round].field;
+    st.phase = 'setup'; st.ready = { A: false, B: false };
+    st.lineupSize = n; st.halfLen = n * 9 / 2;
+    st.goals = { A: 0, B: 0 }; st.minute = 0; st.half = 1; st.turn = 0; st.cur = null; st.prev = null; st.scorers = []; st.result = null;
+    st.stats = { A: emptyStats(), B: emptyStats() }; st.track = []; st.ps = {}; st.halfStats = null; st.halfPs = null; st.lastShot = null; st.holder = null;
+    st.flank = false; st.through = null; st.presence = false; st.volley = false; st.kerze = false; st.finalPhase = false; st.stoppage = false;
+    st.kickoff = Math.random() < .5 ? 'A' : 'B';
+    for (const s of ['A', 'B']) {
+      const t = st.teams[s] = emptyTeam(), src = fin ? M.pick[s] : { f: M.teams[M.round][s].f, g: M.teams[M.round][s].g };
+      t.squad = src.f.slice(); t.gks = [src.g]; t.gk = src.g;
+      t.name = M.names[s] || ''; st.names[s] = M.names[s] || st.names[s];
+    }
+    st.squadSize = n;
+    log(st, fin ? 'Finale: 11 gegen 11. Beide stellen auf.' : `Spiel ${M.round + 1} von 3: ${n + 1} gegen ${n + 1}, ${n * 9} Minuten. Beide stellen auf.`, 'info');
+  }
+  function mwtMatchOver(st) {
+    const M = st.mwt, g = st.goals, w = g.A === g.B ? null : g.A > g.B ? 'A' : 'B';
+    M.results.push({ round: M.final ? 3 : M.round, goals: [g.A, g.B], winner: w });
+    if (!M.final && w) M.bonus[w] = MWT_ROUNDS[M.round].bonus;
+    log(st, `${M.final ? 'Finale' : 'Spiel ' + (M.round + 1)}: ${w ? st.names[w] + ' gewinnt' + (M.final ? '' : ' und bekommt ' + mwtFmt(MWT_ROUNDS[M.round].bonus) + ' Siegerbonus') : 'Unentschieden'}.`, 'info');
+  }
+  function mwtNext(st) {
+    const M = st.mwt, last = M.results[M.results.length - 1];
+    if (M.final) {
+      const pre = M.results.filter(r => r.round < 3), wins = s => pre.filter(r => r.winner === s).length, gd = s => pre.reduce((a, r) => a + (s === 'A' ? r.goals[0] - r.goals[1] : r.goals[1] - r.goals[0]), 0);
+      M.winner = last.winner || (wins('A') !== wins('B') ? (wins('A') > wins('B') ? 'A' : 'B') : gd('A') !== gd('B') ? (gd('A') > gd('B') ? 'A' : 'B') : null);
+      M.winReason = last.winner ? 'Sieg im Finale' : wins('A') !== wins('B') ? `Finale unentschieden, mehr Siege in den Vorrunden (${wins('A')}:${wins('B')})` : gd('A') !== gd('B') ? `Finale unentschieden, bessere Tordifferenz in den Vorrunden (${gd('A') > 0 ? '+' : ''}${gd('A')} / ${gd('B') > 0 ? '+' : ''}${gd('B')})` : 'Finale unentschieden, Vorrunden ausgeglichen';
+      st.phase = 'mover';
+      log(st, `Turnierende: ${M.winner ? st.names[M.winner] + ' gewinnt das Marktwert-Turnier' : 'Unentschieden'}.`, 'info');
+      return;
+    }
+    const start = last && last.winner ? other(last.winner) : other(M.start);
+    if (M.round < MWT_ROUNDS.length - 1) { mwtRound(st, M.round + 1, start); return; }
+    M.final = true; M.pick = { A: null, B: null }; M.ready = { A: false, B: false };
+    for (const s of ['A', 'B']) { M.budget[s] = MWT_FINAL.budget + (M.bonus[s] || 0) + Math.min(0, M.budget[s]); M.bonus[s] = 0; }
+    st.phase = 'mfinal'; st.cur = null; mwtClearBoard(st);
+    log(st, `Finale: Jeder wählt 10 Feldspieler (mindestens einen aus jeder Runde) und einen Torhüter aus seinen drei Kadern. Budget ${mwtFmt(M.budget.A)} / ${mwtFmt(M.budget.B)}.`, 'info');
+  }
+  function mwtFinalOk(st, s, act) {
+    const M = st.mwt, ids = act.ids, own = M.teams.map(t => t[s]);
+    if (!Array.isArray(ids) || ids.length !== MWT_FINAL.field || new Set(ids).size !== ids.length) return false;
+    if (!ids.every(id => own.some(t => t.f.includes(id))) || !own.every(t => t.f.some(id => ids.includes(id)))) return false;
+    if (!own.some(t => t.g === act.gk)) return false;
+    return ids.reduce((a, id) => a + mwOf(id), 0) + mwOf(act.gk) <= M.budget[s];
+  }
+  function mwtFinalPick(st, s, act) {
+    const M = st.mwt;
+    M.pick[s] = { f: act.ids.slice(), g: act.gk }; M.ready[s] = true;
+    M.budget[s] -= act.ids.reduce((a, id) => a + mwOf(id), 0) + mwOf(act.gk);
+    log(st, `${st.names[s]} hat die Final-Elf gewählt.`, 'info');
+    if (M.ready.A && M.ready.B) mwtStartMatch(st);
+  }
+  // Bot fürs Marktwert-Turnier: einfach, zum Testen des Ablaufs
+  function mwtBot(st, s, acts) {
+    const M = st.mwt;
+    if (st.phase === 'mfinal') {
+      const own = M.teams.map(t => t[s]), all = own.flatMap(t => t.f), B = M.budget[s];
+      const gk = own.map(t => t.g).sort((x, y) => mwOf(y) - mwOf(x)).find(g => mwOf(g) <= B * .15) || own.map(t => t.g).sort((x, y) => mwOf(x) - mwOf(y))[0];
+      let pick = own.map(t => t.f.slice().sort((x, y) => mwOf(x) - mwOf(y))[0]);
+      const rest = all.filter(id => !pick.includes(id)).sort((x, y) => mwOf(y) - mwOf(x));
+      const cost = arr => arr.reduce((a, id) => a + mwOf(id), 0) + mwOf(gk);
+      for (const id of rest) {
+        if (pick.length >= MWT_FINAL.field) break;
+        const need = MWT_FINAL.field - pick.length - 1, cheap = rest.filter(x => x !== id && !pick.includes(x)).map(mwOf).sort((a, b) => a - b).slice(0, need).reduce((a, b) => a + b, 0);
+        if (cost([...pick, id]) + cheap <= B) pick.push(id);
+      }
+      return { type: 'mfinal', ids: pick, gk };
+    }
+    if (acts[0].type === 'mstack') {
+      const sl = mwtSlots(st, s), per = M.budget[s] / Math.max(1, sl.f + sl.g), avg = g => { const d = M.decks[g]; return d.length ? d.reduce((a, id) => a + mwOf(id), 0) / d.length : 0; };
+      const fit = acts.filter(a => avg(a.id) <= per * 1.15).sort((x, y) => avg(y.id) - avg(x.id));
+      return fit[0] || acts.slice().sort((x, y) => avg(x.id) - avg(y.id))[0];
+    }
+    if (acts[0].type === 'msell') return acts.slice().sort((x, y) => y.id.split(',').reduce((a, id) => a + mwOf(id), 0) - x.id.split(',').reduce((a, id) => a + mwOf(id), 0))[0];
+    const sl = mwtSlots(st, s), per = M.budget[s] / Math.max(1, sl.f + sl.g);
+    const gks = acts.filter(a => isGk(a.id)), fs = acts.filter(a => !isGk(a.id));
+    const wantG = gks.length && (!fs.length || Math.random() < 1 / (sl.f + sl.g));
+    const pool = wantG ? gks : fs;
+    const under = pool.filter(a => mwOf(a.id) <= per * 1.3).sort((x, y) => mwOf(y.id) - mwOf(x.id));
+    return under[0] || pool.slice().sort((x, y) => mwOf(x.id) - mwOf(y.id))[0];
+  }
+
   // ---------- Bot ----------
   const DEF_BEATS = (da, aa, green) => {
     if (aa === 'Ball sichern') return false;
@@ -1071,7 +1323,8 @@
     if (ph === 'draft') return pick(acts);
     if (ph === 'tdraft') { const v = id => isGk(id) ? 40 - byId[id].fields.reduce((x, y) => x + y, 0) * 3 : power(id); const own = st.tour.market[s]; return acts.slice().sort((x, y) => (v(y.id) - (own.includes(y.id) || isGk(y.id) ? 0 : 3)) - (v(x.id) - (own.includes(x.id) || isGk(x.id) ? 0 : 3)))[0]; }
     if (ph === 'tsteal') return acts.slice().sort((x, y) => (isGk(y.id) ? 0 : power(y.id)) - (isGk(x.id) ? 0 : power(x.id)))[0];
-    if (ph === 'over') return { type: 'tnext' };
+    if (ph === 'over') return st.mwt ? { type: 'mnext' } : { type: 'tnext' };
+    if (ph === 'mmarket' || ph === 'mfinal') return mwtBot(st, s, acts);
     if (ph === 'scout') return { type: 'squad', ids: st.vflPool.slice().sort((x, y) => power(y) - power(x)).slice(0, squadOf(st)) };
     if (ph === 'setup') {
       const t = st.teams[s];
@@ -1141,6 +1394,6 @@
     return pick(acts);
   }
 
-  const api = { TOUR_STATIONS, TOUR_POINTS, tierOf, isGk, lineupOf, halfOf, CLUB_NAMES, ZONES, MIRROR, LATERAL, QUER, FORWARD, BACKWARD, DIAG, ZONE_NAME, CORNERS, SQUAD, LINEUP, MAX_SUBS, MARKET, squadOf, benchOf, setData, card, other, newGame, legal, apply, actor, zoneRow, canPay, botAct, shotGame, distOk, DEF_BEATS, duelText, grades };
+  const api = { MWT_ROUNDS, MWT_FINAL, MWT_GROUPS, MWT_GROUP_NAME, setMarketValues, mwOf, mwtGroupOf, mwtFmt, TOUR_STATIONS, TOUR_POINTS, tierOf, isGk, lineupOf, halfOf, CLUB_NAMES, ZONES, MIRROR, LATERAL, QUER, FORWARD, BACKWARD, DIAG, ZONE_NAME, CORNERS, SQUAD, LINEUP, MAX_SUBS, MARKET, squadOf, benchOf, setData, card, other, newGame, legal, apply, actor, zoneRow, canPay, botAct, shotGame, distOk, DEF_BEATS, duelText, grades };
   if (typeof module !== 'undefined') module.exports = api; else root.FC = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -19,10 +19,13 @@ for src in sorted(list(root.glob('challengers/*/src')) + list(root.glob('2decks/
     t = (src / 'template.html').read_text(encoding='utf-8')
     t = t.replace('/*CARDS*/null', (src / 'cards.json').read_text(encoding='utf-8'))
     t = t.replace('/*ENGINE*/', (src / 'engine.js').read_text(encoding='utf-8'))
+    # Marktwerte fürs Marktwert-Turnier (aus tools/turnier/marktwerte-export.py)
+    if '/*MW*/null' in t and (src / 'marktwerte.json').exists():
+        t = t.replace('/*MW*/null', (src / 'marktwerte.json').read_text(encoding='utf-8'))
     t = t.replace('<!--PEERJS-->', PEERJS).replace('/*P2P*/false', 'true')
     if '/*BUILD*/null' in t:
         import hashlib, datetime
-        h = hashlib.sha1(b''.join((src / f).read_bytes() for f in ('template.html', 'engine.js', 'cards.json'))).hexdigest()[:6]
+        h = hashlib.sha1(b''.join((src / f).read_bytes() for f in ('template.html', 'engine.js', 'cards.json', 'marktwerte.json') if (src / f).exists())).hexdigest()[:6]
         t = t.replace('/*BUILD*/null', '"' + h + '"')
     # Draft-Musik: aus src/draft-music.mp3 (liegt nicht im Repository, Lizenz erlaubt keine Weitergabe als
     # Einzeldatei). Fehlt die Datei, wird die bereits in index.html eingebettete Musik übernommen.
