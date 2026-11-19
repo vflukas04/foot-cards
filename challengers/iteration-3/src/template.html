@@ -302,6 +302,12 @@ table.stats td:first-child{text-align:left;color:var(--muted)}
 .pe-row.on{opacity:1;border-color:var(--fg)}
 .pe-row b{font-family:var(--font-d);font-size:16px;flex:1}
 .pe-row span{font-size:12.5px}
+/* Marktwert-Turnier */
+.mprice{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}.mprice b{font-family:var(--font-d);font-size:20px}.mprice small{font-size:11.5px;color:var(--muted)}
+.dcard.msel .pcard{outline:3px solid var(--hl);outline-offset:-1px}.mpr{font-weight:700;font-size:13px;white-space:nowrap}
+.ttag.mw-t5{background:#e7d9c9}.ttag.mw-ver{background:#e8d3f0}.ttag.mw-nat{background:#ffe9a8}
+.mstacks{display:flex;flex-wrap:wrap;gap:10px}.mstacks .btn{display:flex;flex-direction:column;align-items:flex-start;padding:10px 16px;font-size:17px}.mstacks .btn small{font-size:12px;opacity:.8}
+.mfinbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin:10px 0;position:sticky;top:0;z-index:5;background:var(--surface);padding:8px 0}.mfinbar .bad{color:var(--red)}
 /* Draft */
 .tour{margin-top:16px;display:flex;flex-direction:column;gap:14px}
 .tour-head{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;justify-content:space-between;background:#0d0f12;color:#fff;border-radius:12px;padding:14px 16px}
@@ -686,6 +692,7 @@ const CHANT_AWAY = /*CHANT_AWAY*/null;   // Hymne der Gästekurve (Aufnahme, Pix
 (function(){
 'use strict';
 FC.setData(CARD_DATA);
+FC.setMarketValues(/*MW*/null);
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const card = FC.card;
@@ -1228,7 +1235,7 @@ function reduceMotion(){ try { return matchMedia('(prefers-reduced-motion: reduc
 function canAct(st){
   if (!st || app.busy || app.replay) return false;
   // Turnier: Nach dem Abpfiff darf jeder auf „Weiter“ drücken
-  if (st.phase === 'over' && st.tour) return app.mode === 'local' || (app.mode === 'p2p' && app.connected);
+  if (st.phase === 'over' && (st.tour || st.mwt)) return app.mode === 'local' || (app.mode === 'p2p' && app.connected);
   const a = FC.actor(st);
   if (!a) return false;
   if (app.mode === 'local') return true;
@@ -1457,7 +1464,7 @@ const TRACK = (() => {
 // Musik läuft nur im Draft und nur mit eingeschaltetem Ton; mit dem Anpfiff klingt sie aus
 function syncMusic(){
   const st = app.st;
-  if (SFX.on() && app.mode && st && (['draft','setup','scout','tdraft','tsteal','tover'].includes(st.phase) || (st.phase === 'half' && !app.replay) || app.swap)) TRACK.start(SFX.ctx(), SFX.musicOut());
+  if (SFX.on() && app.mode && st && (['draft','setup','scout','tdraft','tsteal','tover','mmarket','mfinal','mover'].includes(st.phase) || (st.phase === 'half' && !app.replay) || app.swap)) TRACK.start(SFX.ctx(), SFX.musicOut());
   else TRACK.stop();
   syncCrowd();
 }
@@ -1485,7 +1492,7 @@ function syncCrowd(){
       mode = 'game'; lvl = app.replay.step < 2 ? 1 : o === 'tor' ? 1 : o === 'parade' ? .55 : .4;
     }
     else if (st.phase === 'over' && app.replay) { mode = 'game'; lvl = .3; }
-    else if (!['draft','setup','scout','over','tdraft','tsteal','tover'].includes(st.phase)) { mode = 'game'; lvl = tensionOf(st); }
+    else if (!['draft','setup','scout','over','tdraft','tsteal','tover','mmarket','mfinal','mover'].includes(st.phase)) { mode = 'game'; lvl = tensionOf(st); }
   }
   SFX.far(mode === 'half');
   SFX.crowd(lvl, mode);
@@ -1583,6 +1590,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 function setState(next){
   const old = app.st;
   try { tourSave(next); } catch(e){}
+  try { mwtSave(next); } catch(e){}
   // Schlussphase und Nachspielzeit kurz einblenden (nach der laufenden Auflösung)
   if (old && next && old.half === next.half && next.half === 2) {
     if (next.finalPhase && !old.finalPhase) phaseBanner('Schlussphase läuft', 'Die Stapel werden zum letzten Mal gemischt');
@@ -1734,9 +1742,9 @@ function boardHtml(st){
   const g = { A: st.goals.A, B: st.goals.B };
   if (rp && rp.prev.out.k === 'goal' && rp.step < 2) g[rp.prev.possStart]--;
   const pulse = rp && rp.prev.out.k === 'goal' && rp.step >= 2;
-  const clock = st.phase==='tdraft' ? 'Turnier · Draft' : st.phase==='tsteal' ? 'Turnier · Beutezug' : st.phase==='tover' ? 'Turnierende' : st.phase==='over' && !rp ? 'Abpfiff' : st.phase==='draft' ? 'Draft' : st.phase==='scout' ? 'Scouting' : st.phase==='setup' ? 'Aufstellung' : (st.phase==='half' && !rp) || app.swap ? 'Halbzeitpause' : `${rp?rp.prev.minute+1:st.minute}. Minute · ${st.stoppage && !rp ? 'Nachspielzeit' : st.finalPhase && !rp ? 'Schlussphase' : (rp&&rp.prev.half?rp.prev.half:st.half) + '. Halbzeit'}`;
+  const clock = st.phase==='mmarket' ? 'Marktwert-Turnier · Markt' : st.phase==='mfinal' ? 'Marktwert-Turnier · Final-Elf' : st.phase==='mover' ? 'Turnierende' : st.phase==='tdraft' ? 'Turnier · Draft' : st.phase==='tsteal' ? 'Turnier · Beutezug' : st.phase==='tover' ? 'Turnierende' : st.phase==='over' && !rp ? 'Abpfiff' : st.phase==='draft' ? 'Draft' : st.phase==='scout' ? 'Scouting' : st.phase==='setup' ? 'Aufstellung' : (st.phase==='half' && !rp) || app.swap ? 'Halbzeitpause' : `${rp?rp.prev.minute+1:st.minute}. Minute · ${st.stoppage && !rp ? 'Nachspielzeit' : st.finalPhase && !rp ? 'Schlussphase' : (rp&&rp.prev.half?rp.prev.half:st.half) + '. Halbzeit'}`;
   const possNow = rp ? (rp.step>=2?rp.prev.possEnd:rp.prev.possStart) : st.poss;
-  const pd = s => possNow===s && !['draft','setup','scout','tdraft','tsteal','tover'].includes(st.phase) && !((st.phase==='over'||st.phase==='half')&&!rp) && !app.swap ? '<span class="possdot" title="Ballbesitz"></span>' : '';
+  const pd = s => possNow===s && !['draft','setup','scout','tdraft','tsteal','tover','mmarket','mfinal','mover'].includes(st.phase) && !((st.phase==='over'||st.phase==='half')&&!rp) && !app.swap ? '<span class="possdot" title="Ballbesitz"></span>' : '';
   const vwarn = app.mode === 'p2p' && app.versionMismatch ? `<div class="notice vwarn" style="margin-top:12px"><b>Ihr spielt unterschiedliche Versionen</b> (du: ${esc(BUILD || '?')}, ${app.isHost ? 'dein Gegner' : 'Gastgeber'}: ${esc(app.versionMismatch)}). Das führt zu Fehlern. Bitte ${app.isHost ? 'deinen Gegner die Seite neu laden lassen' : 'die Seite neu laden'} (Strg+F5 bzw. Cmd+Shift+R) und neu beitreten. Die Version steht oben neben dem Titel.</div>` : '';
   return vwarn + `<div class="board">
     <div class="team tbox ta"><div class="tname">${pd('A')}${esc(teamLabel('A'))}</div><div class="tsub">${st.teams.A.name&&playerLabel('A')!=='Heim'?esc(playerLabel('A'))+' · ':''}Heim${st.teams.A.gk ? ` · ${esc(card(st.teams.A.gk).name)} (${card(st.teams.A.gk).fields.join('-')})` : ''}</div></div>
@@ -1812,6 +1820,7 @@ function render(){
   app.flipIdx = 0;
   if (st.phase === 'draft') { v.innerHTML = boardHtml(st) + draftHtml(st); bindGame(); return; }
   if (['tdraft', 'tsteal', 'tover'].includes(st.phase)) { v.innerHTML = boardHtml(st) + tourHtml(st); bindTour(); window.scrollTo(0, scrollY); return; }
+  if (MWT_PHASES.includes(st.phase)) { v.innerHTML = boardHtml(st) + mwtHtml(st); bindMwt(); window.scrollTo(0, scrollY); return; }
   if (st.phase === 'scout') { v.innerHTML = boardHtml(st) + scoutHtml(st); bindScout(); window.scrollTo(0, scrollY); return; }
   if (st.phase === 'setup') {
     const ae = document.activeElement, fid = ae && ae.id === 'teamName' ? ae.selectionStart : null;
@@ -1858,7 +1867,7 @@ document.addEventListener('keydown', e => {
 // ---------- Zwangszüge ----------
 // Hat der Spieler, der dran ist, nur eine einzige erlaubte Aktion, wird sie automatisch gewählt.
 function forcedAct(st){
-  if (!st || app.replay || !canAct(st) || ['setup','half','scout','over','tdraft','tsteal','tover'].includes(st.phase)) return null;
+  if (!st || app.replay || !canAct(st) || ['setup','half','scout','over','tdraft','tsteal','tover','mmarket','mfinal','mover'].includes(st.phase)) return null;
   const acts = FC.legal(st, FC.actor(st));
   return acts.length === 1 ? acts[0] : null;
 }
@@ -2199,6 +2208,7 @@ function centerHtml(st, D){
     return replayHtml(st) + `<div class="row nextrow"><div class="progress"><i style="animation-duration:${rp.total}ms;animation-delay:-${gone}ms"></i></div><button class="btn primary" id="next" data-enter>Weiter</button></div>`;
   }
   if (st.phase === 'over') {
+    if (st.mwt) return `<div class="banner outcome o-goal">Abpfiff · ${st.goals.A}:${st.goals.B} · ${esc(st.goals.A===st.goals.B?'Unentschieden':'Sieg '+teamLabel(st.goals.A>st.goals.B?'A':'B'))}</div>` + mwtOverHtml(st) + recapHtml(st);
     if (st.tour) return `<div class="banner outcome o-goal">Abpfiff · ${st.goals.A}:${st.goals.B} · ${esc(st.goals.A===st.goals.B?'Unentschieden':'Sieg '+teamLabel(st.goals.A>st.goals.B?'A':'B'))}</div>` + tourOverHtml(st) + recapHtml(st);
     return `<div class="banner outcome o-goal">Abpfiff · ${st.goals.A}:${st.goals.B} · ${esc(st.goals.A===st.goals.B?'Unentschieden':'Sieg '+teamLabel(st.goals.A>st.goals.B?'A':'B'))}</div>` + recapHtml(st) + `<div class="row"><button class="btn primary" id="again" data-enter>Neues Spiel</button></div>`;
   }
@@ -2397,7 +2407,7 @@ function setupHtml(st){
     return `<div class="panel setup"><h2 class="setup-h">${esc(t.name)} steht.</h2><div class="notice wait"><span class="thinking"></span>${esc(playerLabel(o))} stellt noch ${o==='A'?'die Heimmannschaft':'die Gastmannschaft'} auf …</div></div>`;
   }
   const key = s + ':' + t.squad.join();
-  if (!app.setup || app.setup.key !== key) app.setup = { key, seat: s, bench: nBench ? t.squad.slice(-nBench) : [], name: st.mode === 'club' ? (s === 'A' ? 'VfL Osnabrück' : FC.CLUB_NAMES[st.opp || 's04']) : st.tour ? (st.tour.names[s] && !['Heim','Gast'].includes(st.tour.names[s]) ? st.tour.names[s] : '') : '', gk: t.gk };
+  if (!app.setup || app.setup.key !== key) app.setup = { key, seat: s, bench: nBench ? t.squad.slice(-nBench) : [], name: st.mode === 'club' ? (s === 'A' ? 'VfL Osnabrück' : FC.CLUB_NAMES[st.opp || 's04']) : st.tour ? (st.tour.names[s] && !['Heim','Gast'].includes(st.tour.names[s]) ? st.tour.names[s] : '') : st.mwt ? (st.mwt.names[s] && !['Heim','Gast'].includes(st.mwt.names[s]) ? st.mwt.names[s] : '') : '', gk: t.gk };
   const S = app.setup, fly = !app.revealed.has('fly-' + key); app.revealed.add('fly-' + key);
   const ok = S.bench.length === nBench;
   const who = app.mode === 'local' ? `<span class="label">${esc(playerLabel(s))} ist dran · ${esc(playerLabel(o))} schaut bitte weg</span>` : '';
@@ -2503,6 +2513,137 @@ function tourOverHtml(st){
 }
 // Turnier lokal speichern, damit man es am nächsten Abend fortsetzen kann
 function tourSave(st){ if (st && st.tour && app.mode === 'local') LS.set('fc3-tour', { st, t: Date.now() }); }
+
+// ---------- Marktwert-Turnier (Lukas): Markt mit Marktwerten, Zwangsverkauf, Finalauswahl ----------
+const MWT_PHASES = ['mmarket', 'mfinal', 'mover'];
+const mwtMio = v => FC.mwtFmt(v);
+function mwtSeat(st){ return app.mode === 'local' ? FC.actor(st) : app.me; }
+function mwtTag(id){
+  const p = card(id), g = FC.mwtGroupOf(id);
+  return `<span class="ttag mw-${g || 'x'}">${esc(FC.CLUB_NAMES[p.club || 'vfl'] || '')}${p.typ ? ' · ' + esc(p.typ) : ''}</span>`;
+}
+function mwtCard(id, o){
+  o = o || {};
+  const attr = o.data ? ` role="button" tabindex="0" ${o.data}` : '';
+  return `<div class="dcard${o.ok ? ' tpk' : ' off'}${o.sel ? ' msel' : ''}" data-cid="${id}"${attr}><div class="mprice"><b>${mwtMio(FC.mwOf(id))}</b>${o.note ? `<small>${esc(o.note)}</small>` : ''}</div>${mwtTag(id)}${cardHtml(id, { cls: o.ok ? 'pickable' : '' })}</div>`;
+}
+function mwtTable(st){
+  const M = st.mwt, R = FC.MWT_ROUNDS;
+  const row = (i, label) => {
+    const r = M.results.find(x => x.round === i), cur = (i < 3 ? !M.final && M.round === i : M.final) && !r;
+    return `<tr class="${cur ? 'cur' : ''}"><td>${label}</td><td>${r ? `${r.goals[0]}:${r.goals[1]}` : cur ? '<span class="muted">läuft</span>' : ''}</td></tr>`;
+  };
+  return `<table class="stats ttable"><tr><th>Spiel</th><th>${esc(teamLabel('A'))} – ${esc(teamLabel('B'))}</th></tr>
+    ${R.map((x, i) => row(i, `${i + 1}. ${x.field + 1} gegen ${x.field + 1}<small class="muted"> · ${esc(FC.MWT_GROUP_NAME[x.group])}</small>`)).join('')}${row(3, 'Finale 11 gegen 11')}</table>`;
+}
+function mwtSquad(st, s, r){
+  const M = st.mwt, t = M.teams[r][s], R = FC.MWT_ROUNDS[r];
+  const li = id => { const p = card(id); return `<li data-tprev="${id}">${shirt(p)}<span><b>${esc(p.name)}</b><small>${p.fields ? 'Torhüter ' + p.fields.join('-') : `T${p.tempo} · P${p.praesenz} · A${p.assist} · K${p.kopf} · S${p.schuss}`}</small></span><span class="mpr">${mwtMio(FC.mwOf(id))}</span></li>`; };
+  const open = R.field - t.f.length;
+  return `<div class="tcol"><div class="khead t${s === 'A' ? 'a' : 'b'}"><b>${esc(teamLabel(s))}</b><span>Budget <b>${mwtMio(M.budget[s])}</b></span></div>
+    <ul class="tlist">${[t.g, ...t.f].filter(Boolean).map(li).join('')}${open > 0 ? `<li class="muted">noch ${open} Feldspieler</li>` : ''}${t.g ? '' : '<li class="muted">noch kein Torhüter</li>'}</ul></div>`;
+}
+function mwtHead(st){
+  const M = st.mwt, R = FC.MWT_ROUNDS[M.round];
+  const title = st.phase === 'mover' ? 'Turnierende' : M.final ? 'Finale · 11 gegen 11' : `Runde ${M.round + 1} von 3 · ${R.field + 1} gegen ${R.field + 1}`;
+  return `<div class="tour-head"><div><div class="sc-tag">Marktwert-Turnier</div><h2>${esc(title)}</h2></div>${mwtTable(st)}</div>`;
+}
+function mwtHtml(st){
+  const M = st.mwt, head = mwtHead(st);
+  if (st.phase === 'mover') {
+    const w = M.winner;
+    const fin = s => M.pick[s] ? `<div class="tcol"><div class="khead t${s === 'A' ? 'a' : 'b'}"><b>${esc(teamLabel(s))}</b><span>Final-Elf</span></div><ul class="tlist">${[M.pick[s].g, ...M.pick[s].f].map(id => `<li>${shirt(card(id))}<span><b>${esc(card(id).name)}</b></span><span class="mpr">${mwtMio(FC.mwOf(id))}</span></li>`).join('')}</ul></div>` : '';
+    return `<div class="tour">${head}<div class="banner outcome o-goal">${w ? `${esc(teamLabel(w))} gewinnt das Marktwert-Turnier!` : 'Das Turnier endet unentschieden!'}${M.winReason ? `<small>${esc(M.winReason)}</small>` : ''}</div>
+      <div class="tcols">${fin('A')}${fin('B')}</div><div class="row" style="justify-content:center"><button class="btn primary" id="mwtLeave">Zur Übersicht</button></div></div>`;
+  }
+  if (st.phase === 'mfinal') return `<div class="tour">${head}${mwtFinalHtml(st)}</div>`;
+  const me = mwtSeat(st), a = FC.actor(st), mine = canAct(st) && a === me, legal = mine ? FC.legal(st, a) : [];
+  const can = new Set(legal.map(x => x.id)), R = FC.MWT_ROUNDS[M.round];
+  const youA = app.mode === 'local' ? esc(teamLabel(a)) + ' ist dran' : 'Du bist dran';
+  let notice, extra = '';
+  if (M.step === 'name') {
+    notice = mine ? `<b>${youA}:</b> Nenne einen Stapel. Davon werden 3 Karten aufgedeckt, dann kaufst du eine der 6 offenen Karten (oder einen Torhüter), danach kauft ${esc(teamLabel(FC.other(a)))}.` : `<span class="thinking"></span>${esc(teamLabel(a))} nennt einen Stapel …`;
+    if (mine) extra = `<div class="mstacks">${legal.map(x => { const d = st.mwt.decks[x.id]; return `<button type="button" class="btn${x.id === R.group ? ' primary' : ''}" data-mstack="${x.id}">${esc(FC.MWT_GROUP_NAME[x.id])}<small>${d.length} Karten</small></button>`; }).join('')}</div>`;
+  } else if (M.step === 'buy') {
+    const who = M.buyer === M.active ? '' : ' (zweiter Kauf in diesem Zug)';
+    notice = mine ? `<b>${youA}${who}:</b> Kaufe ${M.need > 1 ? M.need + ' Karten' : 'eine Karte'} zum Marktwert. Statt eines Feldspielers darfst du einen Torhüter nehmen.` : `<span class="thinking"></span>${esc(teamLabel(a))} kauft${who} …`;
+  } else {
+    const v = M.buyer, k = M.sellK;
+    notice = mine ? `<b>Zwangsverkauf:</b> ${esc(teamLabel(v))} kann sich keine Karte leisten. Wähle ${k === 1 ? 'einen Spieler' : k + ' Spieler'} aus diesem Kader, ${k === 1 ? 'der' : 'die'} zum Marktwert auf den Markt ${k === 1 ? 'geht' : 'gehen'}. Wählbar ist nur, was reicht. Danach kauft ${esc(teamLabel(v))} ${k + 1} Karten.` : `<span class="thinking"></span>Zwangsverkauf: ${esc(teamLabel(a))} wählt, wer aus dem Kader von ${esc(teamLabel(v))} verkauft wird …`;
+    if (mine) {
+      const opts = new Set(M.sellOpts), sel = (app.mwtSel || []).filter(id => M.teams[M.round][v].f.includes(id));
+      const okIds = new Set(M.sellOpts.flatMap(x => x.split(',')));
+      extra = `<div class="tmarket"><div class="khead"><b>Kader ${esc(teamLabel(v))}</b><span>${k === 1 ? 'antippen' : k + ' antippen, dann bestätigen'}</span></div><div class="pool">${M.teams[M.round][v].f.map(id => mwtCard(id, { ok: okIds.has(id), sel: sel.includes(id), data: okIds.has(id) ? `data-msell="${id}"` : '' })).join('')}</div>
+        ${k > 1 ? `<div class="row"><button class="btn primary" id="msellOk" ${opts.has(sel.slice().sort().join(',')) ? '' : 'disabled'}>Verkauf bestätigen</button></div>` : ''}</div>`;
+    }
+  }
+  const dropN = Math.max(0, M.display.length - 3);
+  const disp = M.display.map((id, i) => mwtCard(id, { ok: M.step === 'buy' && can.has(id), data: M.step === 'buy' && can.has(id) ? `data-mbuy="${id}"` : '', note: (M.noRebuy || []).includes(id) ? 'gerade verkauft' : i === 0 ? 'liegt am längsten' : '' })).join('') || '<div class="muted">leer</div>';
+  const gks = M.gkDisplay.map(id => mwtCard(id, { ok: M.step === 'buy' && can.has(id), data: M.step === 'buy' && can.has(id) ? `data-mbuy="${id}"` : '' })).join('') || '<div class="muted">keine Torhüter mehr</div>';
+  return `<div class="tour">${head}
+    <div class="notice${mine ? '' : ' wait'}">${notice}</div>${extra}
+    <div class="tmarket own"><div class="khead"><b>Markt</b><span>${M.display.length} offen · nach jedem Zug bleiben die 3 neuesten liegen${dropN ? '' : ''}</span></div><div class="pool">${disp}</div></div>
+    <div class="tmarket"><div class="khead"><b>Torhüter</b><span>${esc(FC.MWT_GROUP_NAME[R.group])} · jeder kauft genau einen, statt eines Feldspielers</span></div><div class="pool">${gks}</div></div>
+    <div class="tcols">${mwtSquad(st, 'A', M.round)}${mwtSquad(st, 'B', M.round)}</div></div>`;
+}
+// Finale: 10 Feldspieler (mindestens einer aus jeder Runde) und ein Torhüter, zusammen höchstens das Finalbudget
+function mwtFinalHtml(st){
+  const M = st.mwt, s = mwtSeat(st), o = s && FC.other(s);
+  if (!s) return '<div class="empty">Gleich geht es los …</div>';
+  if (M.ready[s]) return `<div class="notice wait"><span class="thinking"></span>${esc(teamLabel(o))} wählt noch die Final-Elf …</div>`;
+  const P = app.mwtFin && app.mwtFin.seat === s ? app.mwtFin : (app.mwtFin = { seat: s, ids: [], gk: null });
+  const cost = P.ids.reduce((x, id) => x + FC.mwOf(id), 0) + (P.gk ? FC.mwOf(P.gk) : 0), B = M.budget[s];
+  const miss = M.teams.map((t, i) => t[s].f.some(id => P.ids.includes(id)) ? null : i + 1).filter(Boolean);
+  const ok = P.ids.length === FC.MWT_FINAL.field && P.gk && !miss.length && cost <= B;
+  const who = app.mode === 'local' ? `<span class="label">${esc(teamLabel(s))} ist dran · ${esc(teamLabel(o))} schaut bitte weg</span>` : '';
+  const block = (t, i) => `<div class="tmarket"><div class="khead"><b>Runde ${i + 1}</b><span>${esc(FC.MWT_GROUP_NAME[FC.MWT_ROUNDS[i].group])}</span></div><div class="pool">${[t[s].g, ...t[s].f].map(id => mwtCard(id, { ok: true, sel: P.ids.includes(id) || P.gk === id, data: `data-mfin="${id}"` })).join('')}</div></div>`;
+  return `<div class="panel setup">${who}<h2 class="setup-h">Final-Elf wählen</h2>
+    <div class="muted">10 Feldspieler, mindestens einer aus jeder Runde, und ein Torhüter. Jede Karte kostet wieder ihren Marktwert. Antippen wählt aus oder ab.</div>
+    <div class="mfinbar"><span><b>${P.ids.length}</b>/10 Feldspieler</span><span>Torhüter: <b>${P.gk ? esc(card(P.gk).name) : '–'}</b></span><span class="${cost > B ? 'bad' : ''}">Kosten <b>${mwtMio(cost)}</b> von ${mwtMio(B)}</span>${miss.length ? `<span class="bad">fehlt: Runde ${miss.join(', ')}</span>` : ''}<button class="btn primary" id="mfinOk" ${ok ? '' : 'disabled'}>Final-Elf bestätigen</button></div>
+    ${M.teams.map(block).join('')}</div>`;
+}
+function mwtOverHtml(st){
+  const M = st.mwt, r = M.results[M.results.length - 1];
+  const bonus = !M.final && r && r.winner ? `<div class="notice">${esc(teamLabel(r.winner))} bekommt ${mwtMio(FC.MWT_ROUNDS[M.round].bonus * 10 / 10)} Siegerbonus für ${M.round < 2 ? 'die nächste Runde' : 'das Finale'}.</div>` : '';
+  const nxt = M.final ? 'Zum Turnier-Ergebnis' : M.round < 2 ? `Weiter zu Runde ${M.round + 2}` : 'Weiter zum Finale';
+  return `<div class="tour-mini">${mwtTable(st)}</div>${bonus}<div class="row"><button class="btn primary" id="mwtNext" data-enter>${nxt}</button></div>`;
+}
+function bindMwt(){
+  const go = (el, f) => { el.onclick = f; el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); f(); } }; };
+  document.querySelectorAll('[data-mstack]').forEach(el => go(el, () => { SFX.play('flip'); act({ type: 'mstack', id: el.dataset.mstack }); }));
+  document.querySelectorAll('[data-mbuy]').forEach(el => go(el, () => { SFX.play('flip'); act({ type: 'mbuy', id: el.dataset.mbuy }); }));
+  document.querySelectorAll('[data-msell]').forEach(el => go(el, () => {
+    const st = app.st, M = st.mwt, id = el.dataset.msell;
+    if (M.sellK === 1) { act({ type: 'msell', id }); return; }
+    const sel = app.mwtSel = (app.mwtSel || []).filter(x => M.teams[M.round][M.buyer].f.includes(x));
+    const i = sel.indexOf(id); if (i >= 0) sel.splice(i, 1); else { sel.push(id); if (sel.length > M.sellK) sel.shift(); }
+    render();
+  }));
+  const so = $('#msellOk'); if (so) so.onclick = () => { const k = (app.mwtSel || []).slice().sort().join(','); app.mwtSel = []; act({ type: 'msell', id: k }); };
+  document.querySelectorAll('[data-mfin]').forEach(el => go(el, () => {
+    const P = app.mwtFin, id = el.dataset.mfin;
+    if (card(id).fields) P.gk = P.gk === id ? null : id;
+    else { const i = P.ids.indexOf(id); if (i >= 0) P.ids.splice(i, 1); else if (P.ids.length < FC.MWT_FINAL.field) P.ids.push(id); }
+    render();
+  }));
+  const fo = $('#mfinOk'); if (fo) fo.onclick = () => { const P = app.mwtFin; app.mwtFin = null; act({ type: 'mfinal', ids: P.ids.slice(), gk: P.gk }); };
+  const l = $('#mwtLeave'); if (l) l.onclick = leave;
+}
+function mwtSave(st){ if (st && st.mwt && app.mode === 'local') LS.set('fc3-mwt', { st, t: Date.now() }); }
+function mwtPanel(){
+  const sv = LS.get('fc3-mwt');
+  return `<div class="panel mode"><h2>Marktwert-Turnier</h2>
+      <div class="muted">Drei Vorrunden mit jeweils neuem Kader (5 gegen 5, 7 gegen 7, 9 gegen 9): Stapel nennen, Karten zum Marktwert kaufen, wer pleite ist, muss verkaufen. Im Finale 11 gegen 11 aus allen drei Kadern.</div>
+      <div class="row"><button class="btn primary" id="mwtLocal">An einem Gerät</button>${P2P_BUILD ? '<button class="btn" id="mwtP2P">Online (Spielcode)</button>' : ''}</div>
+      ${sv && sv.st && sv.st.mwt && sv.st.phase !== 'mover' ? `<div class="row"><button class="btn" id="mwtResume">Turnier fortsetzen <small>(${sv.st.mwt.final ? 'Finale' : 'Runde ' + (sv.st.mwt.round + 1)})</small></button></div>` : ''}
+    </div>`;
+}
+function bindMwtLobby(){
+  const o = () => ({ mode: 'mwt', chaseRule: gameOpts().chaseRule, names: { A: 'Heim', B: 'Gast' } });
+  const ml = $('#mwtLocal'); if (ml) ml.onclick = () => startLocal('local', o());
+  const mp = $('#mwtP2P'); if (mp) mp.onclick = () => { app.lobbyMsg=''; p2pHost(false, o()); };
+  const mr = $('#mwtResume'); if (mr) mr.onclick = () => { const sv = LS.get('fc3-mwt'); if (!sv) return; clearReplayTimers(); app.replay = null; app.mode = 'local'; app.me = null; app.st = sv.st; render(); };
+}
 
 // ---------- Schulnoten ----------
 const fmtXg = x => (x || 0).toFixed(2).replace('.', ',');
@@ -2716,6 +2857,7 @@ function bindGame(){
   const nx = $('#next'); if (nx) nx.onclick = endReplay;
   const rp2 = $('#recapPlay'); if (rp2) { rp2.onclick = startRecap; if (!app.recapAuto && app.st && app.st.phase==='over') { app.recapAuto = app.st.turn; setTimeout(startRecap, 400); } }
   const tn = $('#tourNext'); if (tn) tn.onclick = () => act({ type: 'tnext' });
+  const mn = $('#mwtNext'); if (mn) mn.onclick = () => act({ type: 'mnext' });
   const ag = $('#again'); if (ag) ag.onclick = () => { if (app.mode==='online') leave(); else if (app.mode==='p2p') { if (app.isHost) p2pRestart(); else flash('Ein neues Spiel startet dein Gegner.'); } else startLocal(app.mode, gameOpts()); };
 }
 
@@ -2956,7 +3098,7 @@ function p2pHostData(d){
   if (d.t === 'sync') { if (!app.st || d.seq !== app.st.seq) p2pSend({ t:'state', st: app.st, names: app.p2pNames, build: BUILD }); return; }
   if (d.t === 'act') {
     const st = app.st;
-    const free = d.a && (d.a.type === 'team' || d.a.type === 'ready' || d.a.type === 'tnext');   // Aufstellung und Halbzeit laufen gleichzeitig
+    const free = d.a && (d.a.type === 'team' || d.a.type === 'ready' || d.a.type === 'tnext' || d.a.type === 'mnext' || d.a.type === 'mfinal');   // Aufstellung und Halbzeit laufen gleichzeitig
     if (!FC.legal(st, 'B').length || (!free && d.seq !== st.seq)) { p2pSend({ t:'state', st, names: app.p2pNames }); return; }
     let next; try { next = FC.apply(st, 'B', d.a); } catch(e){ p2pSend({ t:'state', st, names: app.p2pNames }); return; }
     p2pSetState(next);
@@ -3133,6 +3275,7 @@ function localPanels(){
       <div class="row"><button class="btn primary" id="tourLocal">An einem Gerät</button>${P2P_BUILD ? '<button class="btn" id="tourP2P">Online (Spielcode)</button>' : ''}</div>
       ${(() => { const sv = LS.get('fc3-tour'); return sv && sv.st && sv.st.phase !== 'tover' ? `<div class="row"><button class="btn" id="tourResume">Turnier fortsetzen <small>(Station ${sv.st.tour.station + 1} · ${sv.st.tour.points.A}:${sv.st.tour.points.B} Punkte)</small></button></div>` : ''; })()}
     </div>
+    ${mwtPanel()}
     <div class="panel mode"><h2>Gegen den Bot</h2>
       <div class="muted">Zum Regeln-Üben allein. Der Bot spielt einfach und etwas zufällig.</div>
       <div class="row"><button class="btn primary" id="bot">Spiel starten</button></div>
@@ -3152,6 +3295,7 @@ function bindLobby(){
   $('#local').onclick = () => startLocal('local', gameOpts());
   const tl = $('#tourLocal'); if (tl) tl.onclick = () => startLocal('local', { mode: 'tour', chaseRule: gameOpts().chaseRule, names: { A: 'Heim', B: 'Gast' } });
   const tp = $('#tourP2P'); if (tp) tp.onclick = () => { app.lobbyMsg=''; p2pHost(false, { mode: 'tour', chaseRule: gameOpts().chaseRule, names: { A: 'Heim', B: 'Gast' } }); };
+  bindMwtLobby();
   const tr = $('#tourResume'); if (tr) tr.onclick = () => { const sv = LS.get('fc3-tour'); if (!sv) return; clearReplayTimers(); app.replay = null; app.mode = 'local'; app.me = null; app.st = sv.st; render(); };
   $('#bot').onclick = () => startLocal('bot', gameOpts());
 }
