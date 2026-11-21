@@ -3073,7 +3073,7 @@ function p2pHost(resume, opts){
       const old = app.conn; app.conn = c;
       if (old) { try { old.close(); } catch(e){} }
       c.on('open', () => { app.connected = true; app.p2pStatus = ''; p2pSend({ t:'state', st: app.st, names: app.p2pNames }); render(); });
-      c.on('data', d => p2pHostData(d));
+      c.on('data', d => { if (app.conn === c && !app.connected) { app.connected = true; app.p2pStatus = ''; render(); } p2pHostData(d); });
       c.on('close', () => { if (app.conn === c) { app.connected = false; app.conn = null; app.p2pStatus = 'Verbindung getrennt.'; render(); } });
       c.on('error', e => console.error(e));
     });
@@ -3095,7 +3095,7 @@ function p2pHostData(d){
     p2pSetState(app.st); return;
   }
   // Gast fragt regelmäßig nach: Hat er nicht den aktuellen Stand, bekommt er ihn neu
-  if (d.t === 'sync') { if (!app.st || d.seq !== app.st.seq) p2pSend({ t:'state', st: app.st, names: app.p2pNames, build: BUILD }); return; }
+  if (d.t === 'sync') { if (!app.st || d.seq !== app.st.seq) p2pSend({ t:'state', st: app.st, names: app.p2pNames, build: BUILD }); else p2pSend({ t:'pong' }); return; }
   if (d.t === 'act') {
     const st = app.st;
     const free = d.a && (d.a.type === 'team' || d.a.type === 'ready' || d.a.type === 'tnext' || d.a.type === 'mnext' || d.a.type === 'mfinal');   // Aufstellung und Halbzeit laufen gleichzeitig
@@ -3104,6 +3104,17 @@ function p2pHostData(d){
     p2pSetState(next);
   }
 }
+// Verbindung still abgerissen (z. B. Bildschirm aus)? Der Gast hört 12 Sekunden nichts vom Gastgeber und tritt mit demselben Code neu bei.
+// Nur wenn der Gastgeber schon geantwortet hat (ältere Versionen antworten nicht auf jede Nachfrage).
+function p2pWatch(c){
+  if (app.mode !== 'p2p' || app.isHost || app.conn !== c || !app.hostPongs || !app.hostSeen) return false;
+  if (Date.now() - app.hostSeen < 12000 || (app.rejoinAt && Date.now() - app.rejoinAt < 20000)) return false;
+  app.rejoinAt = Date.now(); app.hostPongs = false;
+  const code = app.code;
+  p2pJoin(code); app.p2pStatus = 'Verbindung war weg, verbinde neu …'; render();
+  return true;
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && app.mode === 'p2p' && !app.isHost && app.conn) p2pWatch(app.conn); });
 function p2pJoin(code){
   code = (code||'').trim().toUpperCase();
   if (!/^[A-Z0-9]{5}$/.test(code)) { app.lobbyMsg = 'Der Code hat fünf Zeichen, zum Beispiel K7QXA.'; render(); return; }
@@ -3121,10 +3132,12 @@ function p2pJoin(code){
     c.on('open', () => {
       app.connected = true; app.p2pStatus = ''; c.send({ t:'hello', name: myName(), build: BUILD }); render();
       clearInterval(app.syncTimer);
-      app.syncTimer = setInterval(() => { if (app.conn === c && c.open && !app.busy) { try { c.send({ t:'sync', seq: app.st ? app.st.seq : -1 }); } catch(e){} } }, 3000);
+      app.hostSeen = Date.now();
+      app.syncTimer = setInterval(() => { if (p2pWatch(c)) return; if (app.conn === c && c.open && !app.busy) { try { c.send({ t:'sync', seq: app.st ? app.st.seq : -1 }); } catch(e){} } }, 3000);
     });
     c.on('data', d => {
       if (!d || typeof d !== 'object') return;
+      app.hostSeen = Date.now(); if (d.t === 'pong') app.hostPongs = true;
       if (d.t === 'full') { app.lobbyMsg = 'Dieses Spiel hat schon zwei Spieler.'; leave(); return; }
       if (d.t === 'version' || (d.t === 'state' && 'build' in d)) { const vm = d.build !== BUILD ? (d.build || 'älter') : null; if (vm !== app.versionMismatch) { app.versionMismatch = vm; render(); } }
       if (d.t === 'state') {
