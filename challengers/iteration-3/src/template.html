@@ -1580,8 +1580,9 @@ function cloudSave(st, now){
   if (!st || !st.gid || !cloudOn() || ['draft', 'setup', 'scout'].includes(st.phase) && !now) return;
   CLOUD.last = st; clearTimeout(CLOUD.timer);
   const go = () => { const s = CLOUD.last; if (!s) return; try {
-    fetch(CLOUD.url + s.gid + '?key=' + CLOUD.key, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, keepalive: true,
-      body: JSON.stringify({ fields: toFS(cloudDoc(s)).mapValue.fields }) }).then(r => { if (!r.ok) console.warn('Archiv', r.status); }).catch(e => console.warn('Archiv', e));
+    // keepalive nur für kleine Stände: Browser lehnen keepalive-Anfragen über 64 KB ab (ab etwa der Spielmitte wurde sonst nichts mehr gespeichert)
+    const body = JSON.stringify({ fields: toFS(cloudDoc(s)).mapValue.fields });
+    fetch(CLOUD.url + s.gid + '?key=' + CLOUD.key, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, keepalive: body.length < 60000, body }).then(r => { if (!r.ok) console.warn('Archiv', r.status); }).catch(e => console.warn('Archiv', e));
   } catch(e) { console.warn('Archiv', e); } };
   now ? go() : (CLOUD.timer = setTimeout(go, 4000));
 }
