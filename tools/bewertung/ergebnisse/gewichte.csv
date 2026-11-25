@@ -1,138 +1,138 @@
 Merkmal;Bauchgefühl (Wertpunkte);gelernt (Wertpunkte);95-%-Spanne ±;Testkarten mit Merkmal
-A|DA|0|Ball sichern;1;0,2;1,0;393
-A|DA|0|Ballverlust;-6;-2,0;1,4;152
-A|DA|0|Befreiungsschlag;-1;-0,0;1,1;320
-A|DA|0|Diagonalball;3;3,3;1,5;118
-A|DA|0|Dribbling;4;3,3;0,7;888
-A|DA|0|Kerze;0,5;-0,6;1,2;291
-A|DA|0|Querpass;2,5;2,8;0,7;1475
-A|DA|0|Rückpass;0;2,0;1,4;147
-A|DA|0|Slapstick;1;2,7;1,2;214
-A|DA|0|Sprint;3,5;-0,8;1,3;275
-A|DA|0|Steilpass;3,5;-1,0;1,6;147
-A|DA|1|Befreiungsschlag;0;-0,1;1,4;135
-A|DA|1|Diagonalball;2;-0,9;1,2;176
-A|DA|1|Dribbling;3;0,6;1,0;307
-A|DA|1|Flanke;1;1,6;1,3;142
-A|DA|1|Kerze;0,3;0,6;1,3;154
-A|DA|1|Querpass;1,5;-0,1;1,0;296
-A|DA|1|Slapstick;0,5;-0,9;1,4;127
-A|DA|1|Steilpass;2,5;-1,7;1,2;307
-A|OA|0|-- und erschöpft;-1;0,1;1,3;190
-A|OA|0|Ball sichern;1;0,2;0,9;473
-A|OA|0|Dribbling;5;1,9;0,7;1264
-A|OA|0|Flanke;6;3,9;0,7;794
+A|DA|0|Ball sichern;1;0,9;1,1;393
+A|DA|0|Ballverlust;-6;-1,6;1,4;152
+A|DA|0|Befreiungsschlag;-1;0,4;1,1;320
+A|DA|0|Diagonalball;3;4,1;1,6;118
+A|DA|0|Dribbling;4;3,7;0,7;888
+A|DA|0|Kerze;0,5;-0,3;1,2;291
+A|DA|0|Querpass;2,5;2,9;0,7;1475
+A|DA|0|Rückpass;0;2,4;1,4;147
+A|DA|0|Slapstick;1;3,7;1,2;214
+A|DA|0|Sprint;3,5;-0,3;1,3;275
+A|DA|0|Steilpass;3,5;1,1;1,6;147
+A|DA|1|Befreiungsschlag;0;-1,2;1,4;135
+A|DA|1|Diagonalball;2;-0,6;1,3;176
+A|DA|1|Dribbling;3;0,8;1,0;307
+A|DA|1|Flanke;1;0,8;1,4;142
+A|DA|1|Kerze;0,3;0,6;1,4;154
+A|DA|1|Querpass;1,5;-0,3;1,0;296
+A|DA|1|Slapstick;0,5;-0,7;1,5;127
+A|DA|1|Steilpass;2,5;-1,0;1,2;307
+A|OA|0|-- und erschöpft;-1;-0,0;1,3;190
+A|OA|0|Ball sichern;1;0,8;0,9;473
+A|OA|0|Dribbling;5;1,5;0,7;1264
+A|OA|0|Flanke;6;4,4;0,7;794
 A|OA|0|Querpass;2;1,1;0,7;732
-A|OA|0|Rückpass;0;-0,7;1,3;185
-A|OA|0|Schuss;4;7,1;1,3;246
-A|OA|0|Slapstick;1;3,2;1,3;166
-A|OA|0|Sprint;4;0,6;1,2;267
-A|OA|1|Ballverlust;0;1,2;1,6;103
-A|OA|1|Dribbling;3;0,7;0,9;344
-A|OA|1|Flanke;4;0,8;0,6;1149
-A|OA|1|Querpass;1;-1,1;1,1;242
-A|OA|1|Schuss;3;-0,3;1,3;217
-A|OA|1|Sprint;2,5;-2,6;1,3;214
-A|OA|1|Vorlage;3;1,6;1,3;160
-A|ZD|0|-- und erschöpft;-1;-0,5;1,9;93
-A|ZD|0|Ball sichern;1;3,3;1,5;169
-A|ZD|0|Ballverlust;-6;-5,0;1,9;80
-A|ZD|0|Befreiungsschlag;-1;9,3;1,4;216
-A|ZD|0|Dribbling;3,5;11,3;1,5;158
-A|ZD|0|Fehlpass;-6;-3,0;1,8;99
-A|ZD|0|Kerze;0,5;3,0;2,0;79
-A|ZD|0|Querpass;2,5;7,9;0,9;1275
-A|ZD|0|Rückpass;0;2,7;2,1;67
-A|ZD|0|Slapstick;1;9,6;1,9;84
-A|ZD|1|Befreiungsschlag;0;1,5;1,4;163
-A|ZD|1|Diagonalball;2;1,4;1,3;184
-A|ZD|1|Kerze;0,3;-0,3;1,7;99
-A|ZD|1|Querpass;1,5;2,8;1,3;189
-A|ZD|1|Rückpass;0;0,1;1,7;88
-A|ZD|1|Steilpass;2,5;-1,3;1,4;197
-A|ZM|0|Ball sichern;1;9,6;1,5;308
-A|ZM|0|Diagonalball;3;5,5;2,3;64
-A|ZM|0|Dribbling;4,5;12,7;1,4;442
-A|ZM|0|Flanke;3;15,1;1,9;106
-A|ZM|0|Kerze;0,5;0,6;2,1;85
-A|ZM|0|Querpass;1,5;6,3;1,3;923
-A|ZM|0|Schuss;4;28,3;1,9;147
-A|ZM|0|Slapstick;1;6,8;2,0;92
-A|ZM|0|Sprint;4;5,6;1,9;177
-A|ZM|0|Steilpass;4;8,8;1,6;457
-A|ZM|1|Ball sichern;0,5;-0,7;2,2;53
-A|ZM|1|Ballverlust;0;2,0;2,0;69
-A|ZM|1|Diagonalball;2;0,3;1,4;166
-A|ZM|1|Dribbling;3;0,1;1,0;398
-A|ZM|1|Flanke;2;0,9;1,7;104
-A|ZM|1|Kerze;0,3;2,0;2,2;53
-A|ZM|1|Querpass;1;-0,5;1,2;226
-A|ZM|1|Schuss;3;5,3;1,7;122
-A|ZM|1|Slapstick;0,5;-1,0;1,8;80
-A|ZM|1|Steilpass;3;-1,1;1,2;461
-A|ZM|1|Vorlage;2;3,8;1,7;108
-A|ZO|0|Ball sichern;1;5,8;1,8;91
-A|ZO|0|Ballverlust;-6;-2,0;1,5;124
-A|ZO|0|Dribbling;3;3,7;1,5;145
-A|ZO|0|Kerze;1;2,5;1,7;99
-A|ZO|0|Querpass;-1;0,6;1,2;260
-A|ZO|0|Schuss;10;9,6;1,0;766
-A|ZO|0|Slapstick;1;-0,3;1,6;106
-A|ZO|0|Vorlage;7;11,6;0,9;692
-A|ZO|1|Dribbling;2;-1,0;1,8;86
-A|ZO|1|Querpass;0;-3,6;1,6;112
-A|ZO|1|Schuss;7;-1,2;1,0;723
-A|ZO|1|Slapstick;0,5;-0,2;1,7;96
-A|ZO|1|Vorlage;5;1,8;1,3;171
-D|DA|0|-- und Regeneriert;0,5;0,5;0,9;412
-D|DA|0|Ballgewinn;5;3,7;1,0;331
-D|DA|0|Passabfangen;3;1,6;0,8;555
-D|DA|0|Tackling;3;2,5;0,6;1418
-D|DA|1|Ballgewinn;4;1,4;0,9;418
-D|DA|1|Block;1,5;1,4;1,2;197
-D|DA|1|Gelb;0,8;0,9;1,1;257
-D|DA|1|Passabfangen;2,5;-0,5;0,8;516
-D|DA|1|Tackling;2;0,6;0,7;665
-D|OA|0|-- und Regeneriert;0,5;-0,2;0,8;475
-D|OA|0|Passabfangen;2;2,0;0,6;796
-D|OA|0|Tackling;2;1,5;0,6;957
-D|OA|1|Gelb;0,3;-1,0;0,9;317
-D|OA|1|Passabfangen;1,5;1,3;0,6;802
-D|OA|1|Tackling;1,5;0,5;0,7;613
-D|ZD|0|-- und Regeneriert;0,5;1,2;1,3;191
-D|ZD|0|Ballgewinn;6;9,8;1,4;166
-D|ZD|0|Passabfangen;3;3,9;1,0;553
-D|ZD|0|Schuss blocken;3;5,6;1,4;175
-D|ZD|0|Tackling;3;1,4;1,0;613
-D|ZD|1|Ballgewinn;4,5;4,0;1,1;309
-D|ZD|1|Block;3;3,5;1,3;178
-D|ZD|1|Gelb;1;1,6;1,8;80
-D|ZD|1|Passabfangen;2;2,3;1,3;183
-D|ZD|1|Schuss blocken;2,5;3,9;1,5;122
-D|ZD|1|Tackling;2;1,1;1,0;304
-D|ZM|0|-- und Regeneriert;0,5;3,1;1,3;180
+A|OA|0|Rückpass;0;-0,5;1,3;185
+A|OA|0|Schuss;4;6,6;1,3;246
+A|OA|0|Slapstick;1;2,9;1,3;166
+A|OA|0|Sprint;4;0,3;1,3;267
+A|OA|1|Ballverlust;0;1,6;1,6;103
+A|OA|1|Dribbling;3;0,4;0,9;344
+A|OA|1|Flanke;4;1,0;0,6;1149
+A|OA|1|Querpass;1;-1,2;1,1;242
+A|OA|1|Schuss;3;-0,1;1,3;217
+A|OA|1|Sprint;2,5;-1,3;1,4;214
+A|OA|1|Vorlage;3;1,8;1,3;160
+A|ZD|0|-- und erschöpft;-1;0,2;1,9;93
+A|ZD|0|Ball sichern;1;2,3;1,5;169
+A|ZD|0|Ballverlust;-6;-4,7;1,9;80
+A|ZD|0|Befreiungsschlag;-1;8,9;1,5;216
+A|ZD|0|Dribbling;3,5;11,4;1,5;158
+A|ZD|0|Fehlpass;-6;-3,8;1,8;99
+A|ZD|0|Kerze;0,5;1,9;2,0;79
+A|ZD|0|Querpass;2,5;7,8;0,9;1275
+A|ZD|0|Rückpass;0;1,8;2,2;67
+A|ZD|0|Slapstick;1;9,9;1,9;84
+A|ZD|1|Befreiungsschlag;0;1,9;1,5;163
+A|ZD|1|Diagonalball;2;1,7;1,3;184
+A|ZD|1|Kerze;0,3;0,2;1,7;99
+A|ZD|1|Querpass;1,5;2,0;1,3;189
+A|ZD|1|Rückpass;0;1,1;1,8;88
+A|ZD|1|Steilpass;2,5;-0,3;1,4;197
+A|ZM|0|Ball sichern;1;8,1;1,6;308
+A|ZM|0|Diagonalball;3;5,0;2,4;64
+A|ZM|0|Dribbling;4,5;11,3;1,4;442
+A|ZM|0|Flanke;3;14,9;2,0;106
+A|ZM|0|Kerze;0,5;0,4;2,1;85
+A|ZM|0|Querpass;1,5;5,7;1,4;923
+A|ZM|0|Schuss;4;28,6;2,0;147
+A|ZM|0|Slapstick;1;6,7;2,1;92
+A|ZM|0|Sprint;4;6,2;1,9;177
+A|ZM|0|Steilpass;4;8,3;1,7;457
+A|ZM|1|Ball sichern;0,5;-1,0;2,3;53
+A|ZM|1|Ballverlust;0;0,0;2,0;69
+A|ZM|1|Diagonalball;2;-1,0;1,5;166
+A|ZM|1|Dribbling;3;-0,5;1,0;398
+A|ZM|1|Flanke;2;-0,3;1,7;104
+A|ZM|1|Kerze;0,3;1,6;2,3;53
+A|ZM|1|Querpass;1;-1,2;1,3;226
+A|ZM|1|Schuss;3;4,8;1,8;122
+A|ZM|1|Slapstick;0,5;-0,4;1,9;80
+A|ZM|1|Steilpass;3;-1,6;1,2;461
+A|ZM|1|Vorlage;2;2,3;1,7;108
+A|ZO|0|Ball sichern;1;6,1;1,8;91
+A|ZO|0|Ballverlust;-6;-1,7;1,6;124
+A|ZO|0|Dribbling;3;3,8;1,5;145
+A|ZO|0|Kerze;1;1,8;1,7;99
+A|ZO|0|Querpass;-1;1,1;1,2;260
+A|ZO|0|Schuss;10;10,4;1,1;766
+A|ZO|0|Slapstick;1;0,7;1,7;106
+A|ZO|0|Vorlage;7;8,8;1,0;692
+A|ZO|1|Dribbling;2;0,4;1,8;86
+A|ZO|1|Querpass;0;-2,0;1,6;112
+A|ZO|1|Schuss;7;-0,9;1,1;723
+A|ZO|1|Slapstick;0,5;-1,0;1,7;96
+A|ZO|1|Vorlage;5;1,2;1,3;171
+D|DA|0|-- und Regeneriert;0,5;0,3;0,9;412
+D|DA|0|Ballgewinn;5;4,0;1,0;331
+D|DA|0|Passabfangen;3;1,1;0,8;555
+D|DA|0|Tackling;3;2,3;0,6;1418
+D|DA|1|Ballgewinn;4;1,3;0,9;418
+D|DA|1|Block;1,5;0,5;1,2;197
+D|DA|1|Gelb;0,8;1,8;1,1;257
+D|DA|1|Passabfangen;2,5;-0,4;0,8;516
+D|DA|1|Tackling;2;0,9;0,7;665
+D|OA|0|-- und Regeneriert;0,5;-0,0;0,8;475
+D|OA|0|Passabfangen;2;2,3;0,7;796
+D|OA|0|Tackling;2;1,4;0,6;957
+D|OA|1|Gelb;0,3;-1,2;0,9;317
+D|OA|1|Passabfangen;1,5;0,8;0,6;802
+D|OA|1|Tackling;1,5;0,2;0,7;613
+D|ZD|0|-- und Regeneriert;0,5;1,9;1,4;191
+D|ZD|0|Ballgewinn;6;13,3;1,4;166
+D|ZD|0|Passabfangen;3;4,0;1,0;553
+D|ZD|0|Schuss blocken;3;10,2;1,4;175
+D|ZD|0|Tackling;3;1,7;1,0;613
+D|ZD|1|Ballgewinn;4,5;5,2;1,1;309
+D|ZD|1|Block;3;5,6;1,3;178
+D|ZD|1|Gelb;1;3,2;1,9;80
+D|ZD|1|Passabfangen;2;2,1;1,3;183
+D|ZD|1|Schuss blocken;2,5;5,1;1,5;122
+D|ZD|1|Tackling;2;1,1;1,1;304
+D|ZM|0|-- und Regeneriert;0,5;3,4;1,3;180
 D|ZM|0|Ballgewinn;6;17,9;1,2;221
 D|ZM|0|Passabfangen;3,5;9,7;0,9;656
-D|ZM|0|Tackling;3,5;5,1;0,9;650
-D|ZM|1|Ballgewinn;4;7,1;1,0;359
-D|ZM|1|Gelb;0,5;1,1;1,4;142
-D|ZM|1|Passabfangen;2,5;4,7;1,0;410
-D|ZM|1|Tackling;2,5;2,8;1,0;311
-D|ZO|0|Passabfangen;2;8,0;0,8;545
-D|ZO|0|Tackling;2;2,5;0,8;472
-D|ZO|1|Ballgewinn;2,5;1,4;1,4;132
-D|ZO|1|Gelb;0,3;-0,7;1,5;116
-D|ZO|1|Passabfangen;1,5;1,7;1,2;189
-D|ZO|1|Tackling;1,5;0,5;1,3;158
-Token|B;1,5;1,0;0,7;495
-Token|G;1,5;1,9;0,7;448
-Token|R;1;2,5;0,7;419
+D|ZM|0|Tackling;3,5;5,0;0,9;650
+D|ZM|1|Ballgewinn;4;7,4;1,0;359
+D|ZM|1|Gelb;0,5;0,9;1,4;142
+D|ZM|1|Passabfangen;2,5;3,6;1,0;410
+D|ZM|1|Tackling;2,5;1,5;1,0;311
+D|ZO|0|Passabfangen;2;7,6;0,8;545
+D|ZO|0|Tackling;2;2,6;0,9;472
+D|ZO|1|Ballgewinn;2,5;1,9;1,5;132
+D|ZO|1|Gelb;0,3;0,1;1,6;116
+D|ZO|1|Passabfangen;1,5;2,1;1,2;189
+D|ZO|1|Tackling;1,5;1,3;1,3;158
+grün|0;1,5;2,9;0,4;1713
+grün|1;1,5;-0,7;0,9;367
+Token|B;1,5;1,4;0,7;495
+Token|G;1,5;2,1;0,8;448
+Token|R;1;2,6;0,7;419
 Wert|assist;0,8;0,8;0,2;2460
-Wert|kopf;0,6;1,7;0,1;2967
-Wert|praesenz;1,2;2,4;0,1;2958
-Wert|schuss;0,4;0,3;0,2;3000
-Wert|tempo;0,8;1,6;0,2;3000
-Zusammenspiel|schuss×Schuss-Optionen;0,8;1,0;0,2;1774
-Zusammenspiel|tempo×Tempo-Optionen;0,3;0,5;0,2;1784
-grün|0;1,5;3,2;0,4;1713
-grün|1;1,5;-0,2;0,9;367
+Wert|kopf;0,6;1,9;0,2;2967
+Wert|praesenz;1,2;2,4;0,2;2958
+Wert|schuss;0,4;0,1;0,2;3000
+Wert|tempo;0,8;1,7;0,2;3000
+Zusammenspiel|schuss×Schuss-Optionen;0,8;1,1;0,2;1774
+Zusammenspiel|tempo×Tempo-Optionen;0,3;0,3;0,2;1784
