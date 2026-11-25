@@ -35,3 +35,9 @@ node schuesse.js 300 && node torhueter.js
 node werte.js
 ```
 Laufzeit auf 2 Kernen: etwa 15 Minuten (Testkarten) plus 50 Minuten (Tauschtest).
+
+## Mannschaftstest (25.11.)
+Frage: Sind Mannschaften mit gleichem Gesamtmarktwert gleich stark, egal wie sie zusammengesetzt sind? `mannschaften.js` (7 gegen 7, 6 Feldspieler mit zusammen 36 Mio., gleicher Torhüter), Auswertung `mannschaften-auswertung.js`.
+- Teil A: 11 gezielt gebaute Mannschaftstypen, je 600 Spiele gegen zufällige gleich teure Gegner.
+- Teil B: 300 zufällige gleich teure Mannschaften, je 60 Spiele. Karteneffekte werden nur aus den (zufälligen) Gegnern geschätzt, damit sie die Stärke der eigenen Mannschaft unabhängig vorhersagen.
+- Ergebnis: Gleich teure Mannschaften streuen um etwa 2,8 Mio. (Standardabweichung). Mindestens ein Drittel davon sind einzeln falsch bewertete Karten, vor allem Lückenfüller am Mindestpreis von 0,5 Mio. (Lutz Luftloch, Rudi Rumpelfuß) und die teuersten Karten (etwas zu teuer). Der Rest hängt bei zufälligen Mannschaften mit keinem geprüften Merkmal zusammen. Gezielt einseitige Mannschaften (nur Abwehr, mehrere Mittelfeldschützen, Stars mit Lückenfüllern) schneiden schlechter ab, als ihre Karten erwarten lassen.
