@@ -1,6 +1,6 @@
 # Bewertungssystem: Marktwerte für alle Karten
 
-Stand 16.11.2026, Regeln von Iteration 3 (inkl. „Ballgewinn stoppt Steilpass“), Bots wie im Spiel.
+Stand 25.11.2026, Regeln von Iteration 3 (inkl. „Ballgewinn stoppt Steilpass“ und „Direktschuss nach Vorlage verteidigbar“ vom 19.11.), Bots wie im Spiel. Vorher: Stand 16.11.
 
 ## Ergebnisse
 - `ergebnisse/marktwerte.csv`: alle 126 Feldspieler, Wert in Toren pro Spiel über Ersatzniveau und in Mio. €
@@ -33,6 +33,7 @@ node auswerten.js daten/pool.json daten/l5-a.jsonl daten/l5-b.jsonl
 node alle.js 0 2 800 daten/alle-0.jsonl c25 5 & node alle.js 1 2 800 daten/alle-1.jsonl c25 5
 node schuesse.js 300 && node torhueter.js
 node werte.js
+node ergebnisse.js
 ```
 Laufzeit auf 2 Kernen: etwa 15 Minuten (Testkarten) plus 50 Minuten (Tauschtest).
 
@@ -41,3 +42,6 @@ Frage: Sind Mannschaften mit gleichem Gesamtmarktwert gleich stark, egal wie sie
 - Teil A: 11 gezielt gebaute Mannschaftstypen, je 600 Spiele gegen zufällige gleich teure Gegner.
 - Teil B: 300 zufällige gleich teure Mannschaften, je 60 Spiele. Karteneffekte werden nur aus den (zufälligen) Gegnern geschätzt, damit sie die Stärke der eigenen Mannschaft unabhängig vorhersagen.
 - Ergebnis: Gleich teure Mannschaften streuen um etwa 2,8 Mio. (Standardabweichung). Mindestens ein Drittel davon sind einzeln falsch bewertete Karten, vor allem Lückenfüller am Mindestpreis von 0,5 Mio. (Lutz Luftloch, Rudi Rumpelfuß) und die teuersten Karten (etwas zu teuer). Der Rest hängt bei zufälligen Mannschaften mit keinem geprüften Merkmal zusammen. Gezielt einseitige Mannschaften (nur Abwehr, mehrere Mittelfeldschützen, Stars mit Lückenfüllern) schneiden schlechter ab, als ihre Karten erwarten lassen.
+
+## Neubewertung 25.11.
+Neu gerechnet, weil seit 19.11. der Direktschuss nach einer Vorlage verteidigt werden kann. Wirkung auf die gelernten Werte (Mio. €): Vorlage in ZO vor dem „/“ 1,9 → 1,3; Schuss blocken in ZD 0,9 → 1,5; Ballgewinn in ZD 1,6 → 2,0; Block in ZD hinter dem „/“ 0,6 → 0,9. Karten mit Vorlage verlieren im Mittel 0,35 Mio., andere 0,14 Mio. Einzelne Karten ändern sich um bis zu ±1,7 Mio.; das liegt zum großen Teil an der Streuung des Tauschtests (±1,4 Mio. pro Karte), nicht an der Regel.
